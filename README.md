@@ -1,6 +1,30 @@
-Time de agentes reutilizável para o Claude Code. Os papéis ficam aqui e são copiados para qualquer repositório com um comando.
+# claude-core
 
-## Time
+Ferramenta que roda em outros repositórios para configurar o Claude Code e o sistema de desenvolvimento da melhor forma: padrões de desenvolvimento, skills úteis e agentes de utilidade, tudo aplicado com um comando.
+
+## Estado atual
+
+Hoje o repositório já entrega:
+
+- o time de agentes (orquestrador, product owner, devs, revisor, QA e designer);
+- o padrão de branches e commits, como regra do Claude;
+- perfis que escolhem o que cada repositório recebe;
+- o `ai-sync`, que copia isso para um repositório e libera a pasta de worktrees das tarefas.
+
+## Planejado
+
+O que falta para a nova função está nas issues:
+
+- [#2](https://github.com/felipe-sant/claude-core/issues/2) reorganizar o repositório para configurar outros projetos;
+- [#3](https://github.com/felipe-sant/claude-core/issues/3) detectar a stack do projeto automaticamente;
+- [#4](https://github.com/felipe-sant/claude-core/issues/4) sincronizar sem apagar ou sobrescrever arquivos do usuário;
+- [#5](https://github.com/felipe-sant/claude-core/issues/5) padrões de desenvolvimento gerais e por stack;
+- [#6](https://github.com/felipe-sant/claude-core/issues/6) skills úteis;
+- [#7](https://github.com/felipe-sant/claude-core/issues/7) agentes de utilidade além do time;
+- [#8](https://github.com/felipe-sant/claude-core/issues/8) configuração base do Claude para cada projeto;
+- [#1](https://github.com/felipe-sant/claude-core/issues/1) fluxo de especificação e testes (SDD e TDD) para os devs.
+
+## Time de agentes
 
 | Agente | Papel |
 | --- | --- |
@@ -34,7 +58,7 @@ Isso copia os agentes do perfil para `.claude/agents/` e as regras para `.claude
 claude --agent orchestrator
 ```
 
-Rodar de novo atualiza os arquivos copiados e remove os que saíram do perfil. Agentes e regras que você criou à mão no repositório não são tocados.
+Rodar de novo atualiza os arquivos copiados e remove os que saíram do perfil. Atenção: hoje a remoção é feita pelo nome do arquivo, então um agente ou regra seu com o mesmo nome de um do `claude-core` pode ser apagado ou sobrescrito. Agentes e regras com outros nomes não são tocados. A proteção completa está na issue [#4](https://github.com/felipe-sant/claude-core/issues/4).
 
 ## Perfis
 
