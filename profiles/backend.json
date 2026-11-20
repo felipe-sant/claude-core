@@ -1,0 +1,12 @@
+{
+  "agents": [
+    "orchestrator",
+    "product-owner",
+    "dev-backend",
+    "reviewer",
+    "qa"
+  ],
+  "rules": [
+    "commit-standard"
+  ]
+}
