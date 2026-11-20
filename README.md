@@ -1,5 +1,3 @@
-# ai-core
-
 Time de agentes reutilizável para o Claude Code. Os papéis ficam aqui e são copiados para qualquer repositório com um comando.
 
 ## Time
