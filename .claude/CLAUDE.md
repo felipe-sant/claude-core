@@ -4,7 +4,7 @@ Orientações para o Claude Code ao trabalhar neste repositório.
 
 ## Contexto
 
-O `ai-core` é a fonte única do time de agentes do Felipe para o Claude Code. Os papéis (agentes) e as regras ficam aqui e o `ai-sync` os copia para qualquer outro repositório, de acordo com um perfil. Este repositório não tem aplicação nem build: é conteúdo (markdown e JSON) mais um script Node sem dependências.
+O `claude-core` é a fonte única do time de agentes do Felipe para o Claude Code. Os papéis (agentes) e as regras ficam aqui e o `ai-sync` os copia para qualquer outro repositório, de acordo com um perfil. Este repositório não tem aplicação nem build: é conteúdo (markdown e JSON) mais um script Node sem dependências.
 
 Todo o texto dos agentes, das regras e da documentação é em **português**. Nomes de arquivos, de agentes e de perfis são em **inglês** e em minúsculas, com hífen (`product-owner`, `dev-frontend`).
 

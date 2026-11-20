@@ -19,13 +19,13 @@ O time é montado por tarefa e cada tarefa roda em uma worktree própria (confir
 ## Usar em um repositório
 
 ```
-node ~/ai-core/bin/ai-sync.js /caminho/do/repo --profile default
+node ~/claude-core/bin/ai-sync.js /caminho/do/repo --profile default
 ```
 
 Ou, dentro do repositório, sem argumento de pasta:
 
 ```
-node ~/ai-core/bin/ai-sync.js --profile frontend
+node ~/claude-core/bin/ai-sync.js --profile frontend
 ```
 
 Isso copia os agentes do perfil para `.claude/agents/` e as regras para `.claude/rules/` do repositório. Depois, abra o orquestrador:

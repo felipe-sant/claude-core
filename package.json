@@ -1,5 +1,5 @@
 {
-  "name": "ai-core",
+  "name": "claude-core",
   "version": "0.1.0",
   "description": "Time de agentes reutilizável para Claude Code",
   "private": true,
