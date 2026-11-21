@@ -8,13 +8,15 @@ const args = process.argv.slice(2)
 let profile = null
 let target = process.cwd()
 let check = false
+let force = false
 
 for (let i = 0; i < args.length; i++) {
   if (args[i] === '--profile' || args[i] === '-p') profile = args[++i]
   else if (args[i] === '--help' || args[i] === '-h') {
-    console.log('Uso: ai-sync [pasta-do-repositorio] [--profile nome]\n     ai-sync --check\n\nSem --profile, detecta a stack do projeto e aplica o que vale para qualquer projeto mais o da stack.')
+    console.log('Uso: ai-sync [pasta-do-repositorio] [--profile nome] [--force]\n     ai-sync --check\n\n--force reinstala também os arquivos em conflito (seus ou editados), sobrescrevendo-os.\n\nSem --profile, detecta a stack do projeto e aplica o que vale para qualquer projeto mais o da stack.')
     process.exit(0)
   } else if (args[i] === '--check') check = true
+  else if (args[i] === '--force') force = true
   else target = path.resolve(args[i])
 }
 
@@ -146,7 +148,7 @@ const manifestFile = path.join(target, '.claude', 'claude-core.lock.json')
 const coreVersion = readJson(path.join(root, 'package.json')).version || '0.0.0'
 const previous = fs.existsSync(manifestFile) ? readJson(manifestFile).files || {} : {}
 const manifest = {}
-const report = { created: [], updated: [], removed: [], adopted: [], kept: [], warnings: [] }
+const report = { created: [], updated: [], overwritten: [], removed: [], adopted: [], kept: [], warnings: [] }
 
 const hashOf = (file) => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex')
 
@@ -216,14 +218,19 @@ function syncFiles() {
       continue
     }
 
-    if (!recorded) {
-      report.kept.push(rel)
-      report.warnings.push(`${rel}: já existe um arquivo seu com esse nome; não mexi nele. O claude-core tem uma versão disponível.`)
+    if (recorded && currentHash === recorded.hash) {
+      install(report.updated)
       continue
     }
 
-    if (currentHash === recorded.hash) {
-      install(report.updated)
+    if (force) {
+      install(report.overwritten)
+      continue
+    }
+
+    if (!recorded) {
+      report.kept.push(rel)
+      report.warnings.push(`${rel}: já existe um arquivo seu com esse nome; não mexi nele. O claude-core tem uma versão disponível.`)
       continue
     }
 
@@ -264,6 +271,7 @@ function printReport() {
   const sections = [
     ['Criados', report.created],
     ['Atualizados', report.updated],
+    ['Sobrescritos (--force)', report.overwritten],
     ['Removidos', report.removed],
     ['Já em dia (passaram a ser acompanhados)', report.adopted],
     ['Deixados como estavam', report.kept]
