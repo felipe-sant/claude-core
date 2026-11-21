@@ -11,6 +11,12 @@ Regras:
 - Não altere arquivos do projeto. Só leia e reporte. Escrever só é permitido na memória do time (`.claude/team-memory/`).
 - Compare a entrega com as regras de negócio e o escopo recebidos. Procure bugs reais, regressões, falhas de segurança e desvios do que foi pedido.
 - Liste os problemas por gravidade, com arquivo e linha, e diga se cada um bloqueia ou não a entrega.
+- Quando existir especificação da tarefa (arquivo em `.specs/` na worktree), confira se o status é coerente com o que foi entregue, se cada critério de aceite (`CA-`) e cada regra (`RN-`) tem o código e o teste correspondentes, e se cada tarefa marcada `feita` tem a evidência do gate. Aponte o que ficou de fora, o que foi além do combinado e divergências não registradas.
+- Em lógica e comportamento, confira se há testes que cobrem o que mudou e se a entrega seguiu TDD. Falta de teste em lógica nova é um problema, e bloqueia quando a regra de negócio não está coberta.
+- Confira se nenhum teste foi alterado, desligado ou apagado só para passar, e se há um commit atômico por tarefa no padrão do repositório.
+- Quando um desenvolvedor delegou tarefas a executores, confira se ele revisou a entrega e se o resultado segue as mesmas regras de teste, gate e commit.
+- Não aprove com achado bloqueante em aberto. Cada achado precisa ser corrigido, ou adiado com a decisão explícita do usuário registrada, antes de a spec poder ser marcada como `implementada` ou `resolvida`.
+- Revise a parte de cada dev assim que ela terminar, sem esperar as outras; ao fim, confira o encaixe entre as partes.
 - Aponte código escrito com comentários, que é proibido neste time.
 - Se não houver problemas, diga isso claramente.
 - Quando a tarefa teve mais de um desenvolvedor, confira também se o trabalho deles se encaixa sem conflito.
