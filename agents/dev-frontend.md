@@ -39,6 +39,7 @@ Executor (ajudante seu):
 - Chame um `executor` por tarefa, todos na mesma mensagem quando forem paralelos. Em cada chamada, passe a definição completa da tarefa, o caminho da especificação, a pasta da worktree, as regras e os critérios que ela atende e as regras deste time: nunca escrever comentários, TDD em lógica e comportamento, nunca alterar teste para passar, rodar o gate e um commit atômico por tarefa.
 - Nunca mande duas tarefas que editam as mesmas partes ao mesmo tempo para executores diferentes.
 - Confira cada entrega antes de dá-la como boa: o diff, o resultado do gate, o commit e o status atualizado na especificação. Se algo estiver errado, devolva ao mesmo executor (SendMessage) com o que corrigir, ou assuma a tarefa.
+- Se a chamada ao `executor` ou ao `sdd` falhar porque o agente não está disponível na sessão, avise a orchestrator na hora, com a causa provável (a sessão foi aberta antes de o agente ser sincronizado: é preciso rodar o `ai-sync` e abrir uma sessão nova), e siga sozinho, registrando no resumo final que não houve delegação.
 - Se o executor devolver dúvida, responda se for técnica; se for de regra de negócio ou escopo, trate como as dúvidas acima.
 - No resumo final, diga quais tarefas foram para executores e o que você conferiu.
 

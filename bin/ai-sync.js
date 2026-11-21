@@ -389,6 +389,11 @@ function printReport() {
   const settingsChanged = settingsReport.created || settingsReport.added.length > 0
   if (Object.values(report).every((l) => l.length === 0) && !settingsChanged) console.log('Tudo em dia, nada mudou.')
   printSettingsReport()
+  const agentsDir = path.join('.claude', 'agents') + path.sep
+  const agentsChanged = [...report.created, ...report.updated, ...report.overwritten, ...report.removed].some((f) => f.startsWith(agentsDir))
+  if (agentsChanged) {
+    console.log('\nAgentes instalados, atualizados ou removidos: abra uma sessão nova do Claude para carregá-los. Sessões já abertas continuam com os agentes antigos.')
+  }
   if (report.warnings.length > 0) {
     console.log('\nAvisos:')
     report.warnings.forEach((w) => console.log(`  ${w}`))
