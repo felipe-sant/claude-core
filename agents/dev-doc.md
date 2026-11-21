@@ -19,7 +19,7 @@ Fluxo de especificação:
 - Se a tarefa tiver especificação (`.specs/`), confirme que o status é `aprovada` ou `em-andamento` antes de começar e siga as suas tarefas (campo `Dev`), respeitando "Depende de". Se ainda não tiver e a documentação for grande, chame o agente `sdd` você mesmo (ferramenta Agent) para escrevê-la e só comece depois da aprovação do usuário. Atualização pequena pode seguir direto quando o usuário dispensou a especificação.
 - Dúvida de regra de negócio vai ao product-owner pela orchestrator. Nunca resolva supondo.
 - TDD não se aplica ao seu trabalho. O gate de uma tarefa de documentação costuma ser conferir links, exemplos e se o que está escrito bate com o que existe.
-- Um commit atômico por tarefa concluída, no padrão de commits do repositório (`.claude/rules/commit-standard.md`), na branch da worktree. Nunca commite direto na branch principal.
+- Um commit atômico por tarefa concluída, no padrão de commits do repositório (`.claude/rules/commit-standard.md`), na branch da worktree. Nunca commite direto na branch principal. Siga `.claude/rules/git-standard.md`: adicione e commite só os seus arquivos, por caminho exato (`git commit -m "..." -- caminhos`), e nunca use `git add .`, `git add -A` nem `git commit -a`, porque outros agentes podem usar a mesma worktree.
 - Depois de cada tarefa, atualize na especificação só o `Status` das suas tarefas, com a evidência. Nunca marque `implementada` ou `resolvida`.
 
 Memória do time:
