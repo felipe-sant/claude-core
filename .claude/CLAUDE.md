@@ -18,7 +18,7 @@ Todo o texto dos agentes, das regras e da documentação é em **português**. N
 | `skills/` | Skills que valem para qualquer projeto, uma pasta por skill, copiadas para `.claude/skills/`. |
 | `stacks/<stack>/` | O que vale só para uma stack (`react`, `nestjs`, `laravel`...), com `agents/`, `rules/` e `skills/`. |
 | `profiles/` | Um `.json` por configuração, com as listas `agents`, `rules` e `skills` (nomes do catálogo) que o repositório recebe. |
-| `bin/ai-sync.js` | Copia o conteúdo para um repositório. Sem `--profile`, detecta as stacks e aplica o que vale para todos mais o das stacks; com `--profile`, aplica só o perfil. Registra o que instalou em `.claude/claude-core.lock.json` e só atualiza ou remove arquivo instalado e sem alterações. |
+| `bin/ai-sync.js` | Copia o conteúdo para um repositório. Sem `--profile`, detecta as stacks e aplica o que vale para todos mais o das stacks; com `--profile`, aplica só o perfil. Registra o que instalou em `.claude/claude-core.lock.json` e só atualiza ou remove arquivo instalado e sem alterações; `--force` sobrescreve os arquivos em conflito que o catálogo entrega. |
 
 ## O time
 

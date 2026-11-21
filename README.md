@@ -96,7 +96,13 @@ O `ai-sync` registra o que instalou em `.claude/claude-core.lock.json` (caminho,
 - Em repositório que já foi configurado antes, os arquivos idênticos aos do `claude-core` passam a ser acompanhados; os diferentes ficam como estão, com aviso.
 - Ao final, lista o que foi criado, atualizado, removido e deixado como estava. Rodar de novo com tudo em dia não muda nada.
 
-Para receber a versão nova de um arquivo que você editou, apague-o e rode o `ai-sync` de novo. Versione o `claude-core.lock.json` junto com o repositório.
+Para receber a versão nova dos arquivos em conflito (os que você editou e os que já existiam sem registro, como em repositórios configurados pela versão antiga), rode com `--force`:
+
+```
+node ~/claude-core/bin/ai-sync.js --force
+```
+
+O `--force` sobrescreve só os arquivos que o `claude-core` entrega e que estão em conflito, e lista cada um em "Sobrescritos". Arquivos que o `claude-core` não entrega nunca são tocados, e as edições sobrescritas não voltam. Se quiser guardá-las, faça commit antes. Versione o `claude-core.lock.json` junto com o repositório.
 
 ## Perfis
 
