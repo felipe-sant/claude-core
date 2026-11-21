@@ -84,3 +84,56 @@ test('cada padrão de stack se limita aos arquivos da stack e todo padrão é cu
     }
   }
 })
+
+const generalSkills = ['bug-investigation', 'code-review', 'commit-message', 'create-pull-request', 'documentation']
+const stackSkills = { react: 'react-component', nestjs: 'nestjs-module' }
+
+function skillsOf(target) {
+  const dir = path.join(target, '.claude', 'skills')
+  return fs.existsSync(dir) ? fs.readdirSync(dir).sort() : []
+}
+
+for (const [stack, files] of Object.entries(projects)) {
+  test(`projeto ${stack} recebe as skills gerais e só as da própria stack`, () => {
+    const target = h.makeTarget(files)
+    sync(target)
+    const expected = stackSkills[stack] ? [...generalSkills, stackSkills[stack]] : generalSkills
+
+    assert.deepEqual(skillsOf(target), [...expected].sort())
+    for (const skill of expected) assert.ok(h.exists(target, `.claude/skills/${skill}/SKILL.md`))
+  })
+}
+
+test('projeto com React e NestJS recebe as skills das duas stacks', () => {
+  const target = h.makeTarget({
+    'web/package.json': projects.react['package.json'],
+    'api/package.json': projects.nestjs['package.json']
+  })
+  sync(target)
+
+  assert.deepEqual(skillsOf(target), [...generalSkills, 'react-component', 'nestjs-module'].sort())
+})
+
+test('skill editada no projeto não é sobrescrita e uma skill do usuário nunca é tocada', () => {
+  const target = h.makeTarget({
+    ...projects.react,
+    '.claude/skills/minha-skill/SKILL.md': '---\nname: minha-skill\ndescription: x\n---\n'
+  })
+  sync(target)
+  const file = path.join(target, '.claude', 'skills', 'code-review', 'SKILL.md')
+  const edited = `${fs.readFileSync(file, 'utf8')}\nMinha regra.\n`
+  fs.writeFileSync(file, edited)
+  const output = sync(target)
+
+  assert.equal(fs.readFileSync(file, 'utf8'), edited)
+  assert.match(output, /code-review\/SKILL\.md: você editou este arquivo/)
+  assert.ok(h.exists(target, '.claude/skills/minha-skill/SKILL.md'))
+})
+
+test('cada skill do catálogo diz quando usar e o que entrega', () => {
+  for (const [name, item] of Object.entries(catalog.skills)) {
+    const text = fs.readFileSync(path.join(h.repoRoot, item.path, 'SKILL.md'), 'utf8')
+    assert.match(text, /description: .*(Use quando|Use para)/, `${name} deve dizer quando usar`)
+    assert.match(text, /Entrega:/, `${name} deve dizer o que entrega`)
+  }
+})
