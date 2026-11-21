@@ -18,6 +18,9 @@ Todo o texto dos agentes, das regras e da documentação é em **português**. N
 | `skills/` | Skills que valem para qualquer projeto, uma pasta por skill, copiadas para `.claude/skills/`. |
 | `stacks/<stack>/` | O que vale só para uma stack (`react`, `nestjs`, `laravel`...), com `agents/`, `rules/` e `skills/`. |
 | `profiles/` | Um `.json` por configuração, com as listas `agents`, `rules` e `skills` (nomes do catálogo) que o repositório recebe. |
+| `lint/` | Regra do oxlint contra comentários e a checagem do formato de agentes, regras, skills e perfis. |
+| `tests/` | Testes do `ai-sync` e do formato do conteúdo, com `node --test`. |
+| `.github/workflows/ci.yml` | Roda `npm run lint` e `npm test` em todo PR. |
 | `bin/ai-sync.js` | Copia o conteúdo para um repositório. Sem `--profile`, detecta as stacks e aplica o que vale para todos mais o das stacks; com `--profile`, aplica só o perfil. Registra o que instalou em `.claude/claude-core.lock.json` e só atualiza ou remove arquivo instalado e sem alterações; `--force` sobrescreve os arquivos em conflito que o catálogo entrega. |
 
 ## O time
@@ -47,7 +50,7 @@ Fluxo: o `product-owner` define as regras, um dev chama o `sdd` para a especific
 
 ## Verificar uma mudança
 
-Rode a checagem e o `ai-sync` em uma pasta temporária e confira o resultado:
+Rode `npm run lint` e `npm test` (o CI roda os mesmos comandos). Toda mudança de comportamento do `ai-sync` ou de formato do conteúdo precisa de teste. Depois rode a checagem e o `ai-sync` em uma pasta temporária e confira o resultado:
 
 ```bash
 node bin/ai-sync.js --check
