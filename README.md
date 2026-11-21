@@ -122,6 +122,15 @@ Ficam em `rules/*.md` e o Claude Code as carrega sozinho a partir de `.claude/ru
 
 - `commit-standard`: tipos de alteração com ícone e padrão de branches e commits (`Fix :bug: [#5] Troca <a href> por <Link>`).
 
+## Testes e lint
+
+Requer Node 22 ou mais novo. Instale as dependências de desenvolvimento uma vez com `npm ci`.
+
+- `npm test`: roda os testes do `ai-sync` (detecção de stack, arquivos do usuário preservados, atualização e remoção seguras, `--force`) e da consistência do catálogo e dos perfis. Eles trabalham só em pastas temporárias.
+- `npm run lint`: roda o oxlint no código Node e a checagem do formato dos agentes (cabeçalho com `name`, `description` e `model`, nome igual ao do arquivo), das regras, das skills, dos perfis e dos JSON. A regra de nunca escrever comentários no código também é conferida aqui.
+
+O GitHub roda os dois em todo PR (`.github/workflows/ci.yml`), com os mesmos comandos. PR com lint ou teste quebrado não passa na checagem.
+
 ## Adicionar um item
 
 1. Crie o arquivo: `agents/nome.md` (com o cabeçalho `name`, `description`, `model`), `rules/nome.md` ou `skills/nome/SKILL.md`. Se for só de uma stack, use `stacks/<stack>/...`.
