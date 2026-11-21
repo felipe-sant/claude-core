@@ -21,11 +21,14 @@ Todo o texto dos agentes, das regras e da documentação é em **português**. N
 
 - `orchestrator`: única sessão que fala com o usuário e só delega. Só pode chamar agentes e perguntar ao usuário.
 - `product-owner`: fonte das regras de negócio. Consulta e cria tarefas, nunca define prioridade, e só edita ou apaga tarefa quando o usuário pediu isso de forma explícita.
-- `dev-frontend`, `dev-backend`, `reviewer`, `qa` e `designer`.
+- `sdd`: escreve a especificação da tarefa, só a pedido de um dev, e não grava na memória.
+- `executor`: ajudante dos devs, executa uma tarefa da especificação (teste primeiro, gate, commit). Só um dev o chama e ele leva no prompt a regra de não escrever comentários.
+- Devs: `dev-frontend`, `dev-backend`, `dev-mobile`, `dev-devops`, `dev-database`, `dev-fullstack` e `dev-doc` (este nunca define regra de negócio).
+- `reviewer`, `qa` e `designer`.
 
-O time é montado por tarefa, com mais de um dev do mesmo tipo quando o escopo pedir. O `reviewer` é obrigatório sempre que houver dev. `qa` e `designer` são opcionais: a `orchestrator` informa que existem e o usuário decide.
+O time é montado por tarefa, com mais de um agente do mesmo papel quando o escopo pedir, e o trabalho é dividido para rodar em paralelo. O nome de cada agente é perguntado em uma pergunta individual, e um tema opcional (como Jujutsu Kaisen) faz a orchestrator sugerir os nomes. O `reviewer` é obrigatório sempre que houver dev. `qa` e `designer` são opcionais: a `orchestrator` informa que existem e o usuário decide.
 
-Fluxo: o `product-owner` define as regras, os devs implementam, o `reviewer` revisa, o `designer` entra em mudanças visuais e o `qa` valida.
+Fluxo: o `product-owner` define as regras, um dev chama o `sdd` para a especificação, o usuário aprova, os devs implementam (delegando as tarefas mecânicas e paralelas ao `executor`) com TDD em lógica e comportamento, o `reviewer` revisa (conferindo especificação e testes), o `designer` entra em mudanças visuais e o `qa` valida. A especificação fica inteira em `.specs/<branch>.md` na worktree, commitada, com tipo, tamanho, status, IDs de regra e critério e tarefas com `[P]`, dependências e gate. Cada dev faz um commit atômico por tarefa. O usuário pode dispensá-la em tarefa pequena.
 
 ## Regras ao editar
 

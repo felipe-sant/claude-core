@@ -2,8 +2,15 @@
   "agents": [
     "orchestrator",
     "product-owner",
+    "sdd",
+    "executor",
     "dev-frontend",
     "dev-backend",
+    "dev-mobile",
+    "dev-devops",
+    "dev-database",
+    "dev-fullstack",
+    "dev-doc",
     "reviewer",
     "qa",
     "designer"
