@@ -144,5 +144,41 @@
       "description": "Padrão para aplicações AdonisJS."
     }
   },
-  "skills": {}
+  "skills": {
+    "commit-message": {
+      "path": "skills/commit-message",
+      "applies": ["all"],
+      "description": "Cria o commit no padrão do projeto."
+    },
+    "create-pull-request": {
+      "path": "skills/create-pull-request",
+      "applies": ["all"],
+      "description": "Abre um pull request com título no padrão e descrição clara."
+    },
+    "code-review": {
+      "path": "skills/code-review",
+      "applies": ["all"],
+      "description": "Revisa uma mudança e entrega achados por gravidade, sem alterar o código."
+    },
+    "bug-investigation": {
+      "path": "skills/bug-investigation",
+      "applies": ["all"],
+      "description": "Descobre a causa de um bug com evidências e propõe a correção e o teste."
+    },
+    "documentation": {
+      "path": "skills/documentation",
+      "applies": ["all"],
+      "description": "Escreve e atualiza a documentação a partir do que o código faz."
+    },
+    "react-component": {
+      "path": "stacks/react/skills/react-component",
+      "applies": ["react"],
+      "description": "Cria ou altera um componente React com teste primeiro."
+    },
+    "nestjs-module": {
+      "path": "stacks/nestjs/skills/nestjs-module",
+      "applies": ["nestjs"],
+      "description": "Cria um módulo NestJS completo com testes primeiro."
+    }
+  }
 }

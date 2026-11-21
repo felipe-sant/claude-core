@@ -22,7 +22,7 @@ test('conteúdo bem formado não gera erros', () => {
   const root = fixture({
     'agents/qa.md': goodAgent('qa'),
     'rules/padrao.md': '# Padrão\n',
-    'skills/demo/SKILL.md': 'x\n',
+    'skills/demo/SKILL.md': '---\nname: demo\ndescription: Faz algo\n---\n\n# Demo\n',
     'profiles/default.json': '{ "agents": ["qa"], "rules": [] }\n',
     'catalog.json': '{}\n',
     'stacks/react/agents/dev-react.md': goodAgent('dev-react')
@@ -50,12 +50,21 @@ test('agente sem cabeçalho, sem campo obrigatório ou com nome diferente do arq
   assert.match(errors, /nao-md\.txt: agente deve ser um arquivo \.md/)
 })
 
-test('regra sem título e skill sem SKILL.md são reprovadas', () => {
-  const root = fixture({ 'rules/sem-titulo.md': 'texto\n', 'skills/vazia/outro.md': 'x\n' })
+test('regra sem título e skill sem SKILL.md ou com cabeçalho errado são reprovadas', () => {
+  const root = fixture({
+    'rules/sem-titulo.md': 'texto\n',
+    'skills/vazia/outro.md': 'x\n',
+    'skills/sem-cabecalho/SKILL.md': '# Só texto\n',
+    'skills/nome-errado/SKILL.md': '---\nname: outro\ndescription: x\n---\n',
+    'skills/sem-descricao/SKILL.md': '---\nname: sem-descricao\n---\n'
+  })
   const errors = lintContent(root).join('\n')
 
   assert.match(errors, /sem-titulo\.md: a regra deve começar com um título/)
   assert.match(errors, /skills\/vazia: falta o SKILL\.md/)
+  assert.match(errors, /skills\/sem-cabecalho\/SKILL\.md: falta o cabeçalho/)
+  assert.match(errors, /skills\/nome-errado\/SKILL\.md: "name" \(outro\)/)
+  assert.match(errors, /skills\/sem-descricao\/SKILL\.md: falta "description"/)
 })
 
 test('perfil com JSON inválido, chave desconhecida ou nomes repetidos é reprovado', () => {

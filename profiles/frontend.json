@@ -17,5 +17,12 @@
     "testing-standard",
     "security-standard",
     "review-standard"
+  ],
+  "skills": [
+    "commit-message",
+    "create-pull-request",
+    "code-review",
+    "bug-investigation",
+    "documentation"
   ]
 }

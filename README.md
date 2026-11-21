@@ -30,7 +30,6 @@ O campo `applies` de cada item do catálogo diz a que projetos ele serve: `["all
 
 O que falta para a nova função está nas issues:
 
-- [#6](https://github.com/felipe-sant/claude-core/issues/6) skills úteis;
 - [#7](https://github.com/felipe-sant/claude-core/issues/7) agentes de utilidade além do time;
 - [#8](https://github.com/felipe-sant/claude-core/issues/8) configuração base do Claude para cada projeto;
 - [#1](https://github.com/felipe-sant/claude-core/issues/1) fluxo de especificação e testes (SDD e TDD) para os devs.
@@ -133,6 +132,24 @@ Por stack, aplicadas só quando a stack é detectada no projeto:
 - Têm `paths` no cabeçalho, então o Claude só as carrega ao mexer em arquivos da stack. Em um repositório com painel React e API NestJS, cada padrão aparece só nos arquivos certos.
 
 Você pode editar uma regra no projeto: a próxima sincronização não a sobrescreve e avisa se houver versão nova (veja "Sincronização segura"). Regras novas seguem o fluxo de "Adicionar um item". Os perfis manuais (`--profile`) incluem só as regras gerais.
+
+## Skills
+
+Ficam em `skills/<nome>/SKILL.md` (gerais) e `stacks/<stack>/skills/<nome>/SKILL.md` (por stack) e vão para `.claude/skills/` do projeto. O Claude as usa sozinho quando o pedido combina com a `description`, ou você as chama por `/nome`. Cada uma diz quando usar e o que entrega.
+
+Gerais, aplicadas em qualquer projeto:
+
+- `commit-message`: cria o commit no padrão do projeto, dividindo mudanças que misturam propósitos.
+- `create-pull-request`: roda lint e testes, faz o push (com sua confirmação) e abre o PR com título no padrão e descrição clara.
+- `code-review`: revisa uma mudança e entrega achados que bloqueiam ou são sugestões, sem alterar o código.
+- `bug-investigation`: acha a causa com evidências e propõe a correção e o teste, sem aplicar.
+- `documentation`: escreve e atualiza a documentação a partir do que o código faz.
+
+Por stack, aplicadas só quando a stack é detectada:
+
+- `react-component` (React) e `nestjs-module` (NestJS), ambas com teste primeiro.
+
+Como o resto, uma skill editada no projeto não é sobrescrita pela próxima sincronização. Os perfis manuais incluem só as skills gerais.
 
 ## Testes e lint
 

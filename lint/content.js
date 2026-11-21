@@ -72,7 +72,18 @@ function lintRule(file, label, errors) {
 }
 
 function lintSkill(dir, label, errors) {
-  if (!fs.existsSync(path.join(dir, 'SKILL.md'))) errors.push(`${label}: falta o SKILL.md`)
+  const file = path.join(dir, 'SKILL.md')
+  if (!fs.existsSync(file)) return errors.push(`${label}: falta o SKILL.md`)
+  const data = parseFrontmatter(fs.readFileSync(file, 'utf8'))
+  if (!data) return errors.push(`${label}/SKILL.md: falta o cabeçalho entre "---" no início do arquivo`)
+  if (data.invalid) return errors.push(`${label}/SKILL.md: linha inválida no cabeçalho: "${data.invalid}"`)
+  if (!data.name) errors.push(`${label}/SKILL.md: falta "name" no cabeçalho`)
+  else if (data.name !== path.basename(dir)) errors.push(`${label}/SKILL.md: "name" (${data.name}) deve ser igual ao nome da pasta`)
+  if (!data.description) errors.push(`${label}/SKILL.md: falta "description" no cabeçalho`)
+  else if (data.description.length > 1024) errors.push(`${label}/SKILL.md: "description" passa de 1024 caracteres`)
+  if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(path.basename(dir))) {
+    errors.push(`${label}: o nome da pasta deve ser em minúsculas, com hífen`)
+  }
 }
 
 function lintProfile(file, label, errors) {
