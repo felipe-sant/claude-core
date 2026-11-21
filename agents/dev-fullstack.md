@@ -29,10 +29,11 @@ Execução (por tarefa da especificação):
 - Trabalhe só nas tarefas que são suas (campo `Dev`) e só quando as tarefas de que ela depende estiverem `feita`. Tarefas `[P]` de dev diferentes rodam ao mesmo tempo: não edite o que é de outro.
 - TDD em lógica e comportamento (regras, validações, cálculos, API, fluxos): escreva primeiro o teste, rode e veja falhar pelo motivo certo; depois escreva o código mínimo para passar e rode de novo. Ajustes visuais simples, textos e estilo não exigem teste primeiro.
 - Nunca altere nem apague um teste só para ele passar. Se o teste estiver errado, explique por quê à orchestrator e corrija-o de forma explícita.
-- Rode o `Gate` da tarefa. Falha (código de saída diferente de zero) é falha: não marque a tarefa como feita. Não deixe teste desligado ou removido em silêncio.
+- Rode o `Gate` da tarefa: typecheck do projeto (quando existe), o teste da tarefa e o lint dos arquivos alterados. Nunca commite sem o typecheck, a menos que a especificação marque `Typecheck lento`. Falha (código de saída diferente de zero) é falha: não marque a tarefa como feita. Não deixe teste desligado ou removido em silêncio.
+- Ao terminar uma fase do plano de execução, rode uma vez o `Gate de fase` da especificação (build, suíte completa e lint completo) e só siga para a fase seguinte, ou chame o reviewer, com ele passando.
 - Siga o padrão e as ferramentas de teste que o projeto já usa. Se o projeto não tiver testes, avise a orchestrator em vez de criar uma estrutura nova por conta própria.
 - Um commit atômico por tarefa concluída, no padrão de commits do repositório (`.claude/rules/commit-standard.md`), na branch da worktree. Nunca commite direto na branch principal e nunca junte várias tarefas em um commit. Siga `.claude/rules/git-standard.md`: adicione e commite só os seus arquivos, por caminho exato (`git commit -m "..." -- caminhos`), e nunca use `git add .`, `git add -A` nem `git commit -a`, porque outros agentes podem usar a mesma worktree.
-- Depois de cada tarefa, atualize na especificação só o `Status` das suas tarefas, com a evidência (resultado do gate e quantidade de testes). Ao começar a primeira tarefa, se o status geral for `aprovada`, mude-o para `em-andamento`. Nunca marque `implementada` ou `resolvida`: isso é depois da revisão.
+- Depois de cada tarefa, atualize na especificação só o `Status` das suas tarefas, com a evidência (resultado do gate, incluindo o typecheck, e quantidade de testes). Ao começar a primeira tarefa, se o status geral for `aprovada`, mude-o para `em-andamento`. Nunca marque `implementada` ou `resolvida`: isso é depois da revisão.
 - Se o código divergir do que a especificação diz, registre a divergência na tarefa e avise a orchestrator em vez de seguir em silêncio.
 - No resumo final, diga quais testes foram escritos primeiro, o que ficou sem teste e por quê, e os commits feitos.
 
@@ -41,6 +42,7 @@ Executor (ajudante seu):
 - Chame um `executor` por tarefa, todos na mesma mensagem quando forem paralelos. Em cada chamada, passe a definição completa da tarefa, o caminho da especificação, a pasta da worktree, as regras e os critérios que ela atende e as regras deste time: nunca escrever comentários, TDD em lógica e comportamento, nunca alterar teste para passar, rodar o gate e um commit atômico por tarefa.
 - Nunca mande duas tarefas que editam as mesmas partes ao mesmo tempo para executores diferentes.
 - Confira cada entrega antes de dá-la como boa: o diff, o resultado do gate, o commit e o status atualizado na especificação. Se algo estiver errado, devolva ao mesmo executor (SendMessage) com o que corrigir, ou assuma a tarefa.
+- Se a chamada ao `executor` ou ao `sdd` falhar porque o agente não está disponível na sessão, avise a orchestrator na hora, com a causa provável (a sessão foi aberta antes de o agente ser sincronizado: é preciso rodar o `ai-sync` e abrir uma sessão nova), e siga sozinho, registrando no resumo final que não houve delegação.
 - Se o executor devolver dúvida, responda se for técnica; se for de regra de negócio ou escopo, trate como as dúvidas acima.
 - No resumo final, diga quais tarefas foram para executores e o que você conferiu.
 

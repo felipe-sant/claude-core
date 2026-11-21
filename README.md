@@ -78,6 +78,7 @@ O `ai-sync` registra o que instalou em `.claude/claude-core.lock.json` (caminho,
 - Arquivo instalado que você editou não é tocado. A ferramenta avisa e diz se há versão nova disponível.
 - Em repositório já configurado antes, os arquivos idênticos aos do `claude-core` passam a ser acompanhados; os diferentes ficam como estão, com aviso.
 - Rodar de novo com tudo em dia não muda nada.
+- Quando agentes são instalados, atualizados ou removidos, a ferramenta avisa para abrir uma sessão nova do Claude: sessões já abertas continuam com os agentes antigos. Se um dev não conseguir chamar o `executor` ou o `sdd`, ele avisa a `orchestrator`, que orienta você a rodar o `ai-sync` e abrir uma sessão nova.
 
 Para receber a versão nova dos arquivos em conflito (os que você editou e os que já existiam sem registro), rode com `--force`. Ele sobrescreve só os arquivos que o `claude-core` entrega e que estão em conflito, e lista cada um em "Sobrescritos". Arquivos que o `claude-core` não entrega nunca são tocados, e as edições sobrescritas não voltam: faça commit antes se quiser guardá-las.
 
@@ -135,8 +136,17 @@ Fica em um único arquivo, `.specs/<nome-da-branch>.md`, na worktree da tarefa, 
 
 - Tem tipo (funcionalidade ou bug), tamanho (pequena, média ou grande) e status (`em-revisao`, `aprovada`, `em-andamento`, `implementada` ou `resolvida`).
 - Regras e critérios de aceite têm IDs (`RN-01`, `CA-01`) no formato "QUANDO ... ENTÃO o sistema DEVE ...".
-- Cada tarefa traz de quem é, do que depende, o gate de verificação e se é paralela (`[P]`) ou mecânica (modelo econômico).
+- Cada tarefa traz de quem é, do que depende, o gate e se é paralela (`[P]`) ou mecânica (modelo econômico).
 - Nada é codificado antes da sua aprovação, a menos que você dispense a especificação. As tarefas `[P]` rodam ao mesmo tempo.
+
+### Gate de verificação
+
+O gate tem dois níveis, para não rodar build e suíte inteira a cada commit:
+
+- **Gate da tarefa**, em todo commit: typecheck do projeto (quando existe), o teste da tarefa e o lint dos arquivos alterados. Nunca se commita sem o typecheck.
+- **Gate de fase**, uma vez ao fim de cada fase do plano e antes do `reviewer`: build, suíte completa e lint completo.
+
+O `sdd` descobre os comandos no projeto (`package.json`, `Makefile` ou CI) e os escreve na especificação. Se o typecheck do projeto leva minutos, ele marca `Typecheck lento` com o tempo medido e o typecheck passa para o gate de fase, aceitando que commits intermediários possam não compilar. Os devs registram o resultado, incluindo o typecheck, no Status de cada tarefa, e o `reviewer` confere essa evidência e roda o gate de fase uma vez no último commit.
 
 ### Como o time é montado
 

@@ -440,3 +440,30 @@ test('cada perfil do repositório aplica em um projeto limpo e roda de novo sem 
     assert.equal(h.snapshot(target), before)
   }
 })
+
+test('avisa para abrir uma sessão nova quando agentes são instalados, atualizados ou removidos', () => {
+  const core = basicCore()
+  const target = h.makeTarget()
+  const first = h.run(core, target)
+  assert.match(first.output, /abra uma sessão nova do Claude/)
+
+  const idle = h.run(core, target)
+  assert.doesNotMatch(idle.output, /sessão nova/)
+
+  h.setContent(core, 'agents/qa.md', agent('qa', ' novo'))
+  assert.match(h.run(core, target).output, /abra uma sessão nova do Claude/)
+
+  h.removeItem(core, 'agents', 'designer')
+  assert.match(h.run(core, target).output, /abra uma sessão nova do Claude/)
+})
+
+test('não manda abrir sessão nova quando só regras mudam', () => {
+  const core = basicCore()
+  const target = h.makeTarget()
+  h.run(core, target)
+  h.setContent(core, 'rules/commit-standard.md', '# Commits\n\nmais uma linha\n')
+  const result = h.run(core, target)
+
+  assert.match(result.output, /Atualizados:\n\s+\.claude\/rules\/commit-standard\.md/)
+  assert.doesNotMatch(result.output, /sessão nova/)
+})

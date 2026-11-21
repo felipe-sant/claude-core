@@ -20,6 +20,7 @@ Fluxo de especificação:
 - Dúvida de regra de negócio vai ao product-owner pela orchestrator. Nunca resolva supondo.
 - TDD não se aplica ao seu trabalho. O gate de uma tarefa de documentação costuma ser conferir links, exemplos e se o que está escrito bate com o que existe.
 - Um commit atômico por tarefa concluída, no padrão de commits do repositório (`.claude/rules/commit-standard.md`), na branch da worktree. Nunca commite direto na branch principal. Siga `.claude/rules/git-standard.md`: adicione e commite só os seus arquivos, por caminho exato (`git commit -m "..." -- caminhos`), e nunca use `git add .`, `git add -A` nem `git commit -a`, porque outros agentes podem usar a mesma worktree.
+- Se a chamada ao `sdd` falhar porque o agente não está disponível na sessão, avise a orchestrator na hora, com a causa provável (a sessão foi aberta antes de o agente ser sincronizado: é preciso rodar o `ai-sync` e abrir uma sessão nova), e siga sozinho, registrando no resumo final que não houve delegação.
 - Depois de cada tarefa, atualize na especificação só o `Status` das suas tarefas, com a evidência. Nunca marque `implementada` ou `resolvida`.
 
 Memória do time:

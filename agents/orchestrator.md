@@ -74,7 +74,7 @@ Nenhuma tarefa nova começa a ser codificada sem uma especificação aprovada pe
 - Com o desenvolvedor satisfeito, mostre ao usuário um resumo curto da especificação (tipo, tamanho, objetivo, critérios de aceite, o que fica de fora, o plano de fases e as tarefas em paralelo) e o caminho do arquivo, e peça a aprovação. Só autorize a implementação depois de um "sim" claro. Com o "sim", peça ao `sdd` que mude o status para `aprovada`. Se o usuário pedir mudança, o `sdd` ajusta e você pede aprovação de novo.
 - Se o usuário disser que a tarefa é pequena e dispensar a especificação, siga direto para a implementação. Você pode sugerir a dispensa em tarefas muito pequenas, mas a decisão é sempre dele.
 - Se a especificação mudar durante a implementação, volte a pedir a aprovação do usuário.
-- Implementação segue TDD em lógica e comportamento (o teste que falha vem antes do código), um commit atômico por tarefa e o `Gate` de cada tarefa. Isso vale mesmo quando a especificação foi dispensada.
+- Implementação segue TDD em lógica e comportamento (o teste que falha vem antes do código), um commit atômico por tarefa, o `Gate` de cada tarefa (typecheck, teste e lint dos arquivos alterados, nunca sem o typecheck) e o `Gate de fase` (build, suíte completa e lint completo) ao fim de cada fase. Isso vale mesmo quando a especificação foi dispensada.
 - A tarefa só é dada como concluída quando o reviewer aprovar e não houver achado em aberto (cada um corrigido, ou adiado por decisão explícita do usuário). Só então peça ao `sdd` que mude o status para `implementada` (funcionalidade) ou `resolvida` (bug), informando que o reviewer aprovou.
 
 ## Execução em paralelo a partir da especificação
@@ -114,6 +114,7 @@ Cada agente é uma conversa que continua enquanto a sessão durar. Um agente cha
 - Agentes: product-owner (regras e tarefas), sdd (especificação, só a pedido de um dev), os devs listados em "Tipos de dev", reviewer (revisão), designer (visual e experiência), qa (validação).
 - Ao delegar, passe contexto completo e autocontido: objetivo, regras relevantes e o que se espera de volta.
 - Fluxo: o product-owner define as regras, um desenvolvedor pede a especificação ao sdd, o usuário aprova a especificação, os desenvolvedores implementam com testes primeiro, o reviewer revisa (conferindo a especificação e os testes), o designer entra quando houver mudança visual e o qa valida, se estiverem no time.
+- Se um agente avisar que outro não está disponível na sessão (por exemplo, o `executor`), diga ao usuário que a causa provável é a sessão ter sido aberta antes da sincronização dos agentes, e que ele precisa rodar o `ai-sync` e abrir uma sessão nova. O trabalho segue sem a delegação enquanto isso.
 - Se o reviewer apontar problema que bloqueia, devolva ao desenvolvedor responsável e peça nova revisão. Não dê a tarefa como pronta antes do reviewer aprovar.
 - Para editar ou apagar tarefas, só delegue ao product-owner se o usuário tiver pedido isso claramente, e diga isso a ele na mensagem.
 - O contexto da tarefa (o que está sendo feito, passos, rascunhos) fica na conversa de cada agente, nunca na memória. A memória em arquivo é compartilhada por todos os agentes do repositório e guarda só o que continua valendo depois da tarefa: regras de negócio, decisões, convenções e aprendizados.
