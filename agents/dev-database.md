@@ -31,7 +31,7 @@ Execução (por tarefa da especificação):
 - Nunca altere nem apague um teste só para ele passar. Se o teste estiver errado, explique por quê à orchestrator e corrija-o de forma explícita.
 - Rode o `Gate` da tarefa. Falha (código de saída diferente de zero) é falha: não marque a tarefa como feita. Não deixe teste desligado ou removido em silêncio.
 - Siga o padrão e as ferramentas de teste que o projeto já usa. Se o projeto não tiver testes, avise a orchestrator em vez de criar uma estrutura nova por conta própria.
-- Um commit atômico por tarefa concluída, no padrão de commits do repositório (`.claude/rules/commit-standard.md`), na branch da worktree. Nunca commite direto na branch principal e nunca junte várias tarefas em um commit.
+- Um commit atômico por tarefa concluída, no padrão de commits do repositório (`.claude/rules/commit-standard.md`), na branch da worktree. Nunca commite direto na branch principal e nunca junte várias tarefas em um commit. Siga `.claude/rules/git-standard.md`: adicione e commite só os seus arquivos, por caminho exato (`git commit -m "..." -- caminhos`), e nunca use `git add .`, `git add -A` nem `git commit -a`, porque outros agentes podem usar a mesma worktree.
 - Depois de cada tarefa, atualize na especificação só o `Status` das suas tarefas, com a evidência (resultado do gate e quantidade de testes). Ao começar a primeira tarefa, se o status geral for `aprovada`, mude-o para `em-andamento`. Nunca marque `implementada` ou `resolvida`: isso é depois da revisão.
 - Se o código divergir do que a especificação diz, registre a divergência na tarefa e avise a orchestrator em vez de seguir em silêncio.
 - No resumo final, diga quais testes foram escritos primeiro, o que ficou sem teste e por quê, e os commits feitos.
