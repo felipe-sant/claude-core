@@ -74,3 +74,21 @@ test('perfil com JSON inválido, chave desconhecida ou nomes repetidos é reprov
   assert.match(errors, /formato\.json: "agents" deve ser uma lista/)
   assert.match(errors, /catalog\.json: o arquivo deve terminar com uma quebra de linha/)
 })
+
+test('regra com paths válidos é aceita e regra com cabeçalho fora do formato é reprovada', () => {
+  const ok = fixture({ 'rules/com-paths.md': '---\npaths:\n  - "**/*.tsx"\n---\n\n# Regra\n' })
+  assert.deepEqual(lintContent(ok), [])
+
+  const ruim = fixture({
+    'rules/outra-chave.md': '---\ntitle: x\n---\n\n# Regra\n',
+    'rules/sem-fechar.md': '---\npaths:\n  - "a"\n# Regra\n',
+    'rules/sem-aspas.md': '---\npaths:\n  - a\n---\n\n# Regra\n',
+    'rules/sem-titulo-depois.md': '---\npaths:\n  - "a"\n---\n\ntexto\n'
+  })
+  const errors = lintContent(ruim).join('\n')
+
+  assert.match(errors, /outra-chave\.md: o cabeçalho da regra só aceita "paths:"/)
+  assert.match(errors, /sem-fechar\.md: cabeçalho sem o "---" de fechamento/)
+  assert.match(errors, /sem-aspas\.md: o cabeçalho da regra só aceita "paths:"/)
+  assert.match(errors, /sem-titulo-depois\.md: a regra deve começar com um título/)
+})

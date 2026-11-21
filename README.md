@@ -30,7 +30,6 @@ O campo `applies` de cada item do catálogo diz a que projetos ele serve: `["all
 
 O que falta para a nova função está nas issues:
 
-- [#5](https://github.com/felipe-sant/claude-core/issues/5) padrões de desenvolvimento gerais e por stack;
 - [#6](https://github.com/felipe-sant/claude-core/issues/6) skills úteis;
 - [#7](https://github.com/felipe-sant/claude-core/issues/7) agentes de utilidade além do time;
 - [#8](https://github.com/felipe-sant/claude-core/issues/8) configuração base do Claude para cada projeto;
@@ -118,9 +117,22 @@ Cada perfil pode ter as listas `agents`, `rules` e `skills`, com nomes registrad
 
 ## Regras
 
-Ficam em `rules/*.md` e o Claude Code as carrega sozinho a partir de `.claude/rules/`.
+Ficam em `rules/*.md` (gerais) e `stacks/<stack>/rules/*.md` (por stack). O Claude Code as carrega sozinho a partir de `.claude/rules/`, sem nenhuma ação sua. Cada uma é curta e diz no início quando vale.
+
+Gerais, aplicadas em qualquer projeto:
 
 - `commit-standard`: tipos de alteração com ícone e padrão de branches e commits (`Fix :bug: [#5] Troca <a href> por <Link>`).
+- `code-standard`: estilo de código, incluindo nunca escrever comentários.
+- `testing-standard`: testes primeiro (TDD), teste para cada bug e nunca alterar teste só para passar.
+- `security-standard`: segredos, validação de entrada, acesso, senhas e dependências.
+- `review-standard`: como preparar e como fazer uma revisão de código.
+
+Por stack, aplicadas só quando a stack é detectada no projeto:
+
+- `react-standard` (React), `nestjs-standard` (NestJS), `laravel-standard` (Laravel) e `adonisjs-standard` (AdonisJS).
+- Têm `paths` no cabeçalho, então o Claude só as carrega ao mexer em arquivos da stack. Em um repositório com painel React e API NestJS, cada padrão aparece só nos arquivos certos.
+
+Você pode editar uma regra no projeto: a próxima sincronização não a sobrescreve e avisa se houver versão nova (veja "Sincronização segura"). Regras novas seguem o fluxo de "Adicionar um item". Os perfis manuais (`--profile`) incluem só as regras gerais.
 
 ## Testes e lint
 

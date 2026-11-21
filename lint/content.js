@@ -58,7 +58,15 @@ function lintAgent(file, label, errors) {
 }
 
 function lintRule(file, label, errors) {
-  const text = fs.readFileSync(file, 'utf8')
+  let text = fs.readFileSync(file, 'utf8')
+  if (text.startsWith('---\n')) {
+    const end = text.indexOf('\n---\n', 4)
+    if (end === -1) return errors.push(`${label}: cabeçalho sem o "---" de fechamento`)
+    const header = text.slice(4, end).split('\n')
+    const valid = header[0] === 'paths:' && header.length > 1 && header.slice(1).every((l) => /^ {2}- "[^"]+"$/.test(l))
+    if (!valid) errors.push(`${label}: o cabeçalho da regra só aceita "paths:" com uma lista de padrões entre aspas`)
+    text = text.slice(end + 5).replace(/^\n/, '')
+  }
   if (!text.startsWith('# ')) errors.push(`${label}: a regra deve começar com um título "# ..."`)
   if (!text.endsWith('\n')) errors.push(`${label}: o arquivo deve terminar com uma quebra de linha`)
 }
