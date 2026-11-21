@@ -1,65 +1,20 @@
 # claude-core
 
-Ferramenta que roda em outros repositórios para configurar o Claude Code e o sistema de desenvolvimento da melhor forma: padrões de desenvolvimento, skills úteis e agentes de utilidade, tudo aplicado com um comando.
+Ferramenta que roda em outros repositórios para configurar o Claude Code e o sistema de desenvolvimento da melhor forma, com um comando. Ela leva para cada projeto o time de agentes, os padrões de desenvolvimento e as skills que servem a ele, escolhendo sozinha o que é de cada stack.
 
-## Estado atual
+## Em resumo
 
-Hoje o repositório já entrega:
+| O que | Quantos | Onde fica no projeto |
+| --- | --- | --- |
+| Agentes (o time) | 14 | `.claude/agents/` |
+| Regras (padrões de desenvolvimento) | 5 gerais e 4 por stack | `.claude/rules/` |
+| Skills | 5 gerais e 2 por stack | `.claude/skills/` |
 
-- o time de agentes (orquestrador, product owner, devs, revisor, QA e designer);
-- o padrão de branches e commits, como regra do Claude;
-- perfis que escolhem o que cada repositório recebe;
-- o `catalog.json`, que descreve tudo o que existe e a que projetos cada item se aplica;
-- o `ai-sync`, que copia isso para um repositório e libera a pasta de worktrees das tarefas.
-
-## Estrutura
-
-| Pasta ou arquivo | Conteúdo |
-| --- | --- |
-| `catalog.json` | Arquivo central. Registra cada agente, regra e skill com caminho, a que projetos se aplica e descrição. |
-| `agents/` | Agentes que valem para qualquer projeto. |
-| `rules/` | Padrões que valem para qualquer projeto. |
-| `skills/` | Skills que valem para qualquer projeto (uma pasta por skill, com `SKILL.md`). |
-| `stacks/<stack>/` | O que vale só para uma stack (`react`, `nestjs`, `laravel`...), com as mesmas subpastas `agents/`, `rules/` e `skills/`. |
-| `profiles/` | Escolhem o que cada repositório recebe. |
-| `bin/ai-sync.js` | Aplica um perfil em um repositório. |
-
-O campo `applies` de cada item do catálogo diz a que projetos ele serve: `["all"]` para qualquer projeto ou uma lista de stacks, como `["react"]`. Itens de stack ficam em `stacks/<stack>/` e o `path` do catálogo aponta para lá. A configuração base do Claude por projeto está na issue [#8](https://github.com/felipe-sant/claude-core/issues/8).
-
-## Planejado
-
-O que falta para a nova função está nas issues:
-
-- [#7](https://github.com/felipe-sant/claude-core/issues/7) agentes de utilidade além do time;
-- [#8](https://github.com/felipe-sant/claude-core/issues/8) configuração base do Claude para cada projeto;
-- [#1](https://github.com/felipe-sant/claude-core/issues/1) fluxo de especificação e testes (SDD e TDD) para os devs.
-
-## Time de agentes
-
-| Agente | Papel |
-| --- | --- |
-| `orchestrator` | Orquestrador. Única sessão que fala com o usuário. Só delega. |
-| `product-owner` | Product Owner. Fonte das regras. Consulta e cria tarefas. Edita ou apaga só a pedido explícito do usuário. |
-| `sdd` | Escreve a especificação da tarefa (SDD). Só é chamado por um dev. |
-| `executor` | Ajudante dos devs. Executa uma tarefa bem definida da especificação, com teste primeiro, gate e commit. Só é chamado por um dev. |
-| `dev-frontend` | Implementa telas. |
-| `dev-backend` | Implementa API e dados. |
-| `dev-mobile` | Implementa aplicativos de celular. |
-| `dev-devops` | Infraestrutura, pipelines de entrega e ambientes. |
-| `dev-database` | Modelagem, migrações e consultas. |
-| `dev-fullstack` | Tarefa pequena que atravessa tela e API, com uma pessoa só. |
-| `dev-doc` | Atualiza a documentação. Nunca define regra de negócio. |
-| `reviewer` | Revisa a entrega dos devs. Obrigatório sempre que houver dev na tarefa. |
-| `qa` | Valida a entrega. |
-| `designer` | Visual e experiência de uso. |
-
-Fluxo: o product-owner define as regras, um dev pede a especificação ao sdd, você aprova a especificação, os devs implementam com testes primeiro (TDD), o reviewer revisa, o designer entra em mudanças visuais e o QA valida.
-
-A especificação fica em um único arquivo, `.specs/<nome-da-branch>.md`, na worktree da tarefa, e vai commitada com a branch. Tem tipo (funcionalidade ou bug), tamanho (pequena, média ou grande) e status (`em-revisao`, `aprovada`, `em-andamento`, `implementada` ou `resolvida`). As regras e os critérios de aceite têm IDs (`RN-01`, `CA-01`) no formato "QUANDO ... ENTÃO o sistema DEVE ...", e cada tarefa traz de quem é, do que depende, o gate de verificação e se é paralela (`[P]`) ou mecânica (modelo econômico). O dev revisa a spec e, se tiver dúvida de regra, ela vai ao product-owner; dúvida maior vai a você. Nada é codificado antes da sua aprovação, a menos que você dispense a especificação em uma tarefa pequena. Cada dev segue TDD em lógica e comportamento, nunca altera teste para passar, roda o gate e faz um commit por tarefa; o reviewer não aprova com achado em aberto. As tarefas `[P]` rodam ao mesmo tempo. O dev chama o `sdd` e os `executor` diretamente: ele fica com as tarefas que pedem decisão e delega as mecânicas e as `[P]` independentes, conferindo cada entrega. Dúvidas de regra e de escopo voltam pela orchestrator, que fala com o product-owner e com você.
-
-O time é montado por tarefa, com quantos agentes do mesmo papel o escopo pedir, e o trabalho é dividido para rodar em paralelo e economizar tempo (devs, reviewer, qa e designer entram assim que há o que fazer, sem esperar uns aos outros). Cada tarefa roda em uma worktree própria (confirmada com você), para várias sessões trabalharem juntas no mesmo repositório. A `orchestrator` pede as regras ao `product-owner`, propõe quantos `dev-frontend` e `dev-backend` a tarefa pede e confirma com você antes de delegar. O `reviewer` entra sempre que houver dev. `qa` e `designer` são opcionais: ela avisa que estão disponíveis e você decide se entram. No início da sessão ela pergunta, nesta ordem, um tema opcional para os nomes (por exemplo, personagens de Jujutsu Kaisen), o nome dela e o do `product-owner`. Com tema, cada pergunta de nome traz sugestões dele, para você não precisar inventar dezenas de nomes em um time grande, e você pode dizer "escolha por mim". o nome de cada dev, do `reviewer`, do `qa` e do `designer` é perguntado só quando eles entram no time de uma tarefa, uma pergunta por agente.
+Stacks com conteúdo hoje: React, NestJS, Laravel e AdonisJS.
 
 ## Usar em um repositório
+
+Requer Node 22 ou mais novo.
 
 ```
 node ~/claude-core/bin/ai-sync.js /caminho/do/repo
@@ -71,54 +26,111 @@ Ou, dentro do repositório, sem argumento de pasta:
 node ~/claude-core/bin/ai-sync.js
 ```
 
-Sem `--profile`, a ferramenta detecta a stack do projeto e aplica tudo o que vale para qualquer projeto (`applies: ["all"]`) mais o que é das stacks detectadas. Ao final, mostra as stacks detectadas e o que foi aplicado.
-
-- A detecção olha as dependências do `package.json` e do `composer.json` na raiz e nas pastas de primeiro nível, então um repositório com painel e API reconhece as duas stacks.
-- Só são detectadas as stacks para as quais existe conteúdo no `claude-core`. As regras de detecção ficam em `stacks` no `catalog.json`.
-- Se nada for reconhecido, aplica só o que vale para qualquer projeto e avisa.
-- `--profile nome` escolhe um perfil à mão, prevalece sobre a detecção e aplica exatamente o que o perfil lista.
-
-Isso copia os agentes para `.claude/agents/`, as regras para `.claude/rules/` e as skills para `.claude/skills/` do repositório. Depois, abra o orquestrador:
+Depois, abra o orquestrador:
 
 ```
 claude --agent orchestrator
 ```
 
+Opções:
+
+| Opção | O que faz |
+| --- | --- |
+| `--profile nome` (ou `-p`) | Escolhe um perfil à mão. Prevalece sobre a detecção e aplica exatamente o que o perfil lista. |
+| `--force` | Reinstala também os arquivos em conflito (veja "Sincronização segura"). |
+| `--check` | Confere se o catálogo, os arquivos e os perfis do `claude-core` estão consistentes. Não aplica nada. |
+
+Além de copiar os arquivos, o `ai-sync` libera, em `.claude/settings.local.json`, a pasta de worktrees das tarefas (`<repositório>-worktrees`, ao lado do repositório) e mantém `.claude/team-memory/` fora do git, pelo `.git/info/exclude`.
+
+## O que é aplicado
+
+Sem `--profile`, a ferramenta detecta a stack do projeto e aplica tudo o que vale para qualquer projeto mais o que é das stacks detectadas. Ao final, mostra as stacks detectadas e o que foi criado, atualizado, removido e deixado como estava.
+
+| Stack | Detectada por (dependência) |
+| --- | --- |
+| React | `react` |
+| NestJS | `@nestjs/core` |
+| Laravel | `laravel/framework` |
+| AdonisJS | `@adonisjs/core` |
+
+- A detecção lê o `package.json` e o `composer.json` na raiz e nas pastas de primeiro nível (menos as ocultas, `node_modules`, `vendor`, `dist`, `build` e `coverage`). Um repositório com painel e API reconhece as duas stacks.
+- Só são detectadas stacks que têm conteúdo no `claude-core`. As regras de detecção ficam em `stacks`, no `catalog.json`.
+- Se nada for reconhecido, aplica só o que vale para qualquer projeto e avisa.
+- Os padrões e as skills de uma stack não chegam a projetos de outra.
+
+### Perfis
+
+Ficam em `profiles/*.json` e só valem com `--profile`. Cada perfil lista `agents`, `rules` e `skills` pelos nomes do catálogo. Os perfis trazem só o que vale para qualquer projeto: o conteúdo de stack vem apenas pela detecção.
+
+- `default`: o time completo.
+- `frontend`: `dev-frontend`, `dev-fullstack` e `dev-doc`, com `designer`.
+- `backend`: `dev-backend`, `dev-fullstack`, `dev-database`, `dev-devops` e `dev-doc`, sem `designer`.
+
+Todos incluem `orchestrator`, `product-owner`, `sdd`, `executor`, `reviewer` e `qa`, as cinco regras gerais e as cinco skills gerais. Para uma configuração manual nova, crie `profiles/nome.json`.
+
 ## Sincronização segura
 
-O `ai-sync` registra o que instalou em `.claude/claude-core.lock.json` (caminho, versão e impressão digital de cada arquivo) e usa esse registro para nunca mexer no que é seu:
+O `ai-sync` registra o que instalou em `.claude/claude-core.lock.json` (caminho, versão e impressão digital de cada arquivo) e usa esse registro para nunca mexer no que é seu. Versione esse arquivo junto com o repositório.
 
 - Arquivo criado por você, ou que já existia com o mesmo nome de um do `claude-core`, não é apagado nem sobrescrito. Se o conteúdo for diferente, a ferramenta avisa.
 - Arquivo instalado e sem alterações é atualizado quando há versão nova, e removido quando sai do `claude-core`.
 - Arquivo instalado que você editou não é tocado. A ferramenta avisa e diz se há versão nova disponível.
-- Em repositório que já foi configurado antes, os arquivos idênticos aos do `claude-core` passam a ser acompanhados; os diferentes ficam como estão, com aviso.
-- Ao final, lista o que foi criado, atualizado, removido e deixado como estava. Rodar de novo com tudo em dia não muda nada.
+- Em repositório já configurado antes, os arquivos idênticos aos do `claude-core` passam a ser acompanhados; os diferentes ficam como estão, com aviso.
+- Rodar de novo com tudo em dia não muda nada.
 
-Para receber a versão nova dos arquivos em conflito (os que você editou e os que já existiam sem registro, como em repositórios configurados pela versão antiga), rode com `--force`:
+Para receber a versão nova dos arquivos em conflito (os que você editou e os que já existiam sem registro), rode com `--force`. Ele sobrescreve só os arquivos que o `claude-core` entrega e que estão em conflito, e lista cada um em "Sobrescritos". Arquivos que o `claude-core` não entrega nunca são tocados, e as edições sobrescritas não voltam: faça commit antes se quiser guardá-las.
 
-```
-node ~/claude-core/bin/ai-sync.js --force
-```
+## Time de agentes
 
-O `--force` sobrescreve só os arquivos que o `claude-core` entrega e que estão em conflito, e lista cada um em "Sobrescritos". Arquivos que o `claude-core` não entrega nunca são tocados, e as edições sobrescritas não voltam. Se quiser guardá-las, faça commit antes. Versione o `claude-core.lock.json` junto com o repositório.
+| Agente | Modelo | Papel |
+| --- | --- | --- |
+| `orchestrator` | opus | Orquestrador. Única sessão que fala com o usuário. Só delega. |
+| `product-owner` | sonnet | Fonte das regras de negócio. Consulta e cria tarefas, nunca define prioridade, e edita ou apaga só a pedido explícito do usuário. |
+| `sdd` | opus | Escreve a especificação da tarefa. Só é chamado por um dev. |
+| `executor` | haiku | Ajudante dos devs. Executa uma tarefa da especificação, com teste primeiro, gate e commit. Só é chamado por um dev. |
+| `dev-frontend` | sonnet | Implementa telas. |
+| `dev-backend` | sonnet | Implementa API e dados. |
+| `dev-mobile` | sonnet | Implementa aplicativos de celular. |
+| `dev-devops` | sonnet | Infraestrutura, pipelines de entrega e ambientes. |
+| `dev-database` | sonnet | Modelagem, migrações e consultas. |
+| `dev-fullstack` | sonnet | Tarefa pequena que atravessa tela e API, com uma pessoa só. |
+| `dev-doc` | sonnet | Atualiza a documentação. Nunca define regra de negócio. |
+| `reviewer` | opus | Revisa a entrega dos devs. Obrigatório sempre que houver dev na tarefa. |
+| `qa` | sonnet | Valida a entrega. |
+| `designer` | sonnet | Visual e experiência de uso. |
 
-## Perfis
+### Fluxo de uma tarefa
 
-Ficam em `profiles/*.json` e só valem quando escolhidos com `--profile`. Cada perfil lista os `agents` e as `rules` que o repositório recebe.
+1. O `product-owner` define as regras e o escopo.
+2. Um dev pede a especificação ao `sdd`, e você a aprova. Em tarefa pequena você pode dispensá-la.
+3. Os devs implementam com TDD em lógica e comportamento, delegando as tarefas mecânicas e paralelas ao `executor`, com um commit atômico por tarefa.
+4. O `reviewer` revisa, conferindo especificação e testes. Ele não aprova com achado em aberto.
+5. O `designer` entra em mudanças visuais e o `qa` valida, se estiverem no time.
 
-- `default`: time completo.
-- `frontend`: `dev-frontend`, `dev-fullstack` e `dev-doc`, com `designer`.
-- `backend`: `dev-backend`, `dev-fullstack`, `dev-database`, `dev-devops` e `dev-doc`, sem `designer`.
+Dúvidas de regra vão ao `product-owner`; dúvidas maiores vão a você. Tudo passa pela `orchestrator`.
 
-Todos incluem o `reviewer`.
+### Especificação
 
-Cada perfil pode ter as listas `agents`, `rules` e `skills`, com nomes registrados no `catalog.json`. Para uma configuração manual nova, crie `profiles/nome.json`.
+Fica em um único arquivo, `.specs/<nome-da-branch>.md`, na worktree da tarefa, e vai commitada com a branch.
+
+- Tem tipo (funcionalidade ou bug), tamanho (pequena, média ou grande) e status (`em-revisao`, `aprovada`, `em-andamento`, `implementada` ou `resolvida`).
+- Regras e critérios de aceite têm IDs (`RN-01`, `CA-01`) no formato "QUANDO ... ENTÃO o sistema DEVE ...".
+- Cada tarefa traz de quem é, do que depende, o gate de verificação e se é paralela (`[P]`) ou mecânica (modelo econômico).
+- Nada é codificado antes da sua aprovação, a menos que você dispense a especificação. As tarefas `[P]` rodam ao mesmo tempo.
+
+### Como o time é montado
+
+- O time é montado por tarefa, com quantos agentes do mesmo papel o escopo pedir, e o trabalho é dividido para rodar em paralelo.
+- A `orchestrator` pede as regras ao `product-owner`, propõe a composição e confirma com você antes de delegar. O `reviewer` entra sempre que houver dev. `qa` e `designer` são opcionais: ela avisa que existem e você decide.
+- Cada tarefa roda em uma worktree própria, confirmada com você, para várias sessões trabalharem juntas no mesmo repositório.
+- No início da sessão ela pergunta um tema opcional para os nomes (por exemplo, personagens de Jujutsu Kaisen), o nome dela e o do `product-owner`. Com tema, cada pergunta de nome traz sugestões, e você pode dizer "escolha por mim". O nome de cada dev, do `reviewer`, do `qa` e do `designer` é perguntado só quando eles entram no time, uma pergunta por agente.
+- Os agentes compartilham uma memória do time por repositório, em `.claude/team-memory/`, que guarda só o que continua valendo depois da tarefa, e só é gravada a pedido seu.
 
 ## Regras
 
 Ficam em `rules/*.md` (gerais) e `stacks/<stack>/rules/*.md` (por stack). O Claude Code as carrega sozinho a partir de `.claude/rules/`, sem nenhuma ação sua. Cada uma é curta e diz no início quando vale.
 
-Gerais, aplicadas em qualquer projeto:
+Gerais:
 
 - `commit-standard`: tipos de alteração com ícone e padrão de branches e commits (`Fix :bug: [#5] Troca <a href> por <Link>`).
 - `code-standard`: estilo de código, incluindo nunca escrever comentários.
@@ -126,18 +138,13 @@ Gerais, aplicadas em qualquer projeto:
 - `security-standard`: segredos, validação de entrada, acesso, senhas e dependências.
 - `review-standard`: como preparar e como fazer uma revisão de código.
 
-Por stack, aplicadas só quando a stack é detectada no projeto:
-
-- `react-standard` (React), `nestjs-standard` (NestJS), `laravel-standard` (Laravel) e `adonisjs-standard` (AdonisJS).
-- Têm `paths` no cabeçalho, então o Claude só as carrega ao mexer em arquivos da stack. Em um repositório com painel React e API NestJS, cada padrão aparece só nos arquivos certos.
-
-Você pode editar uma regra no projeto: a próxima sincronização não a sobrescreve e avisa se houver versão nova (veja "Sincronização segura"). Regras novas seguem o fluxo de "Adicionar um item". Os perfis manuais (`--profile`) incluem só as regras gerais.
+Por stack: `react-standard`, `nestjs-standard`, `laravel-standard` e `adonisjs-standard`. Têm `paths` no cabeçalho, então o Claude só as carrega ao mexer em arquivos da stack. Em um repositório com painel React e API NestJS, cada padrão aparece só nos arquivos certos.
 
 ## Skills
 
-Ficam em `skills/<nome>/SKILL.md` (gerais) e `stacks/<stack>/skills/<nome>/SKILL.md` (por stack) e vão para `.claude/skills/` do projeto. O Claude as usa sozinho quando o pedido combina com a `description`, ou você as chama por `/nome`. Cada uma diz quando usar e o que entrega.
+Ficam em `skills/<nome>/SKILL.md` (gerais) e `stacks/<stack>/skills/<nome>/SKILL.md` (por stack). O Claude as usa sozinho quando o pedido combina com a `description`, ou você as chama por `/nome`. Cada uma diz quando usar e o que entrega.
 
-Gerais, aplicadas em qualquer projeto:
+Gerais:
 
 - `commit-message`: cria o commit no padrão do projeto, dividindo mudanças que misturam propósitos.
 - `create-pull-request`: roda lint e testes, faz o push (com sua confirmação) e abre o PR com título no padrão e descrição clara.
@@ -145,27 +152,48 @@ Gerais, aplicadas em qualquer projeto:
 - `bug-investigation`: acha a causa com evidências e propõe a correção e o teste, sem aplicar.
 - `documentation`: escreve e atualiza a documentação a partir do que o código faz.
 
-Por stack, aplicadas só quando a stack é detectada:
+Por stack: `react-component` (React) e `nestjs-module` (NestJS), ambas com teste primeiro.
 
-- `react-component` (React) e `nestjs-module` (NestJS), ambas com teste primeiro.
+Regras e skills editadas no projeto não são sobrescritas pela próxima sincronização.
 
-Como o resto, uma skill editada no projeto não é sobrescrita pela próxima sincronização. Os perfis manuais incluem só as skills gerais.
+## Estrutura do repositório
 
-## Testes e lint
+| Pasta ou arquivo | Conteúdo |
+| --- | --- |
+| `catalog.json` | Arquivo central. Registra cada agente, regra e skill com `path`, `applies` e `description`, e as `stacks` com a regra de detecção. |
+| `agents/` | Agentes que valem para qualquer projeto. |
+| `rules/` | Padrões que valem para qualquer projeto. |
+| `skills/` | Skills que valem para qualquer projeto (uma pasta por skill, com `SKILL.md`). |
+| `stacks/<stack>/` | O que vale só para uma stack, com as mesmas subpastas `agents/`, `rules/` e `skills/`. |
+| `profiles/` | Perfis manuais, escolhidos com `--profile`. |
+| `bin/ai-sync.js` | Aplica o conteúdo em um repositório. |
+| `lint/` | Regra do oxlint contra comentários e checagem do formato de agentes, regras, skills e perfis. |
+| `tests/` | Testes do `ai-sync` e do formato do conteúdo. |
+| `.github/workflows/ci.yml` | Roda lint e testes em todo PR. |
 
-Requer Node 22 ou mais novo. Instale as dependências de desenvolvimento uma vez com `npm ci`.
-
-- `npm test`: roda os testes do `ai-sync` (detecção de stack, arquivos do usuário preservados, atualização e remoção seguras, `--force`) e da consistência do catálogo e dos perfis. Eles trabalham só em pastas temporárias.
-- `npm run lint`: roda o oxlint no código Node e a checagem do formato dos agentes (cabeçalho com `name`, `description` e `model`, nome igual ao do arquivo), das regras, das skills, dos perfis e dos JSON. A regra de nunca escrever comentários no código também é conferida aqui.
-
-O GitHub roda os dois em todo PR (`.github/workflows/ci.yml`), com os mesmos comandos. PR com lint ou teste quebrado não passa na checagem.
+O campo `applies` de cada item do catálogo diz a que projetos ele serve: `["all"]` para qualquer projeto ou uma lista de stacks, como `["react"]`.
 
 ## Adicionar um item
 
 1. Crie o arquivo: `agents/nome.md` (com o cabeçalho `name`, `description`, `model`), `rules/nome.md` ou `skills/nome/SKILL.md`. Se for só de uma stack, use `stacks/<stack>/...`.
 2. Registre em `catalog.json`, no grupo certo, com `path`, `applies` e `description`. É o único lugar de registro.
 3. Rode o `ai-sync`: com `applies: ["all"]` ou uma stack detectada, o item é aplicado sozinho. Para um perfil manual receber o item, inclua o nome em `profiles/*.json`.
+4. Se o item é um agente que a `orchestrator` pode chamar, inclua o nome na lista `Agent(...)` dela.
 
 Para uma stack nova, adicione-a em `stacks` no `catalog.json` com `detect.dependencies` (nomes de pacotes do `package.json` ou `composer.json`).
 
-Para conferir se o catálogo e os perfis estão consistentes: `node bin/ai-sync.js --check`.
+## Desenvolvimento
+
+Instale as dependências uma vez com `npm ci`.
+
+- `npm test`: testes do `ai-sync` (detecção de stack, arquivos do usuário preservados, atualização e remoção seguras, `--force`), do catálogo e dos perfis e do conteúdo dos padrões e skills. Trabalham só em pastas temporárias.
+- `npm run lint`: oxlint no código Node, com a regra de nunca escrever comentários, e checagem do formato de agentes (cabeçalho com `name`, `description` e `model`), regras, skills, perfis e JSON.
+- `node bin/ai-sync.js --check`: consistência do catálogo e dos perfis.
+
+O GitHub roda lint e testes em todo PR, com os mesmos comandos.
+
+## Planejado
+
+- [#8](https://github.com/felipe-sant/claude-core/issues/8) configuração base do Claude para cada projeto.
+
+As demais issues abertas (#11 a #19) tratam do fluxo do time de agentes.
