@@ -12,12 +12,13 @@ Todo o texto dos agentes, das regras e da documentação é em **português**. N
 
 | Pasta | Conteúdo |
 | --- | --- |
-| `catalog.json` | Arquivo central. Registra cada agente, regra e skill com `path`, `applies` (`["all"]` ou stacks) e `description`, e as `stacks` com a regra de detecção. É o único lugar de registro de um item. |
+| `catalog.json` | Arquivo central. Registra cada agente, regra, skill e modelo de configuração (`settings`) com `path`, `applies` (`["all"]` ou stacks) e `description`, e as `stacks` com a regra de detecção. É o único lugar de registro de um item. |
 | `agents/` | Um arquivo `.md` por papel, com cabeçalho (`name`, `description`, `model`, `tools`) e as instruções. |
 | `rules/` | Regras compartilhadas, copiadas para `.claude/rules/` dos repositórios. |
 | `skills/` | Skills que valem para qualquer projeto, uma pasta por skill, copiadas para `.claude/skills/`. |
 | `stacks/<stack>/` | O que vale só para uma stack (`react`, `nestjs`, `laravel`...), com `agents/`, `rules/` e `skills/`. |
-| `profiles/` | Um `.json` por configuração, com as listas `agents`, `rules` e `skills` (nomes do catálogo) que o repositório recebe. |
+| `templates/` | Modelos da configuração base do Claude, mesclados em `.claude/settings.json` do projeto sem alterar o que o usuário definiu. |
+| `profiles/` | Um `.json` por configuração, com as listas `agents`, `rules`, `skills` e `settings` (nomes do catálogo) que o repositório recebe. |
 | `lint/` | Regra do oxlint contra comentários e a checagem do formato de agentes, regras, skills e perfis. |
 | `tests/` | Testes do `ai-sync` e do formato do conteúdo, com `node --test`. |
 | `.github/workflows/ci.yml` | Roda `npm run lint` e `npm test` em todo PR. |

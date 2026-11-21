@@ -9,6 +9,7 @@ Ferramenta que roda em outros repositórios para configurar o Claude Code e o si
 | Agentes (o time) | 14 | `.claude/agents/` |
 | Regras (padrões de desenvolvimento) | 5 gerais e 4 por stack | `.claude/rules/` |
 | Skills | 5 gerais e 2 por stack | `.claude/skills/` |
+| Configuração base do Claude | 1 modelo | `.claude/settings.json` |
 
 Stacks com conteúdo hoje: React, NestJS, Laravel e AdonisJS.
 
@@ -40,7 +41,7 @@ Opções:
 | `--force` | Reinstala também os arquivos em conflito (veja "Sincronização segura"). |
 | `--check` | Confere se o catálogo, os arquivos e os perfis do `claude-core` estão consistentes. Não aplica nada. |
 
-Além de copiar os arquivos, o `ai-sync` libera, em `.claude/settings.local.json`, a pasta de worktrees das tarefas (`<repositório>-worktrees`, ao lado do repositório) e mantém `.claude/team-memory/` fora do git, pelo `.git/info/exclude`.
+Além de copiar os arquivos e aplicar a configuração base, o `ai-sync` libera, em `.claude/settings.local.json`, a pasta de worktrees das tarefas (`<repositório>-worktrees`, ao lado do repositório) e mantém `.claude/team-memory/` e `.claude/settings.local.json` fora do git, pelo `.git/info/exclude`.
 
 ## O que é aplicado
 
@@ -60,13 +61,13 @@ Sem `--profile`, a ferramenta detecta a stack do projeto e aplica tudo o que val
 
 ### Perfis
 
-Ficam em `profiles/*.json` e só valem com `--profile`. Cada perfil lista `agents`, `rules` e `skills` pelos nomes do catálogo. Os perfis trazem só o que vale para qualquer projeto: o conteúdo de stack vem apenas pela detecção.
+Ficam em `profiles/*.json` e só valem com `--profile`. Cada perfil lista `agents`, `rules`, `skills` e `settings` pelos nomes do catálogo. Os perfis trazem só o que vale para qualquer projeto: o conteúdo de stack vem apenas pela detecção.
 
 - `default`: o time completo.
 - `frontend`: `dev-frontend`, `dev-fullstack` e `dev-doc`, com `designer`.
 - `backend`: `dev-backend`, `dev-fullstack`, `dev-database`, `dev-devops` e `dev-doc`, sem `designer`.
 
-Todos incluem `orchestrator`, `product-owner`, `sdd`, `executor`, `reviewer` e `qa`, as cinco regras gerais e as cinco skills gerais. Para uma configuração manual nova, crie `profiles/nome.json`.
+Todos incluem `orchestrator`, `product-owner`, `sdd`, `executor`, `reviewer` e `qa`, as cinco regras gerais, as cinco skills gerais e a configuração base. Para uma configuração manual nova, crie `profiles/nome.json`.
 
 ## Sincronização segura
 
@@ -79,6 +80,25 @@ O `ai-sync` registra o que instalou em `.claude/claude-core.lock.json` (caminho,
 - Rodar de novo com tudo em dia não muda nada.
 
 Para receber a versão nova dos arquivos em conflito (os que você editou e os que já existiam sem registro), rode com `--force`. Ele sobrescreve só os arquivos que o `claude-core` entrega e que estão em conflito, e lista cada um em "Sobrescritos". Arquivos que o `claude-core` não entrega nunca são tocados, e as edições sobrescritas não voltam: faça commit antes se quiser guardá-las.
+
+## Configuração base do Claude
+
+O modelo fica em `templates/settings.base.json` e vai para `.claude/settings.json` do projeto, o arquivo compartilhado e versionado. Os valores recomendados são:
+
+| Chave | Valor | Para quê |
+| --- | --- | --- |
+| `effortLevel` | `medium` | Esforço econômico por padrão. |
+| `env.CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY` | `1` | Sem a pesquisa de satisfação no meio do trabalho. |
+| `permissions.deny` | leitura de `.env` e `.env.*` | Protege segredos. O `.env.example` continua liberado. |
+
+Como é aplicada:
+
+- Projeto sem `.claude/settings.json`: o arquivo é criado com o modelo.
+- Projeto com o arquivo: só o que falta é acrescentado. O que você já definiu nunca é alterado, e o que difere do recomendado aparece em "Sugerido e não aplicado", com o seu valor e o recomendado. Listas existentes (como `permissions.deny`) ficam como estão.
+- O que você apagar depois de a ferramenta acrescentar não volta, e um `settings.json` apagado não é recriado. O registro do que foi acrescentado fica no `claude-core.lock.json`.
+- Arquivo com JSON inválido não é tocado, e a ferramenta avisa.
+- O modelo não concede permissões amplas (nada de `allow`, `defaultMode` ou diretórios extras; o lint reprova). A única permissão nova é a da pasta de worktrees, e ela vai para `.claude/settings.local.json`, o arquivo local, que fica fora do git.
+- O modelo não define `model` nem hooks. Cada agente já escolhe o seu modelo, e fixar um no projeto passaria por cima da escolha de quem trabalha nele.
 
 ## Time de agentes
 
@@ -160,11 +180,12 @@ Regras e skills editadas no projeto não são sobrescritas pela próxima sincron
 
 | Pasta ou arquivo | Conteúdo |
 | --- | --- |
-| `catalog.json` | Arquivo central. Registra cada agente, regra e skill com `path`, `applies` e `description`, e as `stacks` com a regra de detecção. |
+| `catalog.json` | Arquivo central. Registra cada agente, regra, skill e modelo de configuração com `path`, `applies` e `description`, e as `stacks` com a regra de detecção. |
 | `agents/` | Agentes que valem para qualquer projeto. |
 | `rules/` | Padrões que valem para qualquer projeto. |
 | `skills/` | Skills que valem para qualquer projeto (uma pasta por skill, com `SKILL.md`). |
 | `stacks/<stack>/` | O que vale só para uma stack, com as mesmas subpastas `agents/`, `rules/` e `skills/`. |
+| `templates/` | Modelos de configuração do Claude (hoje, `settings.base.json`). |
 | `profiles/` | Perfis manuais, escolhidos com `--profile`. |
 | `bin/ai-sync.js` | Aplica o conteúdo em um repositório. |
 | `lint/` | Regra do oxlint contra comentários e checagem do formato de agentes, regras, skills e perfis. |
@@ -180,20 +201,20 @@ O campo `applies` de cada item do catálogo diz a que projetos ele serve: `["all
 3. Rode o `ai-sync`: com `applies: ["all"]` ou uma stack detectada, o item é aplicado sozinho. Para um perfil manual receber o item, inclua o nome em `profiles/*.json`.
 4. Se o item é um agente que a `orchestrator` pode chamar, inclua o nome na lista `Agent(...)` dela.
 
+Um modelo de configuração fica em `templates/settings.nome.json` e é registrado no grupo `settings` do catálogo; o lint reprova modelo que conceda permissões amplas.
+
 Para uma stack nova, adicione-a em `stacks` no `catalog.json` com `detect.dependencies` (nomes de pacotes do `package.json` ou `composer.json`).
 
 ## Desenvolvimento
 
 Instale as dependências uma vez com `npm ci`.
 
-- `npm test`: testes do `ai-sync` (detecção de stack, arquivos do usuário preservados, atualização e remoção seguras, `--force`), do catálogo e dos perfis e do conteúdo dos padrões e skills. Trabalham só em pastas temporárias.
+- `npm test`: testes do `ai-sync` (detecção de stack, arquivos do usuário preservados, atualização e remoção seguras, `--force`, configuração base), do catálogo e dos perfis e do conteúdo dos padrões e skills. Trabalham só em pastas temporárias.
 - `npm run lint`: oxlint no código Node, com a regra de nunca escrever comentários, e checagem do formato de agentes (cabeçalho com `name`, `description` e `model`), regras, skills, perfis e JSON.
 - `node bin/ai-sync.js --check`: consistência do catálogo e dos perfis.
 
 O GitHub roda lint e testes em todo PR, com os mesmos comandos.
 
-## Planejado
+## Issues abertas
 
-- [#8](https://github.com/felipe-sant/claude-core/issues/8) configuração base do Claude para cada projeto.
-
-As demais issues abertas (#11 a #19) tratam do fluxo do time de agentes.
+Os ajustes e problemas do fluxo do time de agentes estão nas issues abertas do repositório (#11 a #19).
