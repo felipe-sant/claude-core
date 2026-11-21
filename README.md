@@ -214,7 +214,3 @@ Instale as dependências uma vez com `npm ci`.
 - `node bin/ai-sync.js --check`: consistência do catálogo e dos perfis.
 
 O GitHub roda lint e testes em todo PR, com os mesmos comandos.
-
-## Issues abertas
-
-Os ajustes e problemas do fluxo do time de agentes estão nas issues abertas do repositório (#11 a #19).
