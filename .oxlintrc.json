@@ -1,0 +1,15 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["node"],
+  "jsPlugins": ["./lint/no-comments-plugin.js"],
+  "categories": { "correctness": "error", "suspicious": "error" },
+  "rules": {
+    "claude-core/no-comments": "error",
+    "eqeqeq": "error",
+    "no-var": "error",
+    "prefer-const": "error",
+    "no-unused-vars": "error"
+  },
+  "env": { "node": true },
+  "ignorePatterns": ["node_modules"]
+}
