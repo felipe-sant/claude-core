@@ -9,13 +9,27 @@ Hoje o repositório já entrega:
 - o time de agentes (orquestrador, product owner, devs, revisor, QA e designer);
 - o padrão de branches e commits, como regra do Claude;
 - perfis que escolhem o que cada repositório recebe;
+- o `catalog.json`, que descreve tudo o que existe e a que projetos cada item se aplica;
 - o `ai-sync`, que copia isso para um repositório e libera a pasta de worktrees das tarefas.
+
+## Estrutura
+
+| Pasta ou arquivo | Conteúdo |
+| --- | --- |
+| `catalog.json` | Arquivo central. Registra cada agente, regra e skill com caminho, a que projetos se aplica e descrição. |
+| `agents/` | Agentes que valem para qualquer projeto. |
+| `rules/` | Padrões que valem para qualquer projeto. |
+| `skills/` | Skills que valem para qualquer projeto (uma pasta por skill, com `SKILL.md`). |
+| `stacks/<stack>/` | O que vale só para uma stack (`react`, `nestjs`, `laravel`...), com as mesmas subpastas `agents/`, `rules/` e `skills/`. |
+| `profiles/` | Escolhem o que cada repositório recebe. |
+| `bin/ai-sync.js` | Aplica um perfil em um repositório. |
+
+O campo `applies` de cada item do catálogo diz a que projetos ele serve: `["all"]` para qualquer projeto ou uma lista de stacks, como `["react"]`. Itens de stack ficam em `stacks/<stack>/` e o `path` do catálogo aponta para lá. A configuração base do Claude por projeto está na issue [#8](https://github.com/felipe-sant/claude-core/issues/8) e a detecção automática de stack, na [#3](https://github.com/felipe-sant/claude-core/issues/3).
 
 ## Planejado
 
 O que falta para a nova função está nas issues:
 
-- [#2](https://github.com/felipe-sant/claude-core/issues/2) reorganizar o repositório para configurar outros projetos;
 - [#3](https://github.com/felipe-sant/claude-core/issues/3) detectar a stack do projeto automaticamente;
 - [#4](https://github.com/felipe-sant/claude-core/issues/4) sincronizar sem apagar ou sobrescrever arquivos do usuário;
 - [#5](https://github.com/felipe-sant/claude-core/issues/5) padrões de desenvolvimento gerais e por stack;
@@ -61,7 +75,7 @@ Ou, dentro do repositório, sem argumento de pasta:
 node ~/claude-core/bin/ai-sync.js --profile frontend
 ```
 
-Isso copia os agentes do perfil para `.claude/agents/` e as regras para `.claude/rules/` do repositório. Depois, abra o orquestrador:
+Isso copia os agentes do perfil para `.claude/agents/`, as regras para `.claude/rules/` e as skills para `.claude/skills/` do repositório. Depois, abra o orquestrador:
 
 ```
 claude --agent orchestrator
@@ -79,7 +93,7 @@ Ficam em `profiles/*.json`. Cada perfil lista os `agents` e as `rules` que o rep
 
 Todos incluem o `reviewer`.
 
-Para uma configuração nova, crie `profiles/nome.json` com as duas listas.
+Cada perfil pode ter as listas `agents`, `rules` e `skills`, com nomes registrados no `catalog.json`. Para uma configuração nova, crie `profiles/nome.json`.
 
 ## Regras
 
@@ -87,6 +101,10 @@ Ficam em `rules/*.md` e o Claude Code as carrega sozinho a partir de `.claude/ru
 
 - `commit-standard`: tipos de alteração com ícone e padrão de branches e commits (`Fix :bug: [#5] Troca <a href> por <Link>`).
 
-## Adicionar um papel
+## Adicionar um item
 
-Crie `agents/nome.md` com o cabeçalho (`name`, `description`, `model`) e as instruções. Depois inclua o nome nos perfis que devem usá-lo e rode o `ai-sync`.
+1. Crie o arquivo: `agents/nome.md` (com o cabeçalho `name`, `description`, `model`), `rules/nome.md` ou `skills/nome/SKILL.md`. Se for só de uma stack, use `stacks/<stack>/...`.
+2. Registre em `catalog.json`, no grupo certo, com `path`, `applies` e `description`. É o único lugar de registro.
+3. Para um repositório receber o item, inclua o nome no perfil que deve usá-lo (`profiles/*.json`) e rode o `ai-sync`.
+
+Para conferir se o catálogo e os perfis estão consistentes: `node bin/ai-sync.js --check`.
