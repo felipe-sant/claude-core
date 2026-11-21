@@ -18,7 +18,7 @@ Todo o texto dos agentes, das regras e da documentação é em **português**. N
 | `skills/` | Skills que valem para qualquer projeto, uma pasta por skill, copiadas para `.claude/skills/`. |
 | `stacks/<stack>/` | O que vale só para uma stack (`react`, `nestjs`, `laravel`...), com `agents/`, `rules/` e `skills/`. |
 | `profiles/` | Um `.json` por configuração, com as listas `agents`, `rules` e `skills` (nomes do catálogo) que o repositório recebe. |
-| `bin/ai-sync.js` | Copia o conteúdo para um repositório. Sem `--profile`, detecta as stacks e aplica o que vale para todos mais o das stacks; com `--profile`, aplica só o perfil. |
+| `bin/ai-sync.js` | Copia o conteúdo para um repositório. Sem `--profile`, detecta as stacks e aplica o que vale para todos mais o das stacks; com `--profile`, aplica só o perfil. Registra o que instalou em `.claude/claude-core.lock.json` e só atualiza ou remove arquivo instalado e sem alterações. |
 
 ## O time
 
@@ -40,6 +40,7 @@ Fluxo: o `product-owner` define as regras, um dev chama o `sdd` para a especific
 - Todo item citado em `profiles/*.json` precisa estar registrado no `catalog.json`, e todo `path` do catálogo precisa existir. O `node bin/ai-sync.js --check` confere isso.
 - Item novo (agente, regra ou skill) é um arquivo mais uma entrada no `catalog.json`. Item com `applies` `["all"]` ou de stack detectada é aplicado sozinho; só perfis manuais precisam do nome na lista.
 - Toda stack citada em `applies` precisa existir em `stacks` do catálogo.
+- O `ai-sync` nunca apaga nem sobrescreve arquivo do usuário: qualquer mudança nele precisa manter essa garantia e ser conferida com arquivo criado, editado e retirado do catálogo.
 - Agente que escreve código leva no prompt a regra de não escrever comentários.
 - Tarefas escritas por agentes usam linguagem simples, que um PO e um QA entendam, sem caminhos de arquivo, código ou detalhes internos.
 - Ao criar ou renomear um papel, atualize o `catalog.json`, `profiles/`, o `README.md` e a lista acima.
