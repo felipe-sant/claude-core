@@ -24,5 +24,8 @@
     "code-review",
     "bug-investigation",
     "documentation"
+  ],
+  "settings": [
+    "base"
   ]
 }

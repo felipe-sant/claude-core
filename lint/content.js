@@ -1,7 +1,7 @@
 const fs = require('node:fs')
 const path = require('node:path')
 
-const GROUPS = ['agents', 'rules', 'skills']
+const GROUPS = ['agents', 'rules', 'skills', 'settings']
 const REQUIRED_AGENT_KEYS = ['name', 'description', 'model']
 const MODELS = ['haiku', 'sonnet', 'opus']
 
@@ -86,6 +86,26 @@ function lintSkill(dir, label, errors) {
   }
 }
 
+const FORBIDDEN_SETTINGS = [
+  ['permissions', 'allow'],
+  ['permissions', 'defaultMode'],
+  ['permissions', 'additionalDirectories'],
+  ['enableAllProjectMcpServers']
+]
+
+function lintSettingsTemplate(file, label, errors) {
+  const template = readJson(file, errors, label)
+  if (!template || typeof template !== 'object' || Array.isArray(template)) {
+    if (template) errors.push(`${label}: o modelo deve ser um objeto JSON`)
+    return
+  }
+  for (const keys of FORBIDDEN_SETTINGS) {
+    let value = template
+    for (const key of keys) value = value && typeof value === 'object' ? value[key] : undefined
+    if (value !== undefined) errors.push(`${label}: o modelo não pode definir "${keys.join('.')}" (não concede permissões amplas)`)
+  }
+}
+
 function lintProfile(file, label, errors) {
   const profile = readJson(file, errors, label)
   if (!profile) return
@@ -128,6 +148,15 @@ function lintContent(root) {
       const full = path.join(profilesDir, file)
       if (file.endsWith('.json')) lintProfile(full, rel(full), errors)
       else errors.push(`${rel(full)}: perfil deve ser um arquivo .json`)
+    }
+  }
+
+  const templatesDir = path.join(root, 'templates')
+  if (fs.existsSync(templatesDir)) {
+    for (const file of fs.readdirSync(templatesDir)) {
+      const full = path.join(templatesDir, file)
+      if (file.endsWith('.json')) lintSettingsTemplate(full, rel(full), errors)
+      else errors.push(`${rel(full)}: modelo deve ser um arquivo .json`)
     }
   }
 
