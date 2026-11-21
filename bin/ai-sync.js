@@ -75,7 +75,8 @@ function allowWorktrees() {
 
   const permissions = settings.permissions || {}
   const dirs = Array.isArray(permissions.additionalDirectories) ? permissions.additionalDirectories : []
-  const obsolete = [`Edit(${dir}/**)`, `Write(${dir}/**)`]
+  const memoryDir = path.join(target, '.claude', 'team-memory')
+  const obsolete = [`Edit(${dir}/**)`, `Write(${dir}/**)`, `Edit(/${memoryDir}/**)`]
   const allow = (Array.isArray(permissions.allow) ? permissions.allow : []).filter((rule) => !obsolete.includes(rule))
   const rules = [`Edit(/${dir}/**)`]
 
@@ -93,7 +94,23 @@ function allowWorktrees() {
   console.log(`\nPasta de worktrees liberada (leitura e edição): ${dir}`)
 }
 
+function excludeTeamMemory() {
+  const gitDir = path.join(target, '.git')
+  if (!fs.existsSync(gitDir) || !fs.statSync(gitDir).isDirectory()) return
+
+  const file = path.join(gitDir, 'info', 'exclude')
+  const entry = '.claude/team-memory/'
+  const current = fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : ''
+  if (current.split('\n').includes(entry)) return
+
+  fs.mkdirSync(path.dirname(file), { recursive: true })
+  const separator = current === '' || current.endsWith('\n') ? '' : '\n'
+  fs.writeFileSync(file, `${current}${separator}${entry}\n`)
+  console.log(`\nMemória do time fora do git: ${entry}`)
+}
+
 allowWorktrees()
+excludeTeamMemory()
 
 console.log(`\nPerfil "${profile}" aplicado em ${target}`)
 console.log('Para conversar com o orquestrador: claude --agent orchestrator')
