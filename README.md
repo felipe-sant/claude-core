@@ -30,7 +30,6 @@ O campo `applies` de cada item do catálogo diz a que projetos ele serve: `["all
 
 O que falta para a nova função está nas issues:
 
-- [#4](https://github.com/felipe-sant/claude-core/issues/4) sincronizar sem apagar ou sobrescrever arquivos do usuário;
 - [#5](https://github.com/felipe-sant/claude-core/issues/5) padrões de desenvolvimento gerais e por stack;
 - [#6](https://github.com/felipe-sant/claude-core/issues/6) skills úteis;
 - [#7](https://github.com/felipe-sant/claude-core/issues/7) agentes de utilidade além do time;
@@ -87,7 +86,17 @@ Isso copia os agentes para `.claude/agents/`, as regras para `.claude/rules/` e 
 claude --agent orchestrator
 ```
 
-Rodar de novo no mesmo projeto não muda nada, e remove os arquivos que saíram do que se aplica. Atenção: hoje a remoção é feita pelo nome do arquivo, então um agente ou regra seu com o mesmo nome de um do `claude-core` pode ser apagado ou sobrescrito. Agentes e regras com outros nomes não são tocados. A proteção completa está na issue [#4](https://github.com/felipe-sant/claude-core/issues/4).
+## Sincronização segura
+
+O `ai-sync` registra o que instalou em `.claude/claude-core.lock.json` (caminho, versão e impressão digital de cada arquivo) e usa esse registro para nunca mexer no que é seu:
+
+- Arquivo criado por você, ou que já existia com o mesmo nome de um do `claude-core`, não é apagado nem sobrescrito. Se o conteúdo for diferente, a ferramenta avisa.
+- Arquivo instalado e sem alterações é atualizado quando há versão nova, e removido quando sai do `claude-core`.
+- Arquivo instalado que você editou não é tocado. A ferramenta avisa e diz se há versão nova disponível.
+- Em repositório que já foi configurado antes, os arquivos idênticos aos do `claude-core` passam a ser acompanhados; os diferentes ficam como estão, com aviso.
+- Ao final, lista o que foi criado, atualizado, removido e deixado como estava. Rodar de novo com tudo em dia não muda nada.
+
+Para receber a versão nova de um arquivo que você editou, apague-o e rode o `ai-sync` de novo. Versione o `claude-core.lock.json` junto com o repositório.
 
 ## Perfis
 
