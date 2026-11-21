@@ -7,14 +7,56 @@ const args = process.argv.slice(2)
 
 let profile = 'default'
 let target = process.cwd()
+let check = false
 
 for (let i = 0; i < args.length; i++) {
   if (args[i] === '--profile' || args[i] === '-p') profile = args[++i]
   else if (args[i] === '--help' || args[i] === '-h') {
-    console.log('Uso: ai-sync [pasta-do-repositorio] [--profile nome]')
+    console.log('Uso: ai-sync [pasta-do-repositorio] [--profile nome]\n     ai-sync --check')
     process.exit(0)
-  } else target = path.resolve(args[i])
+  } else if (args[i] === '--check') check = true
+  else target = path.resolve(args[i])
 }
+
+function runCheck() {
+  const catalog = JSON.parse(fs.readFileSync(path.join(root, 'catalog.json'), 'utf8'))
+  const groups = ['agents', 'rules', 'skills']
+  const errors = []
+  const warnings = []
+
+  for (const group of groups) {
+    for (const [name, item] of Object.entries(catalog[group] || {})) {
+      if (!fs.existsSync(path.join(root, item.path))) errors.push(`${group}/${name}: ${item.path} não existe`)
+      if (!Array.isArray(item.applies) || item.applies.length === 0) errors.push(`${group}/${name}: falta "applies"`)
+      if (!item.description) errors.push(`${group}/${name}: falta "description"`)
+    }
+    const dir = path.join(root, group)
+    if (fs.existsSync(dir)) {
+      const registered = new Set(Object.values(catalog[group] || {}).map((i) => path.normalize(i.path)))
+      for (const file of fs.readdirSync(dir)) {
+        if (!registered.has(path.join(group, file))) warnings.push(`${group}/${file} não está no catalog.json`)
+      }
+    }
+  }
+
+  const profilesDir = path.join(root, 'profiles')
+  for (const file of fs.readdirSync(profilesDir)) {
+    const profileConfig = JSON.parse(fs.readFileSync(path.join(profilesDir, file), 'utf8'))
+    for (const group of groups) {
+      for (const name of profileConfig[group] || []) {
+        if (!(catalog[group] || {})[name]) errors.push(`perfil ${file}: ${group}/${name} não está no catalog.json`)
+      }
+    }
+  }
+
+  warnings.forEach((w) => console.warn(`aviso: ${w}`))
+  errors.forEach((e) => console.error(`erro: ${e}`))
+  if (errors.length > 0) process.exit(1)
+  console.log('Catálogo e perfis consistentes')
+  process.exit(0)
+}
+
+if (check) runCheck()
 
 const profileFile = path.join(root, 'profiles', `${profile}.json`)
 if (!fs.existsSync(profileFile)) {
@@ -28,36 +70,42 @@ if (!fs.existsSync(target) || !fs.statSync(target).isDirectory()) {
 }
 
 const config = JSON.parse(fs.readFileSync(profileFile, 'utf8'))
+const catalog = JSON.parse(fs.readFileSync(path.join(root, 'catalog.json'), 'utf8'))
 
 function syncGroup(group, label) {
   const names = config[group] || []
-  const sourceDir = path.join(root, group)
+  const items = catalog[group] || {}
   const outDir = path.join(target, '.claude', group)
 
   for (const name of names) {
-    if (!fs.existsSync(path.join(sourceDir, `${name}.md`))) {
-      console.error(`${label} "${name}" do perfil não existe em ${group}/`)
+    const item = items[name]
+    if (!item || !fs.existsSync(path.join(root, item.path))) {
+      console.error(`${label} "${name}" do perfil não está registrado no catalog.json ou não existe`)
       process.exit(1)
     }
   }
 
+  if (names.length === 0 && !fs.existsSync(outDir)) return
+
   fs.mkdirSync(outDir, { recursive: true })
 
-  const wanted = new Set(names.map((n) => `${n}.md`))
+  const fileOf = (name) => path.basename(items[name].path)
+  const wanted = new Set(names.map(fileOf))
+  const managed = new Set(Object.keys(items).map(fileOf))
   for (const file of fs.readdirSync(outDir)) {
-    const managed = fs.existsSync(path.join(sourceDir, file))
-    if (managed && !wanted.has(file)) fs.rmSync(path.join(outDir, file))
+    if (managed.has(file) && !wanted.has(file)) fs.rmSync(path.join(outDir, file), { recursive: true })
   }
 
   console.log(`${label}s:`)
   for (const name of names) {
-    fs.copyFileSync(path.join(sourceDir, `${name}.md`), path.join(outDir, `${name}.md`))
+    fs.cpSync(path.join(root, items[name].path), path.join(outDir, fileOf(name)), { recursive: true })
     console.log(`  ${name}`)
   }
 }
 
 syncGroup('agents', 'Agente')
 syncGroup('rules', 'Regra')
+syncGroup('skills', 'Skill')
 
 function allowWorktrees() {
   const dir = path.join(path.dirname(target), `${path.basename(target)}-worktrees`)
