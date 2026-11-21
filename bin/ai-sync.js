@@ -5,14 +5,14 @@ const path = require('path')
 const root = path.resolve(__dirname, '..')
 const args = process.argv.slice(2)
 
-let profile = 'default'
+let profile = null
 let target = process.cwd()
 let check = false
 
 for (let i = 0; i < args.length; i++) {
   if (args[i] === '--profile' || args[i] === '-p') profile = args[++i]
   else if (args[i] === '--help' || args[i] === '-h') {
-    console.log('Uso: ai-sync [pasta-do-repositorio] [--profile nome]\n     ai-sync --check')
+    console.log('Uso: ai-sync [pasta-do-repositorio] [--profile nome]\n     ai-sync --check\n\nSem --profile, detecta a stack do projeto e aplica o que vale para qualquer projeto mais o da stack.')
     process.exit(0)
   } else if (args[i] === '--check') check = true
   else target = path.resolve(args[i])
@@ -21,6 +21,7 @@ for (let i = 0; i < args.length; i++) {
 function runCheck() {
   const catalog = JSON.parse(fs.readFileSync(path.join(root, 'catalog.json'), 'utf8'))
   const groups = ['agents', 'rules', 'skills']
+  const knownStacks = Object.keys(catalog.stacks || {})
   const errors = []
   const warnings = []
 
@@ -28,6 +29,9 @@ function runCheck() {
     for (const [name, item] of Object.entries(catalog[group] || {})) {
       if (!fs.existsSync(path.join(root, item.path))) errors.push(`${group}/${name}: ${item.path} não existe`)
       if (!Array.isArray(item.applies) || item.applies.length === 0) errors.push(`${group}/${name}: falta "applies"`)
+      for (const a of item.applies || []) {
+        if (a !== 'all' && !knownStacks.includes(a)) errors.push(`${group}/${name}: stack "${a}" não está em "stacks"`)
+      }
       if (!item.description) errors.push(`${group}/${name}: falta "description"`)
     }
     const dir = path.join(root, group)
@@ -58,19 +62,83 @@ function runCheck() {
 
 if (check) runCheck()
 
-const profileFile = path.join(root, 'profiles', `${profile}.json`)
-if (!fs.existsSync(profileFile)) {
-  const available = fs.readdirSync(path.join(root, 'profiles')).map((f) => f.replace('.json', ''))
-  console.error(`Perfil "${profile}" não existe. Disponíveis: ${available.join(', ')}`)
-  process.exit(1)
-}
 if (!fs.existsSync(target) || !fs.statSync(target).isDirectory()) {
   console.error(`Pasta não encontrada: ${target}`)
   process.exit(1)
 }
 
-const config = JSON.parse(fs.readFileSync(profileFile, 'utf8'))
 const catalog = JSON.parse(fs.readFileSync(path.join(root, 'catalog.json'), 'utf8'))
+const groups = ['agents', 'rules', 'skills']
+const ignoredDirs = new Set(['node_modules', 'vendor', 'dist', 'build', 'coverage'])
+
+function readJson(file) {
+  try {
+    return JSON.parse(fs.readFileSync(file, 'utf8'))
+  } catch {
+    return {}
+  }
+}
+
+function projectDependencies() {
+  const dirs = [target]
+  for (const entry of fs.readdirSync(target, { withFileTypes: true })) {
+    if (entry.isDirectory() && !entry.name.startsWith('.') && !ignoredDirs.has(entry.name)) {
+      dirs.push(path.join(target, entry.name))
+    }
+  }
+  const found = new Set()
+  for (const dir of dirs) {
+    const pkg = readJson(path.join(dir, 'package.json'))
+    const composer = readJson(path.join(dir, 'composer.json'))
+    for (const key of ['dependencies', 'devDependencies']) Object.keys(pkg[key] || {}).forEach((d) => found.add(d))
+    for (const key of ['require', 'require-dev']) Object.keys(composer[key] || {}).forEach((d) => found.add(d))
+  }
+  return found
+}
+
+function stacksWithContent() {
+  const stacks = new Set()
+  for (const group of groups) {
+    for (const item of Object.values(catalog[group] || {})) {
+      item.applies.filter((a) => a !== 'all').forEach((a) => stacks.add(a))
+    }
+  }
+  return stacks
+}
+
+function detectStacks() {
+  const dependencies = projectDependencies()
+  const available = stacksWithContent()
+  return Object.entries(catalog.stacks || {})
+    .filter(([name]) => available.has(name))
+    .filter(([, stack]) => (stack.detect?.dependencies || []).some((d) => dependencies.has(d)))
+    .map(([name]) => name)
+}
+
+function autoConfig(stacks) {
+  const result = {}
+  for (const group of groups) {
+    result[group] = Object.entries(catalog[group] || {})
+      .filter(([, item]) => item.applies.includes('all') || item.applies.some((a) => stacks.includes(a)))
+      .map(([name]) => name)
+  }
+  return result
+}
+
+let config
+let detected = []
+if (profile) {
+  const profileFile = path.join(root, 'profiles', `${profile}.json`)
+  if (!fs.existsSync(profileFile)) {
+    const available = fs.readdirSync(path.join(root, 'profiles')).map((f) => f.replace('.json', ''))
+    console.error(`Perfil "${profile}" não existe. Disponíveis: ${available.join(', ')}`)
+    process.exit(1)
+  }
+  config = JSON.parse(fs.readFileSync(profileFile, 'utf8'))
+} else {
+  detected = detectStacks()
+  config = autoConfig(detected)
+}
 
 function syncGroup(group, label) {
   const names = config[group] || []
@@ -160,5 +228,11 @@ function excludeTeamMemory() {
 allowWorktrees()
 excludeTeamMemory()
 
-console.log(`\nPerfil "${profile}" aplicado em ${target}`)
+if (profile) {
+  console.log(`\nPerfil "${profile}" aplicado em ${target} (sem detecção de stack)`)
+} else {
+  console.log(`\nStacks detectadas: ${detected.length ? detected.join(', ') : 'nenhuma'}`)
+  if (detected.length === 0) console.log('Nenhuma stack reconhecida: foi aplicado só o que vale para qualquer projeto.')
+  console.log(`Aplicado em ${target}`)
+}
 console.log('Para conversar com o orquestrador: claude --agent orchestrator')

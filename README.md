@@ -24,13 +24,12 @@ Hoje o repositório já entrega:
 | `profiles/` | Escolhem o que cada repositório recebe. |
 | `bin/ai-sync.js` | Aplica um perfil em um repositório. |
 
-O campo `applies` de cada item do catálogo diz a que projetos ele serve: `["all"]` para qualquer projeto ou uma lista de stacks, como `["react"]`. Itens de stack ficam em `stacks/<stack>/` e o `path` do catálogo aponta para lá. A configuração base do Claude por projeto está na issue [#8](https://github.com/felipe-sant/claude-core/issues/8) e a detecção automática de stack, na [#3](https://github.com/felipe-sant/claude-core/issues/3).
+O campo `applies` de cada item do catálogo diz a que projetos ele serve: `["all"]` para qualquer projeto ou uma lista de stacks, como `["react"]`. Itens de stack ficam em `stacks/<stack>/` e o `path` do catálogo aponta para lá. A configuração base do Claude por projeto está na issue [#8](https://github.com/felipe-sant/claude-core/issues/8).
 
 ## Planejado
 
 O que falta para a nova função está nas issues:
 
-- [#3](https://github.com/felipe-sant/claude-core/issues/3) detectar a stack do projeto automaticamente;
 - [#4](https://github.com/felipe-sant/claude-core/issues/4) sincronizar sem apagar ou sobrescrever arquivos do usuário;
 - [#5](https://github.com/felipe-sant/claude-core/issues/5) padrões de desenvolvimento gerais e por stack;
 - [#6](https://github.com/felipe-sant/claude-core/issues/6) skills úteis;
@@ -66,26 +65,33 @@ O time é montado por tarefa, com quantos agentes do mesmo papel o escopo pedir,
 ## Usar em um repositório
 
 ```
-node ~/claude-core/bin/ai-sync.js /caminho/do/repo --profile default
+node ~/claude-core/bin/ai-sync.js /caminho/do/repo
 ```
 
 Ou, dentro do repositório, sem argumento de pasta:
 
 ```
-node ~/claude-core/bin/ai-sync.js --profile frontend
+node ~/claude-core/bin/ai-sync.js
 ```
 
-Isso copia os agentes do perfil para `.claude/agents/`, as regras para `.claude/rules/` e as skills para `.claude/skills/` do repositório. Depois, abra o orquestrador:
+Sem `--profile`, a ferramenta detecta a stack do projeto e aplica tudo o que vale para qualquer projeto (`applies: ["all"]`) mais o que é das stacks detectadas. Ao final, mostra as stacks detectadas e o que foi aplicado.
+
+- A detecção olha as dependências do `package.json` e do `composer.json` na raiz e nas pastas de primeiro nível, então um repositório com painel e API reconhece as duas stacks.
+- Só são detectadas as stacks para as quais existe conteúdo no `claude-core`. As regras de detecção ficam em `stacks` no `catalog.json`.
+- Se nada for reconhecido, aplica só o que vale para qualquer projeto e avisa.
+- `--profile nome` escolhe um perfil à mão, prevalece sobre a detecção e aplica exatamente o que o perfil lista.
+
+Isso copia os agentes para `.claude/agents/`, as regras para `.claude/rules/` e as skills para `.claude/skills/` do repositório. Depois, abra o orquestrador:
 
 ```
 claude --agent orchestrator
 ```
 
-Rodar de novo atualiza os arquivos copiados e remove os que saíram do perfil. Atenção: hoje a remoção é feita pelo nome do arquivo, então um agente ou regra seu com o mesmo nome de um do `claude-core` pode ser apagado ou sobrescrito. Agentes e regras com outros nomes não são tocados. A proteção completa está na issue [#4](https://github.com/felipe-sant/claude-core/issues/4).
+Rodar de novo no mesmo projeto não muda nada, e remove os arquivos que saíram do que se aplica. Atenção: hoje a remoção é feita pelo nome do arquivo, então um agente ou regra seu com o mesmo nome de um do `claude-core` pode ser apagado ou sobrescrito. Agentes e regras com outros nomes não são tocados. A proteção completa está na issue [#4](https://github.com/felipe-sant/claude-core/issues/4).
 
 ## Perfis
 
-Ficam em `profiles/*.json`. Cada perfil lista os `agents` e as `rules` que o repositório recebe.
+Ficam em `profiles/*.json` e só valem quando escolhidos com `--profile`. Cada perfil lista os `agents` e as `rules` que o repositório recebe.
 
 - `default`: time completo.
 - `frontend`: `dev-frontend`, `dev-fullstack` e `dev-doc`, com `designer`.
@@ -93,7 +99,7 @@ Ficam em `profiles/*.json`. Cada perfil lista os `agents` e as `rules` que o rep
 
 Todos incluem o `reviewer`.
 
-Cada perfil pode ter as listas `agents`, `rules` e `skills`, com nomes registrados no `catalog.json`. Para uma configuração nova, crie `profiles/nome.json`.
+Cada perfil pode ter as listas `agents`, `rules` e `skills`, com nomes registrados no `catalog.json`. Para uma configuração manual nova, crie `profiles/nome.json`.
 
 ## Regras
 
@@ -105,6 +111,8 @@ Ficam em `rules/*.md` e o Claude Code as carrega sozinho a partir de `.claude/ru
 
 1. Crie o arquivo: `agents/nome.md` (com o cabeçalho `name`, `description`, `model`), `rules/nome.md` ou `skills/nome/SKILL.md`. Se for só de uma stack, use `stacks/<stack>/...`.
 2. Registre em `catalog.json`, no grupo certo, com `path`, `applies` e `description`. É o único lugar de registro.
-3. Para um repositório receber o item, inclua o nome no perfil que deve usá-lo (`profiles/*.json`) e rode o `ai-sync`.
+3. Rode o `ai-sync`: com `applies: ["all"]` ou uma stack detectada, o item é aplicado sozinho. Para um perfil manual receber o item, inclua o nome em `profiles/*.json`.
+
+Para uma stack nova, adicione-a em `stacks` no `catalog.json` com `detect.dependencies` (nomes de pacotes do `package.json` ou `composer.json`).
 
 Para conferir se o catálogo e os perfis estão consistentes: `node bin/ai-sync.js --check`.

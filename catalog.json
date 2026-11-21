@@ -1,4 +1,24 @@
 {
+  "stacks": {
+    "react": {
+      "description": "Aplicações React.",
+      "detect": {
+        "dependencies": ["react"]
+      }
+    },
+    "nestjs": {
+      "description": "APIs NestJS.",
+      "detect": {
+        "dependencies": ["@nestjs/core"]
+      }
+    },
+    "laravel": {
+      "description": "Aplicações Laravel.",
+      "detect": {
+        "dependencies": ["laravel/framework"]
+      }
+    }
+  },
   "agents": {
     "orchestrator": {
       "path": "agents/orchestrator.md",
