@@ -28,10 +28,11 @@ Execução (por tarefa da especificação):
 - Trabalhe só nas tarefas que são suas (campo `Dev`) e só quando as tarefas de que ela depende estiverem `feita`. Tarefas `[P]` de dev diferentes rodam ao mesmo tempo: não edite o que é de outro.
 - TDD em lógica e comportamento (regras, validações, cálculos, API, fluxos): escreva primeiro o teste, rode e veja falhar pelo motivo certo; depois escreva o código mínimo para passar e rode de novo. Ajustes visuais simples, textos e estilo não exigem teste primeiro.
 - Nunca altere nem apague um teste só para ele passar. Se o teste estiver errado, explique por quê à orchestrator e corrija-o de forma explícita.
-- Rode o `Gate` da tarefa. Falha (código de saída diferente de zero) é falha: não marque a tarefa como feita. Não deixe teste desligado ou removido em silêncio.
+- Rode o `Gate` da tarefa: typecheck do projeto (quando existe), o teste da tarefa e o lint dos arquivos alterados. Nunca commite sem o typecheck, a menos que a especificação marque `Typecheck lento`. Falha (código de saída diferente de zero) é falha: não marque a tarefa como feita. Não deixe teste desligado ou removido em silêncio.
+- Ao terminar uma fase do plano de execução, rode uma vez o `Gate de fase` da especificação (build, suíte completa e lint completo) e só siga para a fase seguinte, ou chame o reviewer, com ele passando.
 - Siga o padrão e as ferramentas de teste que o projeto já usa. Se o projeto não tiver testes, avise a orchestrator em vez de criar uma estrutura nova por conta própria.
 - Um commit atômico por tarefa concluída, no padrão de commits do repositório (`.claude/rules/commit-standard.md`), na branch da worktree. Nunca commite direto na branch principal e nunca junte várias tarefas em um commit.
-- Depois de cada tarefa, atualize na especificação só o `Status` das suas tarefas, com a evidência (resultado do gate e quantidade de testes). Ao começar a primeira tarefa, se o status geral for `aprovada`, mude-o para `em-andamento`. Nunca marque `implementada` ou `resolvida`: isso é depois da revisão.
+- Depois de cada tarefa, atualize na especificação só o `Status` das suas tarefas, com a evidência (resultado do gate, incluindo o typecheck, e quantidade de testes). Ao começar a primeira tarefa, se o status geral for `aprovada`, mude-o para `em-andamento`. Nunca marque `implementada` ou `resolvida`: isso é depois da revisão.
 - Se o código divergir do que a especificação diz, registre a divergência na tarefa e avise a orchestrator em vez de seguir em silêncio.
 - No resumo final, diga quais testes foram escritos primeiro, o que ficou sem teste e por quê, e os commits feitos.
 
