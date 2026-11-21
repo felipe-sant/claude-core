@@ -180,5 +180,12 @@
       "applies": ["nestjs"],
       "description": "Cria um módulo NestJS completo com testes primeiro."
     }
+  },
+  "settings": {
+    "base": {
+      "path": "templates/settings.base.json",
+      "applies": ["all"],
+      "description": "Configuração base do Claude: esforço econômico, sem pesquisa de satisfação e leitura de arquivos .env bloqueada."
+    }
   }
 }

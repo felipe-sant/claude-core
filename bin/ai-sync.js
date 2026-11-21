@@ -22,7 +22,7 @@ for (let i = 0; i < args.length; i++) {
 
 function runCheck() {
   const catalog = JSON.parse(fs.readFileSync(path.join(root, 'catalog.json'), 'utf8'))
-  const groups = ['agents', 'rules', 'skills']
+  const groups = ['agents', 'rules', 'skills', 'settings']
   const knownStacks = Object.keys(catalog.stacks || {})
   const errors = []
   const warnings = []
@@ -70,7 +70,8 @@ if (!fs.existsSync(target) || !fs.statSync(target).isDirectory()) {
 }
 
 const catalog = JSON.parse(fs.readFileSync(path.join(root, 'catalog.json'), 'utf8'))
-const groups = ['agents', 'rules', 'skills']
+const fileGroups = ['agents', 'rules', 'skills']
+const groups = [...fileGroups, 'settings']
 const ignoredDirs = new Set(['node_modules', 'vendor', 'dist', 'build', 'coverage'])
 
 function readJson(file) {
@@ -149,6 +150,11 @@ const coreVersion = readJson(path.join(root, 'package.json')).version || '0.0.0'
 const previous = fs.existsSync(manifestFile) ? readJson(manifestFile).files || {} : {}
 const manifest = {}
 const report = { created: [], updated: [], overwritten: [], removed: [], adopted: [], kept: [], warnings: [] }
+const settingsReport = { created: false, added: [], suggested: [], broken: false }
+const previousSettings = new Set(
+  fs.existsSync(manifestFile) ? readJson(manifestFile).settings?.applied || [] : []
+)
+const appliedSettings = new Set(previousSettings)
 
 const hashOf = (file) => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex')
 
@@ -164,7 +170,7 @@ function listFiles(abs) {
 
 function desiredFiles() {
   const desired = new Map()
-  for (const group of groups) {
+  for (const group of fileGroups) {
     const items = catalog[group] || {}
     for (const name of config[group] || []) {
       const item = items[name]
@@ -257,14 +263,113 @@ function syncFiles() {
   }
 }
 
+const settingsFile = path.join(target, '.claude', 'settings.json')
+
+const isPlainObject = (value) => value !== null && typeof value === 'object' && !Array.isArray(value)
+
+function leafPaths(value, prefix) {
+  if (!isPlainObject(value)) return [prefix]
+  return Object.entries(value).flatMap(([key, child]) => leafPaths(child, `${prefix}.${key}`))
+}
+
+function wasApplied(keyPath) {
+  for (const applied of previousSettings) {
+    if (applied === keyPath || applied.startsWith(`${keyPath}.`)) return true
+  }
+  return false
+}
+
+function mergeMissing(existing, template, prefix) {
+  for (const [key, recommended] of Object.entries(template)) {
+    const keyPath = prefix ? `${prefix}.${key}` : key
+    if (!(key in existing)) {
+      if (wasApplied(keyPath)) continue
+      existing[key] = JSON.parse(JSON.stringify(recommended))
+      leafPaths(recommended, keyPath).forEach((leaf) => appliedSettings.add(leaf))
+      settingsReport.added.push(keyPath)
+    } else if (isPlainObject(existing[key]) && isPlainObject(recommended)) {
+      mergeMissing(existing[key], recommended, keyPath)
+    } else if (JSON.stringify(existing[key]) !== JSON.stringify(recommended)) {
+      settingsReport.suggested.push({ path: keyPath, current: existing[key], recommended })
+    }
+  }
+}
+
+function mergeTemplates(base, template) {
+  const result = { ...base }
+  for (const [key, value] of Object.entries(template)) {
+    result[key] = isPlainObject(result[key]) && isPlainObject(value) ? mergeTemplates(result[key], value) : value
+  }
+  return result
+}
+
+function applySettings() {
+  const items = catalog.settings || {}
+  const templates = (config.settings || []).map((name) => {
+    const item = items[name]
+    if (!item || !fs.existsSync(path.join(root, item.path))) {
+      console.error(`settings/${name} não está registrado no catalog.json ou não existe`)
+      process.exit(1)
+    }
+    return readJson(path.join(root, item.path))
+  })
+  if (templates.length === 0) return
+
+  const recommended = templates.reduce(mergeTemplates, {})
+
+  let existing = {}
+  const hadFile = fs.existsSync(settingsFile)
+  if (hadFile) {
+    try {
+      existing = JSON.parse(fs.readFileSync(settingsFile, 'utf8'))
+    } catch {
+      settingsReport.broken = true
+      return
+    }
+    if (!isPlainObject(existing)) {
+      settingsReport.broken = true
+      return
+    }
+  }
+
+  mergeMissing(existing, recommended, '')
+  if (settingsReport.added.length === 0) return
+
+  fs.mkdirSync(path.dirname(settingsFile), { recursive: true })
+  fs.writeFileSync(settingsFile, `${JSON.stringify(existing, null, 2)}\n`)
+  settingsReport.created = !hadFile
+}
+
 function writeManifest() {
   const sorted = Object.fromEntries(Object.entries(manifest).sort(([x], [y]) => x.localeCompare(y)))
-  const content = `${JSON.stringify({ files: sorted }, null, 2)}\n`
+  const settings = appliedSettings.size > 0 ? { applied: [...appliedSettings].sort() } : undefined
+  const content = `${JSON.stringify({ files: sorted, ...(settings ? { settings } : {}) }, null, 2)}\n`
   const current = fs.existsSync(manifestFile) ? fs.readFileSync(manifestFile, 'utf8') : ''
-  if (Object.keys(sorted).length === 0 && current === '') return
+  if (Object.keys(sorted).length === 0 && appliedSettings.size === 0 && current === '') return
   if (current === content) return
   fs.mkdirSync(path.dirname(manifestFile), { recursive: true })
   fs.writeFileSync(manifestFile, content)
+}
+
+function formatValue(value) {
+  return JSON.stringify(value)
+}
+
+function printSettingsReport() {
+  if (settingsReport.broken) {
+    console.log('\nConfiguração base:')
+    console.log('  .claude/settings.json não é um JSON válido; não mexi nele.')
+    return
+  }
+  if (settingsReport.created) console.log('\nConfiguração base criada em .claude/settings.json:')
+  else if (settingsReport.added.length > 0) console.log('\nConfiguração base acrescentada em .claude/settings.json (o que você já definia não foi alterado):')
+  settingsReport.added.forEach((p) => console.log(`  ${p}`))
+  if (settingsReport.suggested.length > 0) {
+    console.log('\nSugerido e não aplicado (você já definiu outro valor):')
+    for (const { path: keyPath, current, recommended } of settingsReport.suggested) {
+      console.log(`  ${keyPath}: está ${formatValue(current)}, recomendado ${formatValue(recommended)}`)
+    }
+  }
 }
 
 function printReport() {
@@ -281,7 +386,9 @@ function printReport() {
     console.log(`${title}:`)
     list.forEach((f) => console.log(`  ${f}`))
   }
-  if (Object.values(report).every((l) => l.length === 0)) console.log('Tudo em dia, nada mudou.')
+  const settingsChanged = settingsReport.created || settingsReport.added.length > 0
+  if (Object.values(report).every((l) => l.length === 0) && !settingsChanged) console.log('Tudo em dia, nada mudou.')
+  printSettingsReport()
   if (report.warnings.length > 0) {
     console.log('\nAvisos:')
     report.warnings.forEach((w) => console.log(`  ${w}`))
@@ -289,6 +396,7 @@ function printReport() {
 }
 
 syncFiles()
+applySettings()
 writeManifest()
 printReport()
 
@@ -327,23 +435,24 @@ function allowWorktrees() {
   console.log(`\nPasta de worktrees liberada (leitura e edição): ${dir}`)
 }
 
-function excludeTeamMemory() {
+function excludeLocalFiles() {
   const gitDir = path.join(target, '.git')
   if (!fs.existsSync(gitDir) || !fs.statSync(gitDir).isDirectory()) return
 
   const file = path.join(gitDir, 'info', 'exclude')
-  const entry = '.claude/team-memory/'
   const current = fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : ''
-  if (current.split('\n').includes(entry)) return
+  const lines = current.split('\n')
+  const missing = ['.claude/team-memory/', '.claude/settings.local.json'].filter((entry) => !lines.includes(entry))
+  if (missing.length === 0) return
 
   fs.mkdirSync(path.dirname(file), { recursive: true })
   const separator = current === '' || current.endsWith('\n') ? '' : '\n'
-  fs.writeFileSync(file, `${current}${separator}${entry}\n`)
-  console.log(`\nMemória do time fora do git: ${entry}`)
+  fs.writeFileSync(file, `${current}${separator}${missing.join('\n')}\n`)
+  console.log(`\nFora do git: ${missing.join(', ')}`)
 }
 
 allowWorktrees()
-excludeTeamMemory()
+excludeLocalFiles()
 
 if (profile) {
   console.log(`\nPerfil "${profile}" aplicado em ${target} (sem detecção de stack)`)
