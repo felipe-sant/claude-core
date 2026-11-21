@@ -142,6 +142,11 @@
       "path": "stacks/adonisjs/rules/adonisjs-standard.md",
       "applies": ["adonisjs"],
       "description": "Padrão para aplicações AdonisJS."
+    },
+    "git-standard": {
+      "path": "rules/git-standard.md",
+      "applies": ["all"],
+      "description": "Git com vários agentes na mesma worktree: commit por caminho explícito e histórico sem rebase interativo."
     }
   },
   "skills": {

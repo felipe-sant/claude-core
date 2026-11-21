@@ -7,7 +7,7 @@ Ferramenta que roda em outros repositórios para configurar o Claude Code e o si
 | O que | Quantos | Onde fica no projeto |
 | --- | --- | --- |
 | Agentes (o time) | 14 | `.claude/agents/` |
-| Regras (padrões de desenvolvimento) | 5 gerais e 4 por stack | `.claude/rules/` |
+| Regras (padrões de desenvolvimento) | 6 gerais e 4 por stack | `.claude/rules/` |
 | Skills | 5 gerais e 2 por stack | `.claude/skills/` |
 | Configuração base do Claude | 1 modelo | `.claude/settings.json` |
 
@@ -67,7 +67,7 @@ Ficam em `profiles/*.json` e só valem com `--profile`. Cada perfil lista `agent
 - `frontend`: `dev-frontend`, `dev-fullstack` e `dev-doc`, com `designer`.
 - `backend`: `dev-backend`, `dev-fullstack`, `dev-database`, `dev-devops` e `dev-doc`, sem `designer`.
 
-Todos incluem `orchestrator`, `product-owner`, `sdd`, `executor`, `reviewer` e `qa`, as cinco regras gerais, as cinco skills gerais e a configuração base. Para uma configuração manual nova, crie `profiles/nome.json`.
+Todos incluem `orchestrator`, `product-owner`, `sdd`, `executor`, `reviewer` e `qa`, as seis regras gerais, as cinco skills gerais e a configuração base. Para uma configuração manual nova, crie `profiles/nome.json`.
 
 ## Sincronização segura
 
@@ -167,6 +167,7 @@ Gerais:
 - `testing-standard`: testes primeiro (TDD), teste para cada bug e nunca alterar teste só para passar.
 - `security-standard`: segredos, validação de entrada, acesso, senhas e dependências.
 - `review-standard`: como preparar e como fazer uma revisão de código.
+- `git-standard`: git com vários agentes na mesma worktree. Adicionar e commitar só os próprios arquivos, por caminho exato (`git commit -m "..." -- caminhos`), nunca `git add .`, `git add -A` nem `git commit -a`, e como reescrever o histórico sem `git rebase -i` (`GIT_SEQUENCE_EDITOR`, `--autosquash` e cherry-pick).
 
 Por stack: `react-standard`, `nestjs-standard`, `laravel-standard` e `adonisjs-standard`. Têm `paths` no cabeçalho, então o Claude só as carrega ao mexer em arquivos da stack. Em um repositório com painel React e API NestJS, cada padrão aparece só nos arquivos certos.
 
