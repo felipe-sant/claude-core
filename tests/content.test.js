@@ -101,3 +101,23 @@ test('regra com paths válidos é aceita e regra com cabeçalho fora do formato 
   assert.match(errors, /sem-aspas\.md: o cabeçalho da regra só aceita "paths:"/)
   assert.match(errors, /sem-titulo-depois\.md: a regra deve começar com um título/)
 })
+
+test('modelo de configuração que concede permissões amplas ou tem JSON inválido é reprovado', () => {
+  const ok = fixture({ 'templates/settings.base.json': '{ "effortLevel": "medium", "permissions": { "deny": ["Read(./.env)"] } }\n' })
+  assert.deepEqual(lintContent(ok), [])
+
+  const ruim = fixture({
+    'templates/settings.allow.json': '{ "permissions": { "allow": ["Bash(*)"] } }\n',
+    'templates/settings.modo.json': '{ "permissions": { "defaultMode": "bypassPermissions" } }\n',
+    'templates/settings.dirs.json': '{ "permissions": { "additionalDirectories": ["/"] } }\n',
+    'templates/settings.quebrado.json': '{ ruim',
+    'templates/settings.txt': 'x'
+  })
+  const errors = lintContent(ruim).join('\n')
+
+  assert.match(errors, /settings\.allow\.json: o modelo não pode definir "permissions\.allow"/)
+  assert.match(errors, /settings\.modo\.json: o modelo não pode definir "permissions\.defaultMode"/)
+  assert.match(errors, /settings\.dirs\.json: o modelo não pode definir "permissions\.additionalDirectories"/)
+  assert.match(errors, /settings\.quebrado\.json: JSON inválido/)
+  assert.match(errors, /settings\.txt: modelo deve ser um arquivo \.json/)
+})

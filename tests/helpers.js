@@ -31,13 +31,15 @@ function makeCore({ items = [], stacks = {}, profiles = {}, version = '1.0.0' } 
   fs.copyFileSync(path.join(repoRoot, 'bin', 'ai-sync.js'), path.join(core, 'bin', 'ai-sync.js'))
   write(path.join(core, 'package.json'), JSON.stringify({ name: 'fixture', version }))
 
-  const catalog = { stacks, agents: {}, rules: {}, skills: {} }
+  const catalog = { stacks, agents: {}, rules: {}, skills: {}, settings: {} }
   for (const item of items) {
     const { group, name, applies = ['all'], files } = item
-    const itemPath = group === 'skills' ? `skills/${name}` : `${group}/${name}.md`
+    const itemPath = group === 'skills' ? `skills/${name}` : group === 'settings' ? `templates/settings.${name}.json` : `${group}/${name}.md`
     catalog[group][name] = { path: itemPath, applies, description: `${name} de teste` }
     if (group === 'skills') {
       for (const [rel, content] of Object.entries(files)) write(path.join(core, itemPath, rel), content)
+    } else if (group === 'settings') {
+      write(path.join(core, itemPath), JSON.stringify(files, null, 2))
     } else {
       write(path.join(core, itemPath), files)
     }
