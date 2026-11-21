@@ -140,40 +140,149 @@ if (profile) {
   config = autoConfig(detected)
 }
 
-function syncGroup(group, label) {
-  const names = config[group] || []
-  const items = catalog[group] || {}
-  const outDir = path.join(target, '.claude', group)
+const crypto = require('crypto')
 
-  for (const name of names) {
-    const item = items[name]
-    if (!item || !fs.existsSync(path.join(root, item.path))) {
-      console.error(`${label} "${name}" do perfil não está registrado no catalog.json ou não existe`)
-      process.exit(1)
+const manifestFile = path.join(target, '.claude', 'claude-core.lock.json')
+const coreVersion = readJson(path.join(root, 'package.json')).version || '0.0.0'
+const previous = fs.existsSync(manifestFile) ? readJson(manifestFile).files || {} : {}
+const manifest = {}
+const report = { created: [], updated: [], removed: [], adopted: [], kept: [], warnings: [] }
+
+const hashOf = (file) => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex')
+
+function listFiles(abs) {
+  if (!fs.statSync(abs).isDirectory()) return ['']
+  const out = []
+  for (const entry of fs.readdirSync(abs, { withFileTypes: true })) {
+    if (entry.isDirectory()) listFiles(path.join(abs, entry.name)).forEach((f) => out.push(path.join(entry.name, f)))
+    else out.push(entry.name)
+  }
+  return out
+}
+
+function desiredFiles() {
+  const desired = new Map()
+  for (const group of groups) {
+    const items = catalog[group] || {}
+    for (const name of config[group] || []) {
+      const item = items[name]
+      if (!item || !fs.existsSync(path.join(root, item.path))) {
+        console.error(`${group}/${name} não está registrado no catalog.json ou não existe`)
+        process.exit(1)
+      }
+      const source = path.join(root, item.path)
+      for (const rel of listFiles(source)) {
+        const from = rel === '' ? source : path.join(source, rel)
+        const to = path.join('.claude', group, path.basename(item.path), rel)
+        desired.set(to, from)
+      }
     }
   }
+  return desired
+}
 
-  if (names.length === 0 && !fs.existsSync(outDir)) return
-
-  fs.mkdirSync(outDir, { recursive: true })
-
-  const fileOf = (name) => path.basename(items[name].path)
-  const wanted = new Set(names.map(fileOf))
-  const managed = new Set(Object.keys(items).map(fileOf))
-  for (const file of fs.readdirSync(outDir)) {
-    if (managed.has(file) && !wanted.has(file)) fs.rmSync(path.join(outDir, file), { recursive: true })
-  }
-
-  console.log(`${label}s:`)
-  for (const name of names) {
-    fs.cpSync(path.join(root, items[name].path), path.join(outDir, fileOf(name)), { recursive: true })
-    console.log(`  ${name}`)
+function pruneEmptyDirs(file) {
+  let dir = path.dirname(file)
+  const stop = path.join(target, '.claude')
+  while (dir.startsWith(stop) && dir !== stop && fs.existsSync(dir) && fs.readdirSync(dir).length === 0) {
+    fs.rmdirSync(dir)
+    dir = path.dirname(dir)
   }
 }
 
-syncGroup('agents', 'Agente')
-syncGroup('rules', 'Regra')
-syncGroup('skills', 'Skill')
+function syncFiles() {
+  const desired = desiredFiles()
+
+  for (const [rel, from] of desired) {
+    const dest = path.join(target, rel)
+    const sourceHash = hashOf(from)
+    const recorded = previous[rel]
+    const install = (list) => {
+      fs.mkdirSync(path.dirname(dest), { recursive: true })
+      fs.copyFileSync(from, dest)
+      manifest[rel] = { hash: sourceHash, version: coreVersion }
+      list.push(rel)
+    }
+
+    if (!fs.existsSync(dest)) {
+      install(report.created)
+      continue
+    }
+
+    const currentHash = hashOf(dest)
+    if (currentHash === sourceHash) {
+      manifest[rel] = recorded && recorded.hash === sourceHash ? recorded : { hash: sourceHash, version: coreVersion }
+      if (!recorded) report.adopted.push(rel)
+      continue
+    }
+
+    if (!recorded) {
+      report.kept.push(rel)
+      report.warnings.push(`${rel}: já existe um arquivo seu com esse nome; não mexi nele. O claude-core tem uma versão disponível.`)
+      continue
+    }
+
+    if (currentHash === recorded.hash) {
+      install(report.updated)
+      continue
+    }
+
+    manifest[rel] = recorded
+    report.kept.push(rel)
+    const newer = sourceHash !== recorded.hash
+    report.warnings.push(
+      `${rel}: você editou este arquivo; não mexi nele.${newer ? ' Há uma versão nova disponível no claude-core.' : ''}`
+    )
+  }
+
+  for (const [rel, recorded] of Object.entries(previous)) {
+    if (desired.has(rel)) continue
+    const dest = path.join(target, rel)
+    if (!fs.existsSync(dest)) continue
+    if (hashOf(dest) === recorded.hash) {
+      fs.rmSync(dest)
+      pruneEmptyDirs(dest)
+      report.removed.push(rel)
+    } else {
+      report.kept.push(rel)
+      report.warnings.push(`${rel}: saiu do claude-core, mas você editou este arquivo; não removi.`)
+    }
+  }
+}
+
+function writeManifest() {
+  const sorted = Object.fromEntries(Object.entries(manifest).sort(([x], [y]) => x.localeCompare(y)))
+  const content = `${JSON.stringify({ files: sorted }, null, 2)}\n`
+  const current = fs.existsSync(manifestFile) ? fs.readFileSync(manifestFile, 'utf8') : ''
+  if (Object.keys(sorted).length === 0 && current === '') return
+  if (current === content) return
+  fs.mkdirSync(path.dirname(manifestFile), { recursive: true })
+  fs.writeFileSync(manifestFile, content)
+}
+
+function printReport() {
+  const sections = [
+    ['Criados', report.created],
+    ['Atualizados', report.updated],
+    ['Removidos', report.removed],
+    ['Já em dia (passaram a ser acompanhados)', report.adopted],
+    ['Deixados como estavam', report.kept]
+  ]
+  for (const [title, list] of sections) {
+    if (list.length === 0) continue
+    console.log(`${title}:`)
+    list.forEach((f) => console.log(`  ${f}`))
+  }
+  if (Object.values(report).every((l) => l.length === 0)) console.log('Tudo em dia, nada mudou.')
+  if (report.warnings.length > 0) {
+    console.log('\nAvisos:')
+    report.warnings.forEach((w) => console.log(`  ${w}`))
+  }
+}
+
+syncFiles()
+writeManifest()
+printReport()
 
 function allowWorktrees() {
   const dir = path.join(path.dirname(target), `${path.basename(target)}-worktrees`)
