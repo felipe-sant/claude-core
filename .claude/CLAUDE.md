@@ -12,9 +12,12 @@ Todo o texto dos agentes, das regras e da documentação é em **português**. N
 
 | Pasta | Conteúdo |
 | --- | --- |
+| `catalog.json` | Arquivo central. Registra cada agente, regra e skill com `path`, `applies` (`["all"]` ou stacks) e `description`. É o único lugar de registro de um item. |
 | `agents/` | Um arquivo `.md` por papel, com cabeçalho (`name`, `description`, `model`, `tools`) e as instruções. |
 | `rules/` | Regras compartilhadas, copiadas para `.claude/rules/` dos repositórios. |
-| `profiles/` | Um `.json` por configuração, com as listas `agents` e `rules` que o repositório recebe. |
+| `skills/` | Skills que valem para qualquer projeto, uma pasta por skill, copiadas para `.claude/skills/`. |
+| `stacks/<stack>/` | O que vale só para uma stack (`react`, `nestjs`, `laravel`...), com `agents/`, `rules/` e `skills/`. |
+| `profiles/` | Um `.json` por configuração, com as listas `agents`, `rules` e `skills` (nomes do catálogo) que o repositório recebe. |
 | `bin/ai-sync.js` | Copia os agentes e as regras de um perfil para um repositório. |
 
 ## O time
@@ -34,16 +37,18 @@ Fluxo: o `product-owner` define as regras, um dev chama o `sdd` para a especific
 
 - **Nunca escreva comentários no código** (nem de linha, nem de bloco, nem JSDoc), em nenhum arquivo. Deixe os comentários que já existem como estão.
 - O nome do arquivo em `agents/` é igual ao campo `name` do cabeçalho.
-- Todo agente citado em `profiles/*.json` precisa existir em `agents/`, e toda regra citada precisa existir em `rules/`.
+- Todo item citado em `profiles/*.json` precisa estar registrado no `catalog.json`, e todo `path` do catálogo precisa existir. O `node bin/ai-sync.js --check` confere isso.
+- Item novo (agente, regra ou skill) é um arquivo mais uma entrada no `catalog.json`. Para um repositório recebê-lo, inclua o nome no perfil.
 - Agente que escreve código leva no prompt a regra de não escrever comentários.
 - Tarefas escritas por agentes usam linguagem simples, que um PO e um QA entendam, sem caminhos de arquivo, código ou detalhes internos.
-- Ao criar ou renomear um papel, atualize `profiles/`, o `README.md` e a lista acima.
+- Ao criar ou renomear um papel, atualize o `catalog.json`, `profiles/`, o `README.md` e a lista acima.
 
 ## Verificar uma mudança
 
-Rode o `ai-sync` em uma pasta temporária e confira o resultado:
+Rode a checagem e o `ai-sync` em uma pasta temporária e confira o resultado:
 
 ```bash
+node bin/ai-sync.js --check
 T=$(mktemp -d) && node bin/ai-sync.js "$T" --profile default && ls -R "$T/.claude"; rm -rf "$T"
 ```
 

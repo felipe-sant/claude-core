@@ -1,0 +1,82 @@
+{
+  "agents": {
+    "orchestrator": {
+      "path": "agents/orchestrator.md",
+      "applies": ["all"],
+      "description": "Única sessão que fala com o usuário. Monta o time de cada tarefa e só delega."
+    },
+    "product-owner": {
+      "path": "agents/product-owner.md",
+      "applies": ["all"],
+      "description": "Fonte das regras de negócio. Consulta e cria tarefas, nunca define prioridade."
+    },
+    "sdd": {
+      "path": "agents/sdd.md",
+      "applies": ["all"],
+      "description": "Escreve a especificação da tarefa, só a pedido de um dev."
+    },
+    "executor": {
+      "path": "agents/executor.md",
+      "applies": ["all"],
+      "description": "Ajudante dos devs. Executa uma tarefa da especificação com teste primeiro, gate e commit."
+    },
+    "dev-frontend": {
+      "path": "agents/dev-frontend.md",
+      "applies": ["all"],
+      "description": "Implementa telas."
+    },
+    "dev-backend": {
+      "path": "agents/dev-backend.md",
+      "applies": ["all"],
+      "description": "Implementa API e dados."
+    },
+    "dev-mobile": {
+      "path": "agents/dev-mobile.md",
+      "applies": ["all"],
+      "description": "Implementa aplicativos de celular."
+    },
+    "dev-devops": {
+      "path": "agents/dev-devops.md",
+      "applies": ["all"],
+      "description": "Infraestrutura, pipelines de entrega e ambientes."
+    },
+    "dev-database": {
+      "path": "agents/dev-database.md",
+      "applies": ["all"],
+      "description": "Modelagem, migrações e consultas."
+    },
+    "dev-fullstack": {
+      "path": "agents/dev-fullstack.md",
+      "applies": ["all"],
+      "description": "Tarefa pequena que atravessa tela e API, com uma pessoa só."
+    },
+    "dev-doc": {
+      "path": "agents/dev-doc.md",
+      "applies": ["all"],
+      "description": "Atualiza a documentação. Nunca define regra de negócio."
+    },
+    "reviewer": {
+      "path": "agents/reviewer.md",
+      "applies": ["all"],
+      "description": "Revisa a entrega dos devs. Obrigatório sempre que houver dev na tarefa."
+    },
+    "qa": {
+      "path": "agents/qa.md",
+      "applies": ["all"],
+      "description": "Valida a entrega."
+    },
+    "designer": {
+      "path": "agents/designer.md",
+      "applies": ["all"],
+      "description": "Visual e experiência de uso."
+    }
+  },
+  "rules": {
+    "commit-standard": {
+      "path": "rules/commit-standard.md",
+      "applies": ["all"],
+      "description": "Tipos de alteração com ícone e padrão de branches e commits."
+    }
+  },
+  "skills": {}
+}
