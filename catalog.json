@@ -17,6 +17,12 @@
       "detect": {
         "dependencies": ["laravel/framework"]
       }
+    },
+    "adonisjs": {
+      "description": "Aplicações AdonisJS.",
+      "detect": {
+        "dependencies": ["@adonisjs/core"]
+      }
     }
   },
   "agents": {
@@ -96,6 +102,46 @@
       "path": "rules/commit-standard.md",
       "applies": ["all"],
       "description": "Tipos de alteração com ícone e padrão de branches e commits."
+    },
+    "code-standard": {
+      "path": "rules/code-standard.md",
+      "applies": ["all"],
+      "description": "Estilo de código, incluindo nunca escrever comentários."
+    },
+    "testing-standard": {
+      "path": "rules/testing-standard.md",
+      "applies": ["all"],
+      "description": "Testes: TDD, teste de bug e regras para não burlar teste."
+    },
+    "security-standard": {
+      "path": "rules/security-standard.md",
+      "applies": ["all"],
+      "description": "Segurança: segredos, entrada, acesso e dependências."
+    },
+    "review-standard": {
+      "path": "rules/review-standard.md",
+      "applies": ["all"],
+      "description": "Como preparar e fazer revisão de código."
+    },
+    "react-standard": {
+      "path": "stacks/react/rules/react-standard.md",
+      "applies": ["react"],
+      "description": "Padrão para componentes React."
+    },
+    "nestjs-standard": {
+      "path": "stacks/nestjs/rules/nestjs-standard.md",
+      "applies": ["nestjs"],
+      "description": "Padrão para APIs NestJS."
+    },
+    "laravel-standard": {
+      "path": "stacks/laravel/rules/laravel-standard.md",
+      "applies": ["laravel"],
+      "description": "Padrão para aplicações Laravel."
+    },
+    "adonisjs-standard": {
+      "path": "stacks/adonisjs/rules/adonisjs-standard.md",
+      "applies": ["adonisjs"],
+      "description": "Padrão para aplicações AdonisJS."
     }
   },
   "skills": {}

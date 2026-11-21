@@ -16,6 +16,10 @@
     "designer"
   ],
   "rules": [
-    "commit-standard"
+    "commit-standard",
+    "code-standard",
+    "testing-standard",
+    "security-standard",
+    "review-standard"
   ]
 }
