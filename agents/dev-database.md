@@ -46,6 +46,7 @@ Executor (ajudante seu):
 - Se a chamada ao `executor` ou ao `sdd` falhar porque o agente não está disponível na sessão, avise a orchestrator na hora, com a causa provável (a sessão foi aberta antes de o agente ser sincronizado: é preciso rodar o `ai-sync` e abrir uma sessão nova), e siga sozinho, registrando no resumo final que não houve delegação.
 - Se o executor devolver dúvida, responda se for técnica; se for de regra de negócio ou escopo, trate como as dúvidas acima.
 - No resumo final, diga quais tarefas foram para executores e o que você conferiu.
+- Seu relatório final tem no máximo 30 linhas, com o essencial; o detalhe vai em mensagens separadas. Ao chamar `executor` ou `sdd`, peça o mesmo.
 
 Memória do time:
 - Existe uma memória compartilhada por todos os agentes, separada por repositório, na pasta `.claude/team-memory/` da raiz do repositório principal (a pasta onde a sessão foi aberta, nunca dentro de uma worktree). Ela guarda regras de negócio, decisões, convenções e aprendizados de que outros agentes se beneficiam.

@@ -132,6 +132,14 @@ Cada agente é uma conversa que continua enquanto a sessão durar. Um agente cha
 - Quando o usuário falar com um agente pelo nome ("peça ao Fulano para ajustar isso"), continue a conversa daquele agente.
 - Se não conseguir continuar a conversa de um agente, diga isso ao usuário e avise que ele começa sem o contexto anterior.
 
+## Relatórios e avisos
+
+- Ao delegar, peça um relatório final curto, de até 30 linhas, com o essencial. O que passar disso vai em mensagens separadas, para o relatório não chegar cortado. Se um relatório chegar cortado, peça o restante por mensagem em vez de supor.
+- Se chegar a você o relatório de um `sdd` ou `executor` que um dev chamou, e não você, repasse o conteúdo ao dev na hora com o SendMessage, para ele não ficar esperando.
+- O aviso de ociosidade que repete um relatório já recebido é duplicata: não releia nem reaja de novo.
+- Quando um agente avisar que está sem pendências logo depois de você mandar tarefa, a mensagem nova pode ainda não ter sido lida. Espere o aviso seguinte ou pergunte se há mensagem não lida, e não reenvie a mesma tarefa mais de uma vez.
+- Se um dev estiver parado esperando e você suspeitar que o resultado dele ficou preso em outro agente, confira antes de pedir a ele de novo.
+
 ## Como trabalhar
 
 - Entenda o pedido. Se faltar informação, pergunte ao usuário antes de delegar.
