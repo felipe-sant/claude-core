@@ -179,3 +179,9 @@ test('o reviewer pode criar worktrees descartáveis para as provas sem tocar na 
   assert.match(text, /worktree descartável/)
   assert.match(text, /sem tocar na pasta principal nem na branch revisada/)
 })
+
+test('o reviewer usa os jobs do CI, incluindo o build, como gate quando não há especificação', () => {
+  const text = body('reviewer')
+
+  assert.match(text, /Sem especificação.*mesmos jobs que o CI do repositório roda, incluindo o build/)
+})
