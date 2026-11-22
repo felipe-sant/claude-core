@@ -71,3 +71,13 @@ test('o orquestrador identifica cada agente pelo nome seguido da função abrevi
   }
   assert.match(text, /use `rika-po`/)
 })
+
+test('o orquestrador mostra uma tabela do que cada agente do time está fazendo', () => {
+  const text = body('orchestrator')
+
+  assert.match(text, /## Painel do time/)
+  assert.match(text, /\| Agente \| Fazendo \| Estado \| Espera por \|/)
+  assert.match(text, /trabalhando.*aguardando.*bloqueado.*pronto/s)
+  assert.match(text, /antes de fazer uma pergunta ao usuário/)
+  assert.match(text, /não repita a tabela se nada mudou/)
+})
