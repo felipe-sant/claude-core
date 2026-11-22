@@ -20,7 +20,7 @@ test('todo agente que commita manda adicionar e commitar só os próprios arquiv
     const text = body(name)
     assert.match(text, /git-standard\.md/, `${name} deve citar o padrão de git`)
     assert.match(text, /git commit -m "\.\.\." -- caminhos/, `${name} deve mandar commitar por caminho`)
-    assert.match(text, /git add \.`, `git add -A` nem `git commit -a/, `${name} deve proibir git add . e commit -a`)
+    assert.match(text, /git add \.`, `git add -A`, `git add -N`, `git add -u` nem `git commit -a/, `${name} deve proibir git add ., -A, -N, -u e commit -a`)
   }
 })
 
@@ -31,7 +31,7 @@ test('o reviewer confere commit a commit se só há arquivos da própria tarefa'
 test('o padrão de git proíbe adicionar tudo, manda commitar por caminho e traz o rebase sem editor', () => {
   const text = fs.readFileSync(path.join(h.repoRoot, catalog.rules['git-standard'].path), 'utf8')
 
-  for (const forbidden of ['git add .', 'git add -A', 'git add -u', 'git commit -a']) assert.ok(text.includes(forbidden), forbidden)
+  for (const forbidden of ['git add .', 'git add -A', 'git add -N', '--intent-to-add', 'git add -u', 'git commit -a']) assert.ok(text.includes(forbidden), forbidden)
   assert.match(text, /git commit -m "[^"]+" -- caminho\/a\.ts caminho\/b\.ts/)
   assert.match(text, /git show --stat --name-status HEAD/)
   for (const recipe of ['GIT_SEQUENCE_EDITOR=true', "s/^pick/squash/", "s/^pick/drop/", "s/^pick/reword/", 'git cherry-pick', '--fixup=']) {
