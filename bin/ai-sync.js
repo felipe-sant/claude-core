@@ -9,13 +9,16 @@ let profile = null
 let target = process.cwd()
 let check = false
 let force = false
+let teams = null
 
 for (let i = 0; i < args.length; i++) {
   if (args[i] === '--profile' || args[i] === '-p') profile = args[++i]
   else if (args[i] === '--help' || args[i] === '-h') {
-    console.log('Uso: ai-sync [pasta-do-repositorio] [--profile nome] [--force]\n     ai-sync --check\n\n--force reinstala também os arquivos em conflito (seus ou editados), sobrescrevendo-os.\n\nSem --profile, detecta a stack do projeto e aplica o que vale para qualquer projeto mais o da stack.')
+    console.log('Uso: ai-sync [pasta-do-repositorio] [--profile nome] [--force] [--teams | --no-teams]\n     ai-sync --check\n\n--force reinstala também os arquivos em conflito (seus ou editados), sobrescrevendo-os.\n--teams liga o recurso experimental de times de agentes em .claude/settings.local.json (só seu, fora do git); --no-teams o desliga. Sem nenhum dos dois, o ai-sync não mexe nisso.\n\nSem --profile, detecta a stack do projeto e aplica o que vale para qualquer projeto mais o da stack.')
     process.exit(0)
   } else if (args[i] === '--check') check = true
+  else if (args[i] === '--teams') teams = true
+  else if (args[i] === '--no-teams') teams = false
   else if (args[i] === '--force') force = true
   else target = path.resolve(args[i])
 }
@@ -440,6 +443,39 @@ function allowWorktrees() {
   console.log(`\nPasta de worktrees liberada (leitura e edição): ${dir}`)
 }
 
+const TEAMS_FLAG = 'CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS'
+
+function setTeams(enabled) {
+  const file = path.join(target, '.claude', 'settings.local.json')
+
+  let settings = {}
+  if (fs.existsSync(file)) {
+    try {
+      settings = JSON.parse(fs.readFileSync(file, 'utf8'))
+    } catch {
+      console.error(`\n${file} não é um JSON válido. Ajuste a mão em env.${TEAMS_FLAG}: ${enabled ? '"1"' : 'remova a chave'}`)
+      return
+    }
+  }
+
+  const env = { ...(settings.env || {}) }
+  if (enabled) {
+    if (env[TEAMS_FLAG] === '1') return
+    env[TEAMS_FLAG] = '1'
+  } else {
+    if (!(TEAMS_FLAG in env)) return
+    delete env[TEAMS_FLAG]
+  }
+
+  const next = { ...settings, env }
+  if (Object.keys(env).length === 0) delete next.env
+  fs.mkdirSync(path.dirname(file), { recursive: true })
+  fs.writeFileSync(file, `${JSON.stringify(next, null, 2)}\n`)
+  console.log(enabled
+    ? '\nTimes de agentes ligado em .claude/settings.local.json. Abra uma sessão nova do Claude: agentes chamados com nome passam a ser integrantes de um time.'
+    : '\nTimes de agentes desligado em .claude/settings.local.json. Abra uma sessão nova do Claude.')
+}
+
 function excludeLocalFiles() {
   const gitDir = path.join(target, '.git')
   if (!fs.existsSync(gitDir) || !fs.statSync(gitDir).isDirectory()) return
@@ -457,6 +493,7 @@ function excludeLocalFiles() {
 }
 
 allowWorktrees()
+if (teams !== null) setTeams(teams)
 excludeLocalFiles()
 
 if (profile) {

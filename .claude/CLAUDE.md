@@ -26,7 +26,7 @@ Todo o texto dos agentes, das regras e da documentação é em **português**. N
 
 ## O time
 
-- `orchestrator`: única sessão que fala com o usuário e só delega. Só pode chamar agentes e perguntar ao usuário.
+- `orchestrator`: única sessão que fala com o usuário e só delega. Tem as ferramentas de edição só porque, no modo time, os integrantes recebem no máximo as da líder; delegar é regra do prompt. Funciona com subagentes (padrão) e com time de agentes, que o usuário liga com `ai-sync --teams` e nunca é ligado sozinho.
 - `product-owner`: fonte das regras de negócio. Consulta e cria tarefas, nunca define prioridade, e só edita ou apaga tarefa quando o usuário pediu isso de forma explícita.
 - `sdd`: escreve a especificação da tarefa, só a pedido de um dev, e não grava na memória. É o único que escreve no arquivo da especificação (inclusive o `Status`) e commita só ele; devs e executores relatam o andamento à orchestrator.
 - `executor`: ajudante dos devs, executa uma tarefa da especificação (teste primeiro, gate, commit). Só um dev o chama e ele leva no prompt a regra de não escrever comentários.
