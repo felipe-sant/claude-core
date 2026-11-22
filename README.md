@@ -159,6 +159,12 @@ O `sdd` descobre os comandos no projeto (`package.json`, `Makefile` ou CI) e os 
 - A `orchestrator` mostra uma tabela com o que cada agente está fazendo, o estado e o que ele espera, quando o time é montado, quando uma fase muda, quando alguém trava e antes de te fazer uma pergunta.
 - Os agentes compartilham uma memória do time por repositório, em `.claude/team-memory/`, que guarda só o que continua valendo depois da tarefa, e só é gravada a pedido seu.
 
+### Commits, coautoria e `.env`
+
+- Os devs e o `executor` têm no prompt a autorização de commitar. Se o classificador de permissões do Claude Code ainda negar o commit, libere-o no `.claude/settings.local.json` do projeto, que não vai para o git: `{ "permissions": { "allow": ["Bash(git commit *)"] } }`. Isso é uma sugestão opcional e não vai no modelo base, porque o lint reprova modelos com permissões amplas. Não garanto que a regra evite a negação do classificador.
+- A coautoria do Claude depende do repositório. O `git-standard` manda seguir a regra dele e conferir o commit com `git log -1`. Para um repositório que a proíbe, desligue a linha na origem com `"attribution": { "commit": "", "pr": "" }` no `.claude/settings.json` dele. A chave `attribution` vem da documentação do Claude Code e substitui a antiga `includeCoAuthoredBy`.
+- O `.env` pode ser lido e copiado pelos agentes, por exemplo para a worktree da tarefa. A regra de segurança proíbe imprimir os valores, commitá-lo ou colá-lo em mensagens e na especificação.
+
 ## Regras
 
 Ficam em `rules/*.md` (gerais) e `stacks/<stack>/rules/*.md` (por stack). O Claude Code as carrega sozinho a partir de `.claude/rules/`, sem nenhuma ação sua. Cada uma é curta e diz no início quando vale.
