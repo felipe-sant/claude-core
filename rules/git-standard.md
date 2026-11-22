@@ -10,6 +10,12 @@ Vale sempre que mais de um agente ou sessão usa a mesma worktree. Eles comparti
 - Se um arquivo de outro agente entrou no commit, não reescreva o histórico sozinho: avise o dev responsável e a orchestrator.
 - Nunca rode `git reset`, `git restore`, `git checkout -- .`, `git stash` nem `git clean` sem caminhos: isso mexe nos arquivos dos outros.
 
+## Coautoria
+
+- Siga o que o repositório diz sobre coautoria (`CLAUDE.md` e `.claude/rules/`). Se ele proíbe a coautoria do Claude, nunca inclua `Co-Authored-By` na mensagem do commit nem a assinatura do Claude no pull request.
+- Nesse caso, confira com `git log -1` depois de cada commit. Se a linha entrou, avise o dev responsável e a orchestrator em vez de reescrever o histórico sozinho.
+- Sem proibição no repositório, siga a instrução de atribuição da sessão.
+
 ## Reescrever o histórico
 
 `git rebase -i` abre um editor e não funciona sem terminal. Reescreva só commits seus, ainda não enviados, e com os outros agentes parados e o trabalho deles commitado: o rebase recusa rodar com alterações não commitadas. As linhas do rebase são numeradas a partir do commit mais antigo. Alternativas sem editor:
