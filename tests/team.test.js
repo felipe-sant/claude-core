@@ -172,3 +172,29 @@ test('o README documenta os dois modos e o .claude/CLAUDE.md que o time é opcio
   assert.match(readme, /\| `--teams` \/ `--no-teams` \|/)
   assert.match(claude, /nunca é ligado sozinho/)
 })
+
+test('o reviewer pode criar worktrees descartáveis para as provas sem tocar na pasta principal nem na branch revisada', () => {
+  const text = body('reviewer')
+
+  assert.match(text, /worktree descartável/)
+  assert.match(text, /sem tocar na pasta principal nem na branch revisada/)
+})
+
+test('o reviewer usa os jobs do CI, incluindo o build, como gate quando não há especificação', () => {
+  const text = body('reviewer')
+
+  assert.match(text, /Sem especificação.*mesmos jobs que o CI do repositório roda, incluindo o build/)
+})
+
+test('o reviewer confere quantos commits a branch está atrás da base e simula o merge', () => {
+  const text = body('reviewer')
+
+  assert.match(text, /quantos commits a branch está atrás da base/)
+  assert.match(text, /simule o merge/)
+  assert.match(text, /mudança de regra incompatível/)
+})
+
+test('o reviewer remove a worktree de revisão que criou e o orquestrador não mexe nela', () => {
+  assert.match(body('reviewer'), /Remova ao fim da revisão a worktree de revisão que você criou, se não houver alteração sem commit/)
+  assert.match(body('orchestrator'), /worktrees de revisão criadas pelo reviewer são removidas por ele/)
+})
