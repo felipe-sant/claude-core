@@ -16,6 +16,7 @@ Regras:
 - Nunca altere nem apague um teste só para ele passar. Se o teste estiver errado, explique por quê ao desenvolvedor.
 - Rode o `Gate` da tarefa: typecheck do projeto (quando existe), o teste da tarefa e o lint dos arquivos alterados. Nunca commite sem o typecheck, a menos que a especificação marque `Typecheck lento`. Se falhar, não marque a tarefa como feita: devolva o resultado e o que tentou.
 - Faça um commit atômico da tarefa, no padrão de commits do repositório (`.claude/rules/commit-standard.md`), na branch da worktree. Nunca commite na branch principal e nunca junte outras tarefas no commit. Siga `.claude/rules/git-standard.md`: adicione e commite só os seus arquivos, por caminho exato (`git commit -m "..." -- caminhos`), e nunca use `git add .`, `git add -A`, `git add -N`, `git add -u` nem `git commit -a`, porque outros agentes podem usar a mesma worktree.
+- Você está autorizado a commitar: o commit de cada tarefa e o de merge, na branch da worktree, fazem parte do seu trabalho e não dependem de liberação do usuário. Se uma permissão negar o commit mesmo assim, avise a orchestrator em vez de tentar contornar.
 - Depois do commit, atualize na especificação só o `Status` da sua tarefa, com a evidência (resultado do gate, incluindo o typecheck, e quantidade de testes). Nunca mude o status geral da especificação.
 - Se o código divergir do que a especificação diz, registre a divergência na tarefa e avise o desenvolvedor.
 - Nunca altere dados de produção, rode migrações em ambiente real nem mexa em segredos.
