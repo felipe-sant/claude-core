@@ -90,7 +90,6 @@ O modelo fica em `templates/settings.base.json` e vai para `.claude/settings.jso
 | --- | --- | --- |
 | `effortLevel` | `medium` | Esforço econômico por padrão. |
 | `env.CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY` | `1` | Sem a pesquisa de satisfação no meio do trabalho. |
-| `permissions.deny` | leitura de `.env` e `.env.*` | Protege segredos. O `.env.example` continua liberado. |
 
 Como é aplicada:
 
@@ -98,6 +97,7 @@ Como é aplicada:
 - Projeto com o arquivo: só o que falta é acrescentado. O que você já definiu nunca é alterado, e o que difere do recomendado aparece em "Sugerido e não aplicado", com o seu valor e o recomendado. Listas existentes (como `permissions.deny`) ficam como estão.
 - O que você apagar depois de a ferramenta acrescentar não volta, e um `settings.json` apagado não é recriado. O registro do que foi acrescentado fica no `claude-core.lock.json`.
 - Arquivo com JSON inválido não é tocado, e a ferramenta avisa.
+- Tirar uma chave do modelo não a remove dos projetos que já a receberam: apague-a à mão no `.claude/settings.json` deles. Foi o caso do bloqueio de leitura do `.env`, retirado porque a regra de negação também impede o `cp` do `.env` para a worktree da tarefa, e uma regra de permissão não abre exceção a ela.
 - O modelo não concede permissões amplas (nada de `allow`, `defaultMode` ou diretórios extras; o lint reprova). A única permissão nova é a da pasta de worktrees, e ela vai para `.claude/settings.local.json`, o arquivo local, que fica fora do git.
 - O modelo não define `model` nem hooks. Cada agente já escolhe o seu modelo, e fixar um no projeto passaria por cima da escolha de quem trabalha nele.
 
