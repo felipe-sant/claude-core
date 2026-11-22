@@ -39,6 +39,7 @@ Opções:
 | --- | --- |
 | `--profile nome` (ou `-p`) | Escolhe um perfil à mão. Prevalece sobre a detecção e aplica exatamente o que o perfil lista. |
 | `--force` | Reinstala também os arquivos em conflito (veja "Sincronização segura"). |
+| `--teams` / `--no-teams` | Liga ou desliga o recurso experimental de times de agentes em `.claude/settings.local.json` (veja "Subagentes ou time de agentes"). Sem nenhum dos dois, o `ai-sync` não mexe nisso. |
 | `--check` | Confere se o catálogo, os arquivos e os perfis do `claude-core` estão consistentes. Não aplica nada. |
 
 Além de copiar os arquivos e aplicar a configuração base, o `ai-sync` libera, em `.claude/settings.local.json`, a pasta de worktrees das tarefas (`<repositório>-worktrees`, ao lado do repositório) e mantém `.claude/team-memory/` e `.claude/settings.local.json` fora do git, pelo `.git/info/exclude`.
@@ -105,7 +106,7 @@ Como é aplicada:
 
 | Agente | Modelo | Papel |
 | --- | --- | --- |
-| `orchestrator` | opus | Orquestrador. Única sessão que fala com o usuário. Só delega. |
+| `orchestrator` | opus | Orquestrador. Única sessão que fala com o usuário. Só delega, apesar de ter as ferramentas de edição: no modo time, os integrantes recebem no máximo as dela. |
 | `product-owner` | sonnet | Fonte das regras de negócio. Consulta e cria tarefas, nunca define prioridade, e edita ou apaga só a pedido explícito do usuário. |
 | `sdd` | opus | Escreve a especificação da tarefa e é o único que escreve nela, inclusive o `Status`. Só o dev o chama para escrever. |
 | `executor` | haiku | Ajudante dos devs. Executa uma tarefa da especificação, com teste primeiro, gate e commit. Só é chamado por um dev. |
@@ -119,6 +120,25 @@ Como é aplicada:
 | `reviewer` | opus | Revisa a entrega dos devs. Obrigatório sempre que houver dev na tarefa. |
 | `qa` | sonnet | Valida a entrega. |
 | `designer` | sonnet | Visual e experiência de uso. |
+
+### Subagentes ou time de agentes
+
+O fluxo é o mesmo nos dois modos, e a escolha é sua:
+
+| | Subagentes (padrão) | Time de agentes (opcional) |
+| --- | --- | --- |
+| Como ligar | Nada a fazer | `node bin/ai-sync.js --teams` no repositório (grava `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` no `.claude/settings.local.json`, só seu e fora do git). `--no-teams` desliga. |
+| Comunicação | Cada agente devolve o resultado a quem o chamou. Agentes chamados com nome também se falam por ele. | Os integrantes trocam mensagens entre si e com você pelo painel; os devs podem perguntar ao `product-owner` direto. |
+| Consumo | Menor. | Bem maior (a documentação do Claude Code estima cerca de 7 vezes). |
+| Indicado para | Tarefas em sequência ou que mexem nos mesmos arquivos. | Tarefas grandes, com partes independentes. |
+
+- O recurso é experimental e vem desligado. O `ai-sync` nunca o liga sozinho, e ligar ou desligar exige abrir uma sessão nova.
+- Com ele ligado, qualquer agente chamado com nome vira integrante, então em um repositório com o recurso ligado os agentes aparecem no painel mesmo sem você pedir um time.
+- Só a `orchestrator` cria integrantes. Ela precisa ter as ferramentas que os integrantes usam (leitura, edição e terminal), porque cada um recebe no máximo as da líder. Por isso ela as tem e se limita a delegar por instrução.
+- A especificação continua a única fonte de verdade: a lista de tarefas do time só a espelha.
+- Não há retomada de integrantes: depois de `/resume`, a `orchestrator` recria quem sumiu e avisa você.
+- Cada sessão tem um time só. Para tarefas ao mesmo tempo, abra outra sessão.
+- Não testado ainda: os ajudantes `executor` de um dev podem rodar um depois do outro dentro do time.
 
 ### Fluxo de uma tarefa
 
