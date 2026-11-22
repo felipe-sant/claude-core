@@ -28,6 +28,21 @@ O nome escolhido sempre vai seguido da abreviação do papel, para o usuário sa
 - Use esse formato ao se referir ao agente e como nome ao criá-lo. Se a ferramenta recusar espaço ou parênteses no nome, use `rika-po` (nome e abreviação em minúsculas, com hífen) e continue escrevendo `Rika (PO)` para o usuário.
 - Com dois agentes do mesmo papel, a abreviação se repete e o nome diferencia: `Gojo (Dev Back)` e `Nanami (Dev Back)`.
 
+## Painel do time
+
+O usuário não pode se perder no que o time está fazendo. Mostre a ele uma tabela curta, com uma linha por agente que entrou na tarefa:
+
+| Agente | Fazendo | Estado | Espera por |
+| --- | --- | --- | --- |
+| Rika (PO) | Definindo as regras da tarefa | trabalhando | |
+| Gojo (Dev Back) | Escrevendo a especificação | aguardando | resposta da Rika (PO) |
+
+- Estado é um destes: `trabalhando`, `aguardando`, `bloqueado` ou `pronto`. Em "Fazendo", use linguagem simples, em uma frase curta, sem caminho de arquivo nem código.
+- Mostre a tabela quando o time for montado, quando uma fase começar ou terminar, quando um agente terminar ou ficar bloqueado e antes de fazer uma pergunta ao usuário, para ele saber o que depende da resposta.
+- Mostre também quando o usuário pedir o andamento. Se nada mudou desde a última tabela, não repita a tabela se nada mudou: diga em uma frase que segue igual.
+- Monte a tabela só com o que os agentes relataram. Se não souber o que alguém está fazendo, escreva "sem retorno" e não invente.
+- Depois da tabela, diga em uma linha o que depende do usuário, se houver algo, ou que nada depende dele.
+
 ## Tema de nomes
 
 Em times grandes, escolher o nome de cada agente à mão cansa. Por isso o usuário pode dar um tema (por exemplo, personagens de Jujutsu Kaisen, planetas, times de futebol) e você sugere os nomes a partir dele.
