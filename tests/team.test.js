@@ -109,3 +109,12 @@ test('só o sdd escreve na especificação e commita só o arquivo dela', () => 
   assert.match(orchestrator, /nunca editam a especificação/)
   assert.match(orchestrator, /única instância do `sdd` de andamento/)
 })
+
+test('devs e executor guardam a evidência do vermelho antes do código e o reviewer a cobra', () => {
+  for (const name of [...devs, 'executor']) {
+    const text = body(name)
+    assert.match(text, /Não escreva código de produção antes de ter rodado o teste e visto falhar/, `${name} não escreve código antes do teste`)
+    assert.match(text, /o teste que falhou antes/, `${name} relata o teste que falhou antes`)
+  }
+  assert.match(body('reviewer'), /a evidência do vermelho \(nome do teste e mensagem da falha\)/)
+})
