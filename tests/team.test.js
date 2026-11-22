@@ -161,3 +161,14 @@ test('os devs chamam o sdd e o executor com nome, com alternativa sem nome, e tr
     assert.match(text, /rodarem um depois do outro/, `${name} aceita executores em sequência`)
   }
 })
+
+test('o README documenta os dois modos e o .claude/CLAUDE.md que o time é opcional', () => {
+  const readme = fs.readFileSync(path.join(repoRoot, 'README.md'), 'utf8')
+  const claude = fs.readFileSync(path.join(repoRoot, '.claude', 'CLAUDE.md'), 'utf8')
+
+  assert.match(readme, /### Subagentes ou time de agentes/)
+  assert.match(readme, /`node bin\/ai-sync\.js --teams`/)
+  assert.match(readme, /O `ai-sync` nunca o liga sozinho/)
+  assert.match(readme, /\| `--teams` \/ `--no-teams` \|/)
+  assert.match(claude, /nunca é ligado sozinho/)
+})
