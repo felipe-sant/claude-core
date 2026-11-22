@@ -202,3 +202,12 @@ test('o reviewer remove a worktree de revisão que criou e o orquestrador não m
   assert.match(body('reviewer'), /Remova ao fim da revisão a worktree de revisão que você criou, se não houver alteração sem commit/)
   assert.match(body('orchestrator'), /worktrees de revisão criadas pelo reviewer são removidas por ele/)
 })
+
+test('o sdd grava a especificação nova em em-revisao e o ciclo de vida não tem rascunho', () => {
+  const sdd = body('sdd')
+
+  assert.match(sdd, /Você grava a spec nova sempre como `em-revisao`/)
+  assert.match(sdd, /Ciclo de vida: `em-revisao` → `aprovada`/)
+  assert.doesNotMatch(sdd, /`rascunho`/)
+  for (const name of devs) assert.doesNotMatch(body(name), /`rascunho`/, `${name} não cita rascunho como status`)
+})
