@@ -82,3 +82,11 @@ test('as receitas de commit por caminho e de histórico sem editor funcionam em 
   assert.equal(sequence("sed -i '2s/^pick/drop/'", 'true').status, 0)
   assert.deepEqual(subjects().slice(0, 2), ['Commit 3', 'Commit 1'])
 })
+
+test('os agentes que commitam sabem que estão autorizados a commitar', () => {
+  for (const name of committers) {
+    const text = body(name)
+    assert.match(text, /Você está autorizado a commitar/, `${name} deve saber que pode commitar`)
+    assert.match(text, /não dependem de liberação do usuário/, `${name} não deve pedir liberação para commitar`)
+  }
+})
