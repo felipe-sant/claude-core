@@ -138,3 +138,26 @@ test('o README documenta a permissão de commit, a coautoria por repositório e 
   assert.match(readme, /"Bash\(git commit \*\)"/)
   assert.match(readme, /"attribution": \{ "commit": "", "pr": "" \}/)
 })
+
+test('a orchestrator funciona como líder de time e como sessão de subagentes', () => {
+  const text = body('orchestrator')
+
+  assert.match(text, /^tools: .*Read, Grep, Glob, Edit, Write, Bash/m)
+  assert.match(text, /só porque, no modo time, cada integrante recebe no máximo as ferramentas da líder/)
+  assert.match(text, /## Subagentes ou time de agentes/)
+  assert.match(text, /`ai-sync --teams`/)
+  assert.match(text, /A especificação continua sendo a única fonte de verdade/)
+  assert.match(text, /consome bem mais/)
+  assert.match(text, /Chame sempre cada agente com o nome escolhido/)
+  assert.match(text, /SendMessage.*pelo nome/s)
+  assert.doesNotMatch(text, /usando esse identificador, em vez de criar um novo/)
+})
+
+test('os devs chamam o sdd e o executor com nome, com alternativa sem nome, e tratam o modo time', () => {
+  for (const name of devs) {
+    const text = body(name)
+    assert.match(text, /se a ferramenta recusar o nome, chame sem nome e guarde o identificador/, `${name} chama o sdd com nome`)
+    assert.match(text, /Em time de agentes, se o `product-owner` for integrante/, `${name} pergunta ao product-owner direto no modo time`)
+    assert.match(text, /rodarem um depois do outro/, `${name} aceita executores em sequência`)
+  }
+})
