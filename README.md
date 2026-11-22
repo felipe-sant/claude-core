@@ -154,6 +154,8 @@ O `sdd` descobre os comandos no projeto (`package.json`, `Makefile` ou CI) e os 
 - A `orchestrator` pede as regras ao `product-owner`, propõe a composição e confirma com você antes de delegar. O `reviewer` entra sempre que houver dev. `qa` e `designer` são opcionais: ela avisa que existem e você decide.
 - Cada tarefa roda em uma worktree própria, confirmada com você, para várias sessões trabalharem juntas no mesmo repositório.
 - No início da sessão ela pergunta um tema opcional para os nomes (por exemplo, personagens de Jujutsu Kaisen), o nome dela e o do `product-owner`. Com tema, cada pergunta de nome traz sugestões, e você pode dizer "escolha por mim". O nome de cada dev, do `reviewer`, do `qa` e do `designer` é perguntado só quando eles entram no time, uma pergunta por agente.
+- Cada agente aparece com o nome e a função abreviada, como `Rika (PO)` ou `Gojo (Dev Back)`.
+- A `orchestrator` mostra uma tabela com o que cada agente está fazendo, o estado e o que ele espera, quando o time é montado, quando uma fase muda, quando alguém trava e antes de te fazer uma pergunta.
 - Os agentes compartilham uma memória do time por repositório, em `.claude/team-memory/`, que guarda só o que continua valendo depois da tarefa, e só é gravada a pedido seu.
 
 ## Regras
