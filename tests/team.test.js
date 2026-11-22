@@ -81,3 +81,13 @@ test('o orquestrador mostra uma tabela do que cada agente do time está fazendo'
   assert.match(text, /antes de fazer uma pergunta ao usuário/)
   assert.match(text, /não repita a tabela se nada mudou/)
 })
+
+test('o modelo base não nega a leitura do .env e as regras mandam copiar sem expor o conteúdo', () => {
+  const template = fs.readFileSync(path.join(repoRoot, 'templates', 'settings.base.json'), 'utf8')
+  const security = fs.readFileSync(path.join(repoRoot, 'rules', 'security-standard.md'), 'utf8')
+
+  assert.doesNotMatch(template, /\.env/)
+  assert.match(security, /O `\.env` pode ser lido e copiado/)
+  assert.match(security, /nunca imprima os valores/)
+  assert.match(body('orchestrator'), /copia para ela, com `cp`, os arquivos de configuração locais/)
+})

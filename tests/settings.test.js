@@ -161,9 +161,9 @@ test('o modelo do repositório cria a configuração em um projeto novo e não c
   assert.equal(result.status, 0, result.stderr)
   const shared = settings(target)
   assert.ok(shared.effortLevel)
-  assert.ok(shared.permissions.deny.includes('Read(./.env)'))
-  assert.equal(shared.permissions.allow, undefined)
-  assert.equal(shared.permissions.defaultMode, undefined)
+  assert.equal(shared.permissions, undefined)
+  assert.equal(shared.permissions?.allow, undefined)
+  assert.equal(shared.permissions?.defaultMode, undefined)
 })
 
 test('o modelo do repositório respeita um projeto que já tem configuração', () => {
