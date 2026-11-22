@@ -172,3 +172,10 @@ test('o README documenta os dois modos e o .claude/CLAUDE.md que o time é opcio
   assert.match(readme, /\| `--teams` \/ `--no-teams` \|/)
   assert.match(claude, /nunca é ligado sozinho/)
 })
+
+test('o reviewer pode criar worktrees descartáveis para as provas sem tocar na pasta principal nem na branch revisada', () => {
+  const text = body('reviewer')
+
+  assert.match(text, /worktree descartável/)
+  assert.match(text, /sem tocar na pasta principal nem na branch revisada/)
+})
