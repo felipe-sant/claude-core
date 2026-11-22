@@ -107,7 +107,7 @@ Como é aplicada:
 | --- | --- | --- |
 | `orchestrator` | opus | Orquestrador. Única sessão que fala com o usuário. Só delega. |
 | `product-owner` | sonnet | Fonte das regras de negócio. Consulta e cria tarefas, nunca define prioridade, e edita ou apaga só a pedido explícito do usuário. |
-| `sdd` | opus | Escreve a especificação da tarefa. Só é chamado por um dev. |
+| `sdd` | opus | Escreve a especificação da tarefa e é o único que escreve nela, inclusive o `Status`. Só o dev o chama para escrever. |
 | `executor` | haiku | Ajudante dos devs. Executa uma tarefa da especificação, com teste primeiro, gate e commit. Só é chamado por um dev. |
 | `dev-frontend` | sonnet | Implementa telas. |
 | `dev-backend` | sonnet | Implementa API e dados. |
@@ -135,6 +135,7 @@ Dúvidas de regra vão ao `product-owner`; dúvidas maiores vão a você. Tudo p
 Fica em um único arquivo, `.specs/<nome-da-branch>.md`, na worktree da tarefa, e vai commitada com a branch.
 
 - Tem tipo (funcionalidade ou bug), tamanho (pequena, média ou grande) e status (`em-revisao`, `aprovada`, `em-andamento`, `implementada` ou `resolvida`).
+- Só o `sdd` escreve no arquivo e commita só ele. Os devs e executores relatam cada tarefa feita à `orchestrator` (tarefa, commit e evidência), e ela passa o andamento a um `sdd` de andamento. Assim, dois devs não editam nem commitam a mesma linha de `Status`.
 - Regras e critérios de aceite têm IDs (`RN-01`, `CA-01`) no formato "QUANDO ... ENTÃO o sistema DEVE ...".
 - Cada tarefa traz de quem é, do que depende, o gate e se é paralela (`[P]`) ou mecânica (modelo econômico).
 - Nada é codificado antes da sua aprovação, a menos que você dispense a especificação. As tarefas `[P]` rodam ao mesmo tempo.
