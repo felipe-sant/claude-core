@@ -17,7 +17,8 @@ test('o gate de cada tarefa inclui o typecheck e o de fase roda uma vez ao fim d
     const text = body(name)
     assert.match(text, /Nunca commite sem o typecheck/, `${name} não pode commitar sem o typecheck`)
     assert.match(text, /`Typecheck lento`/, `${name} deve respeitar o aviso de typecheck lento`)
-    assert.match(text, /`Gate de fase`.*build, suíte completa e lint completo/, `${name} deve rodar o gate de fase`)
+    assert.match(text, /`Gate de fase`.*build, suíte completa, lint completo e checagem de formatação completa/, `${name} deve rodar o gate de fase`)
+    assert.match(text, /o lint e a checagem de formatação dos arquivos alterados \(quando o projeto tem formatador\)/, `${name} deve conferir a formatação no gate da tarefa`)
     assert.match(text, /incluindo o typecheck/, `${name} deve registrar o typecheck no status`)
   }
 })
@@ -27,13 +28,15 @@ test('o executor não commita sem o typecheck e registra a evidência dele', () 
 
   assert.match(text, /Nunca commite sem o typecheck/)
   assert.match(text, /incluindo o typecheck/)
+  assert.match(text, /o lint e a checagem de formatação dos arquivos alterados \(quando o projeto tem formatador\)/)
 })
 
 test('o sdd escreve o gate rápido com typecheck e o gate de fase, e trata o typecheck lento', () => {
   const text = body('sdd')
 
-  assert.match(text, /typecheck do projeto, quando existe, o teste da tarefa e o lint dos arquivos alterados, nunca sem o typecheck/)
-  assert.match(text, /`Gate de fase`: build, suíte completa e lint completo/)
+  assert.match(text, /typecheck do projeto, quando existe, o teste da tarefa, o lint e a checagem de formatação dos arquivos alterados \(quando o projeto tem formatador\), nunca sem o typecheck/)
+  assert.match(text, /`Gate de fase`: build, suíte completa, lint completo e checagem de formatação completa/)
+  assert.match(text, /mesmas checagens que o CI/)
   assert.match(text, /`Typecheck lento`/)
   assert.doesNotMatch(text, /rápido, completo ou build/)
 })
@@ -47,6 +50,7 @@ test('o reviewer confere a evidência do typecheck e roda o gate de fase uma vez
 
 test('o orquestrador exige o gate com typecheck e o gate de fase', () => {
   assert.match(body('orchestrator'), /nunca sem o typecheck.*`Gate de fase`/s)
+  assert.match(body('orchestrator'), /checagem de formatação/)
 })
 
 test('quem chama executor ou sdd avisa a orchestrator quando o agente não está disponível, e ela orienta o usuário', () => {
