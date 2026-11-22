@@ -118,3 +118,13 @@ test('devs e executor guardam a evidência do vermelho antes do código e o revi
   }
   assert.match(body('reviewer'), /a evidência do vermelho \(nome do teste e mensagem da falha\)/)
 })
+
+test('os relatórios são curtos e a orchestrator repassa resultado preso e ignora duplicata', () => {
+  const orchestrator = body('orchestrator')
+  assert.match(orchestrator, /## Relatórios e avisos/)
+  assert.match(orchestrator, /de até 30 linhas/)
+  assert.match(orchestrator, /repasse o conteúdo ao dev na hora/)
+  assert.match(orchestrator, /aviso de ociosidade que repete um relatório já recebido é duplicata/)
+  assert.match(orchestrator, /não reenvie a mesma tarefa mais de uma vez/)
+  for (const name of devs) assert.match(body(name), /relatório final tem no máximo 30 linhas/, name)
+})
