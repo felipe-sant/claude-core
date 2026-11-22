@@ -60,3 +60,81 @@ test('quem chama executor ou sdd avisa a orchestrator quando o agente não está
   assert.match(orchestrator, /não está disponível na sessão/)
   assert.match(orchestrator, /rodar o `ai-sync` e abrir uma sessão nova/)
 })
+
+test('o orquestrador identifica cada agente pelo nome seguido da função abreviada', () => {
+  const text = body('orchestrator')
+
+  assert.match(text, /## Nome com a função/)
+  assert.match(text, /`Rika \(PO\)`/)
+  for (const abbreviation of ['PO', 'Dev Front', 'Dev Back', 'Dev Mobile', 'Dev Ops', 'Dev DB', 'Dev Full', 'Dev Doc', 'Rev', 'QA', 'Design']) {
+    assert.match(text, new RegExp(`\`${abbreviation}\``), `falta a abreviação ${abbreviation}`)
+  }
+  assert.match(text, /use `rika-po`/)
+})
+
+test('o orquestrador mostra uma tabela do que cada agente do time está fazendo', () => {
+  const text = body('orchestrator')
+
+  assert.match(text, /## Painel do time/)
+  assert.match(text, /\| Agente \| Fazendo \| Estado \| Espera por \|/)
+  assert.match(text, /trabalhando.*aguardando.*bloqueado.*pronto/s)
+  assert.match(text, /antes de fazer uma pergunta ao usuário/)
+  assert.match(text, /não repita a tabela se nada mudou/)
+})
+
+test('o modelo base não nega a leitura do .env e as regras mandam copiar sem expor o conteúdo', () => {
+  const template = fs.readFileSync(path.join(repoRoot, 'templates', 'settings.base.json'), 'utf8')
+  const security = fs.readFileSync(path.join(repoRoot, 'rules', 'security-standard.md'), 'utf8')
+
+  assert.doesNotMatch(template, /\.env/)
+  assert.match(security, /O `\.env` pode ser lido e copiado/)
+  assert.match(security, /nunca imprima os valores/)
+  assert.match(body('orchestrator'), /copia para ela, com `cp`, os arquivos de configuração locais/)
+})
+
+test('só o sdd escreve na especificação e commita só o arquivo dela', () => {
+  for (const name of [...devs, 'dev-doc']) {
+    assert.match(body(name), /Não edite a especificação nem o `Status` dela/, `${name} não edita a especificação`)
+    assert.match(body(name), /relate à orchestrator \(SendMessage para `main`\)/, `${name} relata o andamento à orchestrator em main`)
+    assert.match(body(name), /Se o envio falhar, ponha a mesma evidência no relatório final/, `${name} tem alternativa se o envio falhar`)
+  }
+  assert.match(body('executor'), /Não edite a especificação nem o `Status` dela/)
+
+  const sdd = body('sdd')
+  assert.match(sdd, /^tools: .*Bash/m)
+  assert.match(sdd, /`sdd` de andamento/)
+  assert.match(sdd, /único agente que escreve no arquivo da especificação/)
+  assert.match(sdd, /commite só o arquivo da especificação/)
+  assert.match(sdd, /-- \.specs\/<arquivo>\.md/)
+
+  const orchestrator = body('orchestrator')
+  assert.match(orchestrator, /nunca editam a especificação/)
+  assert.match(orchestrator, /única instância do `sdd` de andamento/)
+})
+
+test('devs e executor guardam a evidência do vermelho antes do código e o reviewer a cobra', () => {
+  for (const name of [...devs, 'executor']) {
+    const text = body(name)
+    assert.match(text, /Não escreva código de produção antes de ter rodado o teste e visto falhar/, `${name} não escreve código antes do teste`)
+    assert.match(text, /o teste que falhou antes/, `${name} relata o teste que falhou antes`)
+  }
+  assert.match(body('reviewer'), /a evidência do vermelho \(nome do teste e mensagem da falha\)/)
+})
+
+test('os relatórios são curtos e a orchestrator repassa resultado preso e ignora duplicata', () => {
+  const orchestrator = body('orchestrator')
+  assert.match(orchestrator, /## Relatórios e avisos/)
+  assert.match(orchestrator, /de até 30 linhas/)
+  assert.match(orchestrator, /repasse o conteúdo ao dev na hora/)
+  assert.match(orchestrator, /aviso de ociosidade que repete um relatório já recebido é duplicata/)
+  assert.match(orchestrator, /não reenvie a mesma tarefa mais de uma vez/)
+  for (const name of devs) assert.match(body(name), /relatório final tem no máximo 30 linhas/, name)
+})
+
+test('o README documenta a permissão de commit, a coautoria por repositório e o .env', () => {
+  const readme = fs.readFileSync(path.join(repoRoot, 'README.md'), 'utf8')
+
+  assert.match(readme, /### Commits, coautoria e `\.env`/)
+  assert.match(readme, /"Bash\(git commit \*\)"/)
+  assert.match(readme, /"attribution": \{ "commit": "", "pr": "" \}/)
+})

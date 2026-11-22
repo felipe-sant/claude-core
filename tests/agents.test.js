@@ -20,7 +20,7 @@ test('todo agente que commita manda adicionar e commitar só os próprios arquiv
     const text = body(name)
     assert.match(text, /git-standard\.md/, `${name} deve citar o padrão de git`)
     assert.match(text, /git commit -m "\.\.\." -- caminhos/, `${name} deve mandar commitar por caminho`)
-    assert.match(text, /git add \.`, `git add -A` nem `git commit -a/, `${name} deve proibir git add . e commit -a`)
+    assert.match(text, /git add \.`, `git add -A`, `git add -N`, `git add -u` nem `git commit -a/, `${name} deve proibir git add ., -A, -N, -u e commit -a`)
   }
 })
 
@@ -31,7 +31,7 @@ test('o reviewer confere commit a commit se só há arquivos da própria tarefa'
 test('o padrão de git proíbe adicionar tudo, manda commitar por caminho e traz o rebase sem editor', () => {
   const text = fs.readFileSync(path.join(h.repoRoot, catalog.rules['git-standard'].path), 'utf8')
 
-  for (const forbidden of ['git add .', 'git add -A', 'git add -u', 'git commit -a']) assert.ok(text.includes(forbidden), forbidden)
+  for (const forbidden of ['git add .', 'git add -A', 'git add -N', '--intent-to-add', 'git add -u', 'git commit -a']) assert.ok(text.includes(forbidden), forbidden)
   assert.match(text, /git commit -m "[^"]+" -- caminho\/a\.ts caminho\/b\.ts/)
   assert.match(text, /git show --stat --name-status HEAD/)
   for (const recipe of ['GIT_SEQUENCE_EDITOR=true', "s/^pick/squash/", "s/^pick/drop/", "s/^pick/reword/", 'git cherry-pick', '--fixup=']) {
@@ -81,4 +81,21 @@ test('as receitas de commit por caminho e de histórico sem editor funcionam em 
 
   assert.equal(sequence("sed -i '2s/^pick/drop/'", 'true').status, 0)
   assert.deepEqual(subjects().slice(0, 2), ['Commit 3', 'Commit 1'])
+})
+
+test('os agentes que commitam sabem que estão autorizados a commitar', () => {
+  for (const name of committers) {
+    const text = body(name)
+    assert.match(text, /Você está autorizado a commitar/, `${name} deve saber que pode commitar`)
+    assert.match(text, /não dependem de liberação do usuário/, `${name} não deve pedir liberação para commitar`)
+  }
+})
+
+test('o padrão de git manda seguir a regra de coautoria do repositório e conferir o commit', () => {
+  const text = fs.readFileSync(path.join(h.repoRoot, 'rules', 'git-standard.md'), 'utf8')
+
+  assert.match(text, /## Coautoria/)
+  assert.match(text, /Se ele proíbe a coautoria do Claude, nunca inclua `Co-Authored-By`/)
+  assert.match(text, /confira com `git log -1` depois de cada commit/)
+  assert.match(text, /Sem proibição no repositório/)
 })

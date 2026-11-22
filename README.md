@@ -90,7 +90,6 @@ O modelo fica em `templates/settings.base.json` e vai para `.claude/settings.jso
 | --- | --- | --- |
 | `effortLevel` | `medium` | Esforço econômico por padrão. |
 | `env.CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY` | `1` | Sem a pesquisa de satisfação no meio do trabalho. |
-| `permissions.deny` | leitura de `.env` e `.env.*` | Protege segredos. O `.env.example` continua liberado. |
 
 Como é aplicada:
 
@@ -98,6 +97,7 @@ Como é aplicada:
 - Projeto com o arquivo: só o que falta é acrescentado. O que você já definiu nunca é alterado, e o que difere do recomendado aparece em "Sugerido e não aplicado", com o seu valor e o recomendado. Listas existentes (como `permissions.deny`) ficam como estão.
 - O que você apagar depois de a ferramenta acrescentar não volta, e um `settings.json` apagado não é recriado. O registro do que foi acrescentado fica no `claude-core.lock.json`.
 - Arquivo com JSON inválido não é tocado, e a ferramenta avisa.
+- Tirar uma chave do modelo não a remove dos projetos que já a receberam: apague-a à mão no `.claude/settings.json` deles. Foi o caso do bloqueio de leitura do `.env`, retirado porque a regra de negação também impede o `cp` do `.env` para a worktree da tarefa, e uma regra de permissão não abre exceção a ela.
 - O modelo não concede permissões amplas (nada de `allow`, `defaultMode` ou diretórios extras; o lint reprova). A única permissão nova é a da pasta de worktrees, e ela vai para `.claude/settings.local.json`, o arquivo local, que fica fora do git.
 - O modelo não define `model` nem hooks. Cada agente já escolhe o seu modelo, e fixar um no projeto passaria por cima da escolha de quem trabalha nele.
 
@@ -107,7 +107,7 @@ Como é aplicada:
 | --- | --- | --- |
 | `orchestrator` | opus | Orquestrador. Única sessão que fala com o usuário. Só delega. |
 | `product-owner` | sonnet | Fonte das regras de negócio. Consulta e cria tarefas, nunca define prioridade, e edita ou apaga só a pedido explícito do usuário. |
-| `sdd` | opus | Escreve a especificação da tarefa. Só é chamado por um dev. |
+| `sdd` | opus | Escreve a especificação da tarefa e é o único que escreve nela, inclusive o `Status`. Só o dev o chama para escrever. |
 | `executor` | haiku | Ajudante dos devs. Executa uma tarefa da especificação, com teste primeiro, gate e commit. Só é chamado por um dev. |
 | `dev-frontend` | sonnet | Implementa telas. |
 | `dev-backend` | sonnet | Implementa API e dados. |
@@ -135,6 +135,7 @@ Dúvidas de regra vão ao `product-owner`; dúvidas maiores vão a você. Tudo p
 Fica em um único arquivo, `.specs/<nome-da-branch>.md`, na worktree da tarefa, e vai commitada com a branch.
 
 - Tem tipo (funcionalidade ou bug), tamanho (pequena, média ou grande) e status (`em-revisao`, `aprovada`, `em-andamento`, `implementada` ou `resolvida`).
+- Só o `sdd` escreve no arquivo e commita só ele. Os devs e executores relatam cada tarefa feita à `orchestrator` (tarefa, commit e evidência), e ela passa o andamento a um `sdd` de andamento. Assim, dois devs não editam nem commitam a mesma linha de `Status`.
 - Regras e critérios de aceite têm IDs (`RN-01`, `CA-01`) no formato "QUANDO ... ENTÃO o sistema DEVE ...".
 - Cada tarefa traz de quem é, do que depende, o gate e se é paralela (`[P]`) ou mecânica (modelo econômico).
 - Nada é codificado antes da sua aprovação, a menos que você dispense a especificação. As tarefas `[P]` rodam ao mesmo tempo.
@@ -154,7 +155,15 @@ O `sdd` descobre os comandos no projeto (`package.json`, `Makefile` ou CI) e os 
 - A `orchestrator` pede as regras ao `product-owner`, propõe a composição e confirma com você antes de delegar. O `reviewer` entra sempre que houver dev. `qa` e `designer` são opcionais: ela avisa que existem e você decide.
 - Cada tarefa roda em uma worktree própria, confirmada com você, para várias sessões trabalharem juntas no mesmo repositório.
 - No início da sessão ela pergunta um tema opcional para os nomes (por exemplo, personagens de Jujutsu Kaisen), o nome dela e o do `product-owner`. Com tema, cada pergunta de nome traz sugestões, e você pode dizer "escolha por mim". O nome de cada dev, do `reviewer`, do `qa` e do `designer` é perguntado só quando eles entram no time, uma pergunta por agente.
+- Cada agente aparece com o nome e a função abreviada, como `Rika (PO)` ou `Gojo (Dev Back)`.
+- A `orchestrator` mostra uma tabela com o que cada agente está fazendo, o estado e o que ele espera, quando o time é montado, quando uma fase muda, quando alguém trava e antes de te fazer uma pergunta.
 - Os agentes compartilham uma memória do time por repositório, em `.claude/team-memory/`, que guarda só o que continua valendo depois da tarefa, e só é gravada a pedido seu.
+
+### Commits, coautoria e `.env`
+
+- Os devs e o `executor` têm no prompt a autorização de commitar. Se o classificador de permissões do Claude Code ainda negar o commit, libere-o no `.claude/settings.local.json` do projeto, que não vai para o git: `{ "permissions": { "allow": ["Bash(git commit *)"] } }`. Isso é uma sugestão opcional e não vai no modelo base, porque o lint reprova modelos com permissões amplas. Não garanto que a regra evite a negação do classificador.
+- A coautoria do Claude depende do repositório. O `git-standard` manda seguir a regra dele e conferir o commit com `git log -1`. Para um repositório que a proíbe, desligue a linha na origem com `"attribution": { "commit": "", "pr": "" }` no `.claude/settings.json` dele. A chave `attribution` vem da documentação do Claude Code e substitui a antiga `includeCoAuthoredBy`.
+- O `.env` pode ser lido e copiado pelos agentes, por exemplo para a worktree da tarefa. A regra de segurança proíbe imprimir os valores, commitá-lo ou colá-lo em mensagens e na especificação.
 
 ## Regras
 
