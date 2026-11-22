@@ -60,3 +60,14 @@ test('quem chama executor ou sdd avisa a orchestrator quando o agente não está
   assert.match(orchestrator, /não está disponível na sessão/)
   assert.match(orchestrator, /rodar o `ai-sync` e abrir uma sessão nova/)
 })
+
+test('o orquestrador identifica cada agente pelo nome seguido da função abreviada', () => {
+  const text = body('orchestrator')
+
+  assert.match(text, /## Nome com a função/)
+  assert.match(text, /`Rika \(PO\)`/)
+  for (const abbreviation of ['PO', 'Dev Front', 'Dev Back', 'Dev Mobile', 'Dev Ops', 'Dev DB', 'Dev Full', 'Dev Doc', 'Rev', 'QA', 'Design']) {
+    assert.match(text, new RegExp(`\`${abbreviation}\``), `falta a abreviação ${abbreviation}`)
+  }
+  assert.match(text, /use `rika-po`/)
+})
