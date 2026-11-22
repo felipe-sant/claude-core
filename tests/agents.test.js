@@ -99,3 +99,20 @@ test('o padrão de git manda seguir a regra de coautoria do repositório e confe
   assert.match(text, /confira com `git log -1` depois de cada commit/)
   assert.match(text, /Sem proibição no repositório/)
 })
+
+test('devs e executor proíbem stash, reset, restore e clean na worktree compartilhada e indicam a alternativa', () => {
+  for (const name of committers) {
+    const text = body(name)
+    assert.match(text, /Na worktree compartilhada, nunca use `git stash`, `git reset`, `git restore` nem `git clean`/, `${name} proíbe stash e afins`)
+    assert.match(text, /worktree própria, criada a partir do último commit/, `${name} indica a worktree própria para isolar falha`)
+    assert.match(text, /avise o dono do arquivo/, `${name} avisa o dono do arquivo`)
+  }
+})
+
+test('o padrão de git explica como isolar uma falha de teste sem tocar nos arquivos dos outros', () => {
+  const text = fs.readFileSync(path.join(h.repoRoot, catalog.rules['git-standard'].path), 'utf8')
+
+  assert.match(text, /## Isolar uma falha/)
+  assert.match(text, /git worktree add/)
+  assert.match(text, /avise o dono do arquivo e espere ele commitar/)
+})
