@@ -164,8 +164,10 @@ Fica em um único arquivo, `.specs/<nome-da-branch>.md`, na worktree da tarefa, 
 
 O gate tem dois níveis, para não rodar build e suíte inteira a cada commit:
 
-- **Gate da tarefa**, em todo commit: typecheck do projeto (quando existe), o teste da tarefa e o lint dos arquivos alterados. Nunca se commita sem o typecheck.
-- **Gate de fase**, uma vez ao fim de cada fase do plano e antes do `reviewer`: build, suíte completa e lint completo.
+- **Gate da tarefa**, em todo commit: typecheck do projeto (quando existe), o teste da tarefa, o lint e a checagem de formatação dos arquivos alterados (quando o projeto tem formatador). Nunca se commita sem o typecheck.
+- **Gate de fase**, uma vez ao fim de cada fase do plano e antes do `reviewer`: build, suíte completa, lint completo e checagem de formatação completa.
+
+Os dois níveis rodam as mesmas checagens que o CI do projeto roda, para o que passa no gate também passar no CI.
 
 O `sdd` descobre os comandos no projeto (`package.json`, `Makefile` ou CI) e os escreve na especificação. Se o typecheck do projeto leva minutos, ele marca `Typecheck lento` com o tempo medido e o typecheck passa para o gate de fase, aceitando que commits intermediários possam não compilar. Os devs registram o resultado, incluindo o typecheck, no Status de cada tarefa, e o `reviewer` confere essa evidência e roda o gate de fase uma vez no último commit.
 
