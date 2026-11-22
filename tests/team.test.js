@@ -128,3 +128,11 @@ test('os relatórios são curtos e a orchestrator repassa resultado preso e igno
   assert.match(orchestrator, /não reenvie a mesma tarefa mais de uma vez/)
   for (const name of devs) assert.match(body(name), /relatório final tem no máximo 30 linhas/, name)
 })
+
+test('o README documenta a permissão de commit, a coautoria por repositório e o .env', () => {
+  const readme = fs.readFileSync(path.join(repoRoot, 'README.md'), 'utf8')
+
+  assert.match(readme, /### Commits, coautoria e `\.env`/)
+  assert.match(readme, /"Bash\(git commit \*\)"/)
+  assert.match(readme, /"attribution": \{ "commit": "", "pr": "" \}/)
+})
