@@ -102,6 +102,23 @@ test('chave que o usuário removeu depois de a ferramenta acrescentar não volta
   assert.doesNotMatch(result.output, /acrescentada/)
 })
 
+test('chave que saiu do modelo continua no projeto e a sincronização não falha', () => {
+  const target = h.makeTarget()
+  h.run(core(), target)
+  const slim = h.makeCore({
+    items: [
+      { group: 'agents', name: 'orchestrator', files: '---\nname: orchestrator\ndescription: x\nmodel: sonnet\n---\n' },
+      { group: 'settings', name: 'base', files: { effortLevel: 'medium', env: { QUIET: '1', OTHER: 'a' } } }
+    ],
+    profiles: { comBase: { agents: ['orchestrator'], settings: ['base'] } }
+  })
+  const result = h.run(slim, target)
+
+  assert.equal(result.status, 0, result.output)
+  assert.deepEqual(settings(target).permissions, { deny: ['Read(./.env)'] })
+  assert.doesNotMatch(result.output, /Error|undefined/)
+})
+
 test('arquivo apagado pelo usuário depois da primeira vez não é recriado', () => {
   const target = h.makeTarget()
   h.run(core(), target)

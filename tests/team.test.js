@@ -95,12 +95,14 @@ test('o modelo base não nega a leitura do .env e as regras mandam copiar sem ex
 test('só o sdd escreve na especificação e commita só o arquivo dela', () => {
   for (const name of [...devs, 'dev-doc']) {
     assert.match(body(name), /Não edite a especificação nem o `Status` dela/, `${name} não edita a especificação`)
-    assert.match(body(name), /relate à orchestrator/, `${name} relata o andamento à orchestrator`)
+    assert.match(body(name), /relate à orchestrator \(SendMessage para `main`\)/, `${name} relata o andamento à orchestrator em main`)
+    assert.match(body(name), /Se o envio falhar, ponha a mesma evidência no relatório final/, `${name} tem alternativa se o envio falhar`)
   }
   assert.match(body('executor'), /Não edite a especificação nem o `Status` dela/)
 
   const sdd = body('sdd')
   assert.match(sdd, /^tools: .*Bash/m)
+  assert.match(sdd, /`sdd` de andamento/)
   assert.match(sdd, /único agente que escreve no arquivo da especificação/)
   assert.match(sdd, /commite só o arquivo da especificação/)
   assert.match(sdd, /-- \.specs\/<arquivo>\.md/)
