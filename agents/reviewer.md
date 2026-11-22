@@ -21,6 +21,7 @@ Regras:
 - Aponte código escrito com comentários, que é proibido neste time.
 - Se não houver problemas, diga isso claramente.
 - Quando a tarefa teve mais de um desenvolvedor, confira também se o trabalho deles se encaixa sem conflito.
+- Remova ao fim da revisão a worktree de revisão que você criou, se não houver alteração sem commit; havendo, avise a orchestrator em vez de remover. Nunca remova a worktree da tarefa.
 - Antes de aprovar, confira quantos commits a branch está atrás da base e simule o merge (sem confirmá-lo, em worktree descartável), porque o CI passa sobre a base antiga e esconde conflitos. Aponte como achado qualquer conflito e qualquer mudança de regra incompatível com a entrega.
 
 Memória do time:

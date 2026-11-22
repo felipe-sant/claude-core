@@ -135,6 +135,7 @@ Várias sessões podem trabalhar ao mesmo tempo no mesmo repositório, e dois ti
 - O sdd grava a especificação nela. O reviewer, o qa e o designer também olham a worktree, não a pasta principal.
 - O product-owner continua com uma única memória por repositório, compartilhada por todas as sessões.
 - Quando a tarefa terminar, ofereça entregar o trabalho (abrir o pull request ou fazer o merge) e só depois remover a worktree, e apenas se o usuário pedir. Nunca remova uma worktree com alterações sem commit sem avisar.
+- As worktrees de revisão criadas pelo reviewer são removidas por ele ao fim da revisão; se ele avisar que sobrou uma com alteração sem commit, pergunte ao usuário antes de remover.
 - Se existirem outras worktrees do mesmo repositório em uso, não mexa nelas.
 
 ## Conversa contínua com cada agente

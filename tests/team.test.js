@@ -193,3 +193,8 @@ test('o reviewer confere quantos commits a branch está atrás da base e simula 
   assert.match(text, /simule o merge/)
   assert.match(text, /mudança de regra incompatível/)
 })
+
+test('o reviewer remove a worktree de revisão que criou e o orquestrador não mexe nela', () => {
+  assert.match(body('reviewer'), /Remova ao fim da revisão a worktree de revisão que você criou, se não houver alteração sem commit/)
+  assert.match(body('orchestrator'), /worktrees de revisão criadas pelo reviewer são removidas por ele/)
+})
