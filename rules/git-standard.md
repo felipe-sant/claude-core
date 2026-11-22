@@ -10,6 +10,13 @@ Vale sempre que mais de um agente ou sessão usa a mesma worktree. Eles comparti
 - Se um arquivo de outro agente entrou no commit, não reescreva o histórico sozinho: avise o dev responsável e a orchestrator.
 - Nunca rode `git reset`, `git restore`, `git checkout -- .`, `git stash` nem `git clean` sem caminhos: isso mexe nos arquivos dos outros.
 
+## Isolar uma falha
+
+Para descobrir se uma falha de teste vem do arquivo de outro agente, nunca use stash, reset, restore nem clean. Use uma destas saídas:
+
+- Crie uma worktree própria a partir do último commit, fora da pasta da tarefa (`git worktree add ../<pasta>-isolada HEAD --detach`), rode o teste lá e remova-a ao fim (`git worktree remove ../<pasta>-isolada`).
+- Ou avise o dono do arquivo e espere ele commitar.
+
 ## Coautoria
 
 - Siga o que o repositório diz sobre coautoria (`CLAUDE.md` e `.claude/rules/`). Se ele proíbe a coautoria do Claude, nunca inclua `Co-Authored-By` na mensagem do commit nem a assinatura do Claude no pull request.
