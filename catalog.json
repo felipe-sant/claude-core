@@ -190,7 +190,7 @@
     "base": {
       "path": "templates/settings.base.json",
       "applies": ["all"],
-      "description": "Configuração base do Claude: esforço econômico, sem pesquisa de satisfação e leitura de arquivos .env bloqueada."
+      "description": "Configuração base do Claude: esforço econômico e sem pesquisa de satisfação."
     }
   }
 }

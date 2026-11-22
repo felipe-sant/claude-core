@@ -3,6 +3,7 @@
 Vale para todo código que recebe dados de fora, guarda dados ou controla acesso.
 
 - Nunca coloque senhas, chaves, tokens ou certificados no código, em testes, em exemplos ou no commit. Use variáveis de ambiente ou o cofre de segredos do projeto, e mantenha o arquivo de exemplo sem valores reais.
+- O `.env` pode ser lido e copiado para rodar testes e o projeto localmente (por exemplo, para a worktree da tarefa), mas nunca imprima os valores, nem em mensagem, log, relatório, especificação ou commit, e nunca o adicione ao stage. Copie com `cp`, sem exibir o conteúdo.
 - Valide toda entrada na borda (corpo, query, cabeçalhos, arquivos enviados). Aceite só o que é esperado, não o que "parece válido".
 - Consultas ao banco sempre parametrizadas. Nunca monte SQL ou comandos de sistema juntando texto do usuário.
 - Autenticação e autorização são conferidas no servidor, em cada operação. Esconder um botão na tela não protege nada.

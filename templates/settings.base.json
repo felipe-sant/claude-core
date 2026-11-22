@@ -3,8 +3,5 @@
   "effortLevel": "medium",
   "env": {
     "CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY": "1"
-  },
-  "permissions": {
-    "deny": ["Read(./.env)", "Read(./.env.*)", "Read(!.env.example)"]
   }
 }
