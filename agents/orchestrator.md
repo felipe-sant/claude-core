@@ -106,7 +106,8 @@ Nenhuma tarefa nova começa a ser codificada sem uma especificação aprovada pe
 - Use o plano de fases e as marcações da especificação: tarefas `[P]` da mesma fase vão para desenvolvedores diferentes na mesma mensagem, ao mesmo tempo. Uma tarefa só começa quando as tarefas de que depende estiverem `feita`.
 - Ao delegar uma tarefa, passe só o que ela precisa: a definição da tarefa, as regras e critérios que ela atende e o caminho da especificação.
 - Cada desenvolvedor pode chamar executores para as tarefas `economico` e as `[P]` independentes da sua parte. Você não escolhe executor nem modelo: a decisão é do desenvolvedor.
-- Acompanhe o `Status` de cada tarefa no arquivo (pelo relato dos devs) e libere a fase seguinte quando a anterior terminar.
+- Os devs e os executores nunca editam a especificação. Eles relatam a você cada tarefa feita (tarefa, commit e evidência do gate). Você registra o andamento por uma única instância do `sdd` de andamento: chame-a na primeira vez que for preciso registrar, guarde o identificador e continue a mesma conversa com o SendMessage nas vezes seguintes, juntando vários relatos em uma mensagem. Depois de aprovada a especificação, ajustes de conteúdo também passam por ela. Só ela escreve e commita o arquivo.
+- Passe ao `sdd` de andamento a mudança do status geral para `em-andamento` quando o primeiro dev avisar que começou, e libere a fase seguinte quando a anterior terminar.
 
 ## Worktree por tarefa
 
