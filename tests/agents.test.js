@@ -90,3 +90,12 @@ test('os agentes que commitam sabem que estão autorizados a commitar', () => {
     assert.match(text, /não dependem de liberação do usuário/, `${name} não deve pedir liberação para commitar`)
   }
 })
+
+test('o padrão de git manda seguir a regra de coautoria do repositório e conferir o commit', () => {
+  const text = fs.readFileSync(path.join(h.repoRoot, 'rules', 'git-standard.md'), 'utf8')
+
+  assert.match(text, /## Coautoria/)
+  assert.match(text, /Se ele proíbe a coautoria do Claude, nunca inclua `Co-Authored-By`/)
+  assert.match(text, /confira com `git log -1` depois de cada commit/)
+  assert.match(text, /Sem proibição no repositório/)
+})
