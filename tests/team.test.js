@@ -185,3 +185,11 @@ test('o reviewer usa os jobs do CI, incluindo o build, como gate quando não há
 
   assert.match(text, /Sem especificação.*mesmos jobs que o CI do repositório roda, incluindo o build/)
 })
+
+test('o reviewer confere quantos commits a branch está atrás da base e simula o merge', () => {
+  const text = body('reviewer')
+
+  assert.match(text, /quantos commits a branch está atrás da base/)
+  assert.match(text, /simule o merge/)
+  assert.match(text, /mudança de regra incompatível/)
+})

@@ -21,6 +21,7 @@ Regras:
 - Aponte código escrito com comentários, que é proibido neste time.
 - Se não houver problemas, diga isso claramente.
 - Quando a tarefa teve mais de um desenvolvedor, confira também se o trabalho deles se encaixa sem conflito.
+- Antes de aprovar, confira quantos commits a branch está atrás da base e simule o merge (sem confirmá-lo, em worktree descartável), porque o CI passa sobre a base antiga e esconde conflitos. Aponte como achado qualquer conflito e qualquer mudança de regra incompatível com a entrega.
 
 Memória do time:
 - Existe uma memória compartilhada por todos os agentes, separada por repositório, na pasta `.claude/team-memory/` da raiz do repositório principal (a pasta onde a sessão foi aberta, nunca dentro de uma worktree). Ela guarda regras de negócio, decisões, convenções e aprendizados de que outros agentes se beneficiam.
