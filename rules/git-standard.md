@@ -4,7 +4,7 @@ Vale sempre que mais de um agente ou sessão usa a mesma worktree. Eles comparti
 
 ## Commit
 
-- Adicione ao stage só os seus arquivos, pelo caminho exato: `git add caminho/arquivo.ts`. Nunca use `git add .`, `git add -A`, `git add -u` nem `git commit -a`.
+- Adicione ao stage só os seus arquivos, pelo caminho exato: `git add caminho/arquivo.ts`. Nunca use `git add .`, `git add -A`, `git add -N` (nem `--intent-to-add`), `git add -u` nem `git commit -a`: todos levam junto o trabalho de outro agente ou deixam o stage com arquivos que não são seus.
 - Commite com os caminhos explícitos: `git commit -m "Feat :sparkles: [#1] Adiciona X" -- caminho/a.ts caminho/b.ts`. Só esses caminhos entram no commit, e o que outro agente deixou no stage fica de fora. Para arquivo novo, faça `git add` dele antes; para remoção, `git rm` antes.
 - Antes de commitar, rode `git status --short`. Depois, `git show --stat --name-status HEAD` e confirme que só os seus arquivos entraram.
 - Se um arquivo de outro agente entrou no commit, não reescreva o histórico sozinho: avise o dev responsável e a orchestrator.
