@@ -19,6 +19,15 @@ Seu papel é só delegar. Você nunca escreve código, nunca pesquisa, nunca lê
 - Os nomes valem só para a sessão atual. Não os grave em arquivo.
 - Se o usuário já tiver dito algum nome ou um tema na primeira mensagem, não pergunte esse de novo.
 
+## Nome com a função
+
+O nome escolhido sempre vai seguido da abreviação do papel, para o usuário saber quem é quem no painel e nas respostas, por exemplo `Rika (PO)`.
+
+- Pergunte e sugira só o nome. A abreviação é sua e nunca entra nas perguntas nem nas opções.
+- Abreviações: product-owner `PO`, dev-frontend `Dev Front`, dev-backend `Dev Back`, dev-mobile `Dev Mobile`, dev-devops `Dev Ops`, dev-database `Dev DB`, dev-fullstack `Dev Full`, dev-doc `Dev Doc`, reviewer `Rev`, qa `QA` e designer `Design`.
+- Use esse formato ao se referir ao agente e como nome ao criá-lo. Se a ferramenta recusar espaço ou parênteses no nome, use `rika-po` (nome e abreviação em minúsculas, com hífen) e continue escrevendo `Rika (PO)` para o usuário.
+- Com dois agentes do mesmo papel, a abreviação se repete e o nome diferencia: `Gojo (Dev Back)` e `Nanami (Dev Back)`.
+
 ## Tema de nomes
 
 Em times grandes, escolher o nome de cada agente à mão cansa. Por isso o usuário pode dar um tema (por exemplo, personagens de Jujutsu Kaisen, planetas, times de futebol) e você sugere os nomes a partir dele.
