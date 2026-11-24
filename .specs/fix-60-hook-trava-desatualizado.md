@@ -61,6 +61,7 @@ Hipótese: o caso relatado originalmente na issue (lock com o registro antigo) �
 - RN-06: O formato do lock, o comportamento do sync e o texto da regra de git não mudam nesta tarefa. Fonte: usuário.
 - RN-07: A mensagem de recusa cita também o caso de outro agente com fonte alterada na pasta: esperar o dono commitar ou trabalhar em uma worktree isolada. Fonte: usuário, resposta à dúvida sobre a mensagem.
 - RN-08: No commit sem caminhos, a conferência roda antes de o hook adicionar os gerados. Se recusar, o stage fica exatamente como estava e nada é adicionado. Fonte: usuário, resposta à dúvida sobre o commit sem caminhos.
+- RN-09: Se o sync falhar durante o commit, o hook recusa o commit com uma mensagem em português que diz que o sync falhou e o que conferir. Fonte: usuário, decisão após a revisão.
 
 ## Critérios de aceite
 
@@ -77,6 +78,10 @@ Hipótese: o caso relatado originalmente na issue (lock com o registro antigo) �
 - CA-12: QUANDO alguém faz um commit sem escolher arquivos e o hook o recusa ENTÃO o stage DEVE ficar exatamente como estava antes do commit, sem nenhum arquivo gerado adicionado. (RN-04, RN-08)
 - CA-13: QUANDO o último commit já está fora de sincronia e alguém faz um commit que não toca fonte nem arquivo gerado (como a especificação) ENTÃO o sistema DEVE recusar o commit com uma mensagem que diz que o último commit está fora de sincronia e como corrigir, e nada é commitado. (RN-05)
 - CA-10: QUANDO a tarefa termina ENTÃO o lint e a suíte de testes do projeto DEVEM passar, incluindo o teste que já existe do hook (o hook continua rodando o sync e adicionando a cópia do time no commit sem caminhos). (RN-04, RN-06)
+- CA-14: QUANDO a suíte de testes roda ENTÃO o teste que confere as pastas temporárias do hook DEVE usar uma pasta temporária só dele e falhar se sobrar nela qualquer arquivo ou pasta depois de commits aceitos e recusados. (CA-09)
+- CA-15: QUANDO o teste da recusa do commit sem caminhos roda ENTÃO ele DEVE comparar o stage antes e depois também pela lista completa dos arquivos preparados, com a versão de cada um, além da lista de alterações. (RN-08, CA-12)
+- CA-16: QUANDO o sync falha durante o commit, com ou sem caminhos ENTÃO o sistema DEVE recusar o commit com uma mensagem em português que diz que o sync falhou e o que conferir, sem commitar nada, sem alterar o stage e sem deixar pastas temporárias. (RN-01, RN-08, RN-09)
+- CA-17: QUANDO a branch vai para o pull request ENTÃO ela DEVE estar atualizada com a main por merge (sem reescrever o histórico), com o lint e a suíte passando depois do merge. (decisão do usuário, após a revisão)
 
 ## Critérios de sucesso
 
@@ -100,8 +105,10 @@ Reverter os commits da tarefa (`git revert`) volta o hook ao comportamento anter
 
 ## Plano de execução
 
-- Fase 1 (paralelo): T1 [P] e T2 [P]. Concluída: gate de fase com `npm run lint` ok, `npm test` 121/121, `node bin/ai-sync.js --check` ok e sync em pasta temporária ok.
+- Fase 1 (paralelo): T1 [P] e T2 [P]. Gate de fase rodado uma vez (`npm run lint` ok, `npm test` 121/121, `node bin/ai-sync.js --check` ok e sync em pasta temporária ok), mas a fase foi reaberta pela revisão (achados em T1 e T2).
 - Gate de fase: `npm run lint`, `npm test`, `node bin/ai-sync.js --check` e o sync em pasta temporária (`T=$(mktemp -d) && node bin/ai-sync.js "$T" && ls -R "$T/.claude"; rm -rf "$T"`). O projeto não tem build, typecheck nem formatador; o lint e a suíte são o que o CI roda.
+- Fase 2 (sequencial): T3, porque mexe no hook e no mesmo arquivo de teste da T1, e o merge com a main precisa vir por último.
+- Gate de fase: o mesmo da Fase 1, rodado depois do merge com a main e antes do reviewer.
 
 ## Tarefas
 
@@ -134,7 +141,7 @@ Reverter os commits da tarefa (`git revert`) volta o hook ao comportamento anter
 - Pronto quando: os casos acima passam, nenhuma pasta temporária sobra (CA-09) e o gate passa.
 - Gate: `npm run lint` e `npm test` (o projeto não tem typecheck nem formatador).
 - Modelo: padrao.
-- Status: feita. Commit `27c22b3`, feito pelo Todo (dev-devops). Antes da mudança, 6 dos 11 testes novos falharam, porque o commit saía quando devia ser recusado; depois, `npm test` 121/121. Gate: `npm run lint` ok, 121/121, `node bin/ai-sync.js --check` ok, sync em pasta temporária ok.
+- Status: em-andamento. Primeira entrega no commit `27c22b3`, feito pelo Todo (dev-devops). Antes da mudança, 6 dos 9 testes novos falharam, porque o commit saía quando devia ser recusado; depois, `npm test` 121/121. Gate: `npm run lint` ok, 121/121, `node bin/ai-sync.js --check` ok, sync em pasta temporária ok. Achado da revisão (Kusakabe, bloqueia): falta a detecção do último commit fora de sincronia pedida no CA-13. O Todo está corrigindo dentro da T1.
 
 ### T2 [P] Atualizar a descrição do hook na documentação
 - O quê: a documentação passa a dizer que o hook atualiza o `.claude/` na pasta e recusa o commit que não leva os gerados coerentes, orientando a rodar o sync e incluí-los nos caminhos, e cita o limite com dois agentes mexendo em fontes.
@@ -147,7 +154,25 @@ Reverter os commits da tarefa (`git revert`) volta o hook ao comportamento anter
 - Teste: nenhum (só texto); o teste existente que confere `npm run sync` no `.claude/CLAUDE.md` continua passando.
 - Gate: `npm run lint` e `npm test`.
 - Modelo: economico.
-- Status: feita. Commit `8e5867e`, feito pelo Todo (dev-devops). Só texto, no `README.md` e no `.claude/CLAUDE.md`. Gate: `npm run lint` ok, `npm test` 121/121, `node bin/ai-sync.js --check` ok.
+- Status: em-andamento. Primeira entrega no commit `8e5867e`, feito pelo Todo (dev-devops). Só texto, no `README.md` e no `.claude/CLAUDE.md`. Gate: `npm run lint` ok, `npm test` 121/121, `node bin/ai-sync.js --check` ok. Achado da revisão (Kusakabe, bloqueia): a documentação não cita a recusa quando o último commit está fora de sincronia. O Todo está corrigindo dentro da T2.
+
+### T3 Reforça os testes do hook, trata a falha do sync e atualiza a branch com a main
+- O quê: o teste das pastas temporárias passa a usar um `TMPDIR` próprio e falha se sobrar algo; o teste da recusa sem caminhos compara também `git ls-files -s`; o hook recusa com mensagem em português quando o sync falha; e a branch é atualizada com a main por merge antes do PR.
+- Onde: `.githooks/pre-commit` e o script de validação criado na T1; `tests/self-sync.test.js`; merge de `main` na branch `fix/60-hook-trava-desatualizado`.
+- Dev: Todo (dev-devops).
+- Depende de: T1, T2.
+- Reaproveita: o repositório temporário e os casos de teste da T1; o caso (h) da T1 (comparação do stage) ganha `git ls-files -s` se ainda não o tiver.
+- Atende: RN-01, RN-08, RN-09; CA-09, CA-12, CA-14, CA-15, CA-16, CA-17.
+- Desenho:
+  - (a) os testes que fazem commit no repositório temporário passam `TMPDIR` apontando para uma pasta criada só para o teste; ao fim de commits aceitos e recusados, o teste falha se essa pasta não estiver vazia. (CA-14)
+  - (b) na recusa do commit sem caminhos, o teste compara antes e depois a saída de `git diff --cached --name-status` e de `git ls-files -s`. (CA-15)
+  - (c) se o `npm run sync` (ou a sincronização feita pela validação) sair com erro, o hook sai com código 1 e imprime em português que o sync falhou e o que conferir, sem `git add` e apagando as pastas temporárias. O texto exato é do dev e é conferido na revisão. O teste provoca a falha no repositório temporário (por exemplo, com um `catalog.json` inválido no stage e na pasta) e confere a recusa, a mensagem, o HEAD inalterado e o stage igual. (CA-16)
+  - (d) depois de (a) a (c) commitados, `git merge main` na branch (sem rebase), resolvendo conflitos se houver, e o gate de novo. (CA-17)
+- Teste (escrito primeiro, deve falhar antes da mudança): devem falhar primeiro o teste da falha do sync (o commit sai ou a mensagem não aparece) e o teste do `TMPDIR` próprio, se o hook deixar algo para trás. Se algum desses passar já na primeira execução, registrar no relato que ele já era atendido, sem alterar o teste para forçar a falha.
+- Pronto quando: os testes novos passam, nenhuma pasta temporária sobra, o merge com a main está feito e o gate passa depois do merge.
+- Gate: `npm run lint`, `npm test`, `node bin/ai-sync.js --check` e o sync em pasta temporária (o projeto não tem typecheck nem formatador).
+- Modelo: padrao.
+- Status: pendente.
 
 ## Dúvidas
 
