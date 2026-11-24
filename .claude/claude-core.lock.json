@@ -40,6 +40,10 @@
       "hash": "e8c5dc1b45d12df909680300b2852b5c38d2a1530fe2f51bf0f9aff2285778b3",
       "version": "0.1.0"
     },
+    ".claude/rules/feedback-standard.md": {
+      "hash": "ae1ad6f64d02683941812698e28198223ada44838e52a09218d86ca920d44dfb",
+      "version": "0.1.0"
+    },
     ".claude/rules/git-standard.md": {
       "hash": "9e104885f0eee3eeffab99e437985654e5a1bc887541696204bded6120a211d8",
       "version": "0.1.0"
@@ -77,7 +81,7 @@
       "version": "0.1.0"
     },
     ".claude/skills/team-setup/SKILL.md": {
-      "hash": "738a5a065356d79afb6bad51074cdd7e21310e0220fe4b325c67e11e9c0f8018",
+      "hash": "121f8fddd76a6dc7a1a62ad23f9d55e712abf29821717e9fca8f3821e7c03945",
       "version": "0.1.0"
     }
   },

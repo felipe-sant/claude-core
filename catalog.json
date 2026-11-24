@@ -142,6 +142,11 @@
       "path": "rules/git-standard.md",
       "applies": ["all"],
       "description": "Git com vários agentes na mesma worktree: commit por caminho explícito e histórico sem rebase interativo."
+    },
+    "feedback-standard": {
+      "path": "rules/feedback-standard.md",
+      "applies": ["all"],
+      "description": "Problema nas instruções do próprio time vira issue no claude-kit, sem dado do projeto."
     }
   },
   "skills": {
