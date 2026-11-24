@@ -34,6 +34,8 @@ Para cada número de `classify`:
    - P: pequena e clara, você resolve sozinho. Inclui ajustes pequenos e claros nas regras, nos agentes e nas skills do time.
    - M: precisa da atenção do Felipe.
    - G: grande migração ou mudança que envolve o fluxo inteiro do repositório.
+   - Mudar workflows, a pasta `.github`, automações, permissões ou segredos é sempre M.
+   - Apagar arquivo também é M, porque você não pode apagar.
    - Se estiver na dúvida entre P e M, escolha M.
 2. Ponha a etiqueta `Size: P`, `Size: M` ou `Size: G` com `gh issue edit <número> --add-label "<etiqueta>"`.
 3. Deixe um único comentário com `gh issue comment`, em linguagem simples, que começa com a frase `Tamanho definido pelo agente de issues`, traz o motivo do tamanho e o link da execução. Use o link da execução que vem pronto em "Valores desta execução" e nunca leia variáveis de ambiente.
@@ -51,9 +53,9 @@ Nunca classifique nem comente a classificação de `pr_issue`: ela já tem taman
 Para a issue do pull request:
 
 1. Siga o fluxo do time com os agentes, regras e skills da pasta `.claude/` do repositório. A especificação é dispensada por ser tarefa pequena. Use TDD em lógica e comportamento.
-2. Crie a branch `<tipo>/<número>-<descrição-curta>` a partir da branch principal, no padrão da regra `commit-standard`, e commite no padrão dela, com um commit atômico por mudança e os arquivos informados pelo caminho.
+2. Crie a branch com `git switch -c <tipo>/<número>-<descrição-curta> origin/main`, no padrão da regra `commit-standard`, e nunca use `git checkout`. Commite no padrão dela, com um commit atômico por mudança e os arquivos informados pelo caminho. Passe a mensagem do commit em um ou mais `-m`, sem `$(...)` nem heredoc. Nos textos de `--body` e `-m`, não use crase nem cifrão, porque esses comandos são negados: no markdown do pull request use aspas ou negrito em vez de crase para código.
 3. Antes de abrir o pull request, rode `npm run lint`, `npm test` e `node bin/ai-sync.js --check`. Só abra com os três passando.
-4. Abra o pull request seguindo a skill `create-pull-request`. O corpo liga a issue com `Closes #<número>` e traz a linha `Aberto pelo agente de issues.`
+4. Abra o pull request seguindo a skill `create-pull-request`. O corpo liga a issue com `Closes #<número>` e traz a linha `Aberto pelo agente de issues.` Passe o texto dos comentários e do pull request direto em `--body`, sem arquivo.
 
 ## Se a issue P for maior do que parecia
 
@@ -61,6 +63,7 @@ Pare, apague a branch local, não envie branch nem abra pull request. Comente na
 
 ## Limites
 
+- Rode os comandos a partir da raiz do repositório, sem `cd`, sem `$(...)` e sem pastas temporárias. Peça o mesmo aos subagentes que chamar: se não conseguir simular o merge ou criar worktree, siga sem isso.
 - Nunca faça merge de nenhum pull request.
 - Nunca faça push na principal: nunca envie nada para a branch principal. Também nunca use `--force`.
 - Nunca edite o `.claude/` à mão: ele é gerado. Altere as fontes (`agents/`, `rules/`, `skills/`, `templates/`, `catalog.json`, `profiles/`), rode `npm run sync` e inclua as fontes e os arquivos gerados no mesmo commit.

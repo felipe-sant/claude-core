@@ -188,7 +188,8 @@ test('as listas de números são expandidas entre aspas no shell', () => {
 })
 
 test('os comandos do shell não têm crase dentro de aspas simples', () => {
-  assert.doesNotMatch(workflow(), /'[^'\n]*`[^'\n]*'/)
+  const shellLines = workflow().split('\n').filter((line) => !line.trim().startsWith('--disallowedTools'))
+  assert.doesNotMatch(shellLines.join('\n'), /'[^'\n]*`[^'\n]*'/)
 })
 
 test('o relatório da execução aparece no resumo, sem mostrar a saída completa', () => {
@@ -202,4 +203,51 @@ test('o passo que monta o prompt calcula o link da execução com as variáveis 
   const step = block.slice(block.indexOf('id: prompt'), block.indexOf('id: claude'))
   assert.match(step, /\$GITHUB_SERVER_URL\/\$GITHUB_REPOSITORY\/actions\/runs\/\$GITHUB_RUN_ID/)
   assert.match(step, /Link da execução: %s/)
+})
+
+test('o git checkout só é liberado para criar branch', () => {
+  const block = jobBlock('agent')
+  const allowed = block.slice(block.indexOf('--allowedTools'), block.indexOf('--disallowedTools'))
+  assert.ok(allowed.includes('Bash(git checkout -b:*)'))
+  assert.ok(!allowed.includes('Bash(git checkout:*)'))
+})
+
+test('as formas de ler o ambiente e o /proc são proibidas', () => {
+  const block = jobBlock('agent')
+  const disallowed = block.slice(block.indexOf('--disallowedTools'))
+  const forbidden = [
+    'Bash(env:*)',
+    'Bash(printenv:*)',
+    'Bash(export:*)',
+    'Bash(set:*)',
+    'Bash(declare:*)',
+    'Bash(cat *environ*)',
+    'Bash(head *environ*)',
+    'Bash(tail *environ*)',
+    'Bash(echo *TOKEN*)',
+    'Bash(printf *TOKEN*)',
+    'Read(//proc/**)'
+  ]
+  for (const rule of forbidden) assert.ok(disallowed.includes(rule), `faltou proibir: ${rule}`)
+})
+
+test('as formas de publicar variável ou arquivo em um texto são proibidas', () => {
+  const block = jobBlock('agent')
+  const disallowed = block.slice(block.indexOf('--disallowedTools'))
+  const forbidden = [
+    'Bash(*$*)',
+    'Bash(*`*)',
+    'Bash(*environ*)',
+    'Bash(*/proc/*)',
+    'Bash(*--body-file*)',
+    'Bash(*--file*)',
+    'Bash(*--template*)',
+    'Bash(* -F*)',
+    'Bash(* -T *)'
+  ]
+  for (const rule of forbidden) assert.ok(disallowed.includes(rule), `faltou proibir: ${rule}`)
+})
+
+test('a lista de proibições vai entre aspas simples para o shell não expandir o cifrão', () => {
+  assert.match(jobBlock('agent'), /--disallowedTools '[^'\n]*Bash\(\*\$\*\)[^'\n]*'/)
 })

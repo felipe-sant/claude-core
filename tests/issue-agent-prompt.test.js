@@ -45,6 +45,16 @@ const guards = {
   'decisão do dono vira M': 'Se a issue precisar de decisão do dono, troque o tamanho para M',
   'não abre issue de problema no time': 'Não abra issue de "Problema no time" pela `feedback-standard`',
   'registra o problema no comentário ou no PR': 'registre-o no comentário da issue ou na descrição do pull request',
+  'branch criada com git switch': 'Crie a branch com `git switch -c <tipo>/<número>-<descrição-curta> origin/main`',
+  'nunca usar git checkout': 'nunca use `git checkout`',
+  'texto longo direto em --body': 'Passe o texto dos comentários e do pull request direto em `--body`, sem arquivo',
+  'commit com vários -m e sem substituição': 'Passe a mensagem do commit em um ou mais `-m`, sem `$(...)` nem heredoc',
+  'workflows e automações são sempre M': 'Mudar workflows, a pasta `.github`, automações, permissões ou segredos é sempre M',
+  'apagar arquivo é M': 'Apagar arquivo também é M, porque você não pode apagar',
+  'comandos a partir da raiz, sem cd, sem substituição e sem pastas temporárias': 'Rode os comandos a partir da raiz do repositório, sem `cd`, sem `$(...)` e sem pastas temporárias',
+  'o mesmo vale para os subagentes': 'Peça o mesmo aos subagentes que chamar',
+  'subagente sem merge simulado segue sem isso': 'se não conseguir simular o merge ou criar worktree, siga sem isso',
+  'sem crase nem cifrão nos textos de --body e -m': 'Nos textos de `--body` e `-m`, não use crase nem cifrão',
   'padrão de commits e branches': 'commit-standard',
   'skill de pull request': 'create-pull-request'
 }
