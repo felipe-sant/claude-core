@@ -50,7 +50,6 @@ jobs:
       CLASSIFY: ${{ needs.select.outputs.classify }}
       PR_ALLOWED: ${{ needs.select.outputs.pr_allowed }}
       PR_ISSUE: ${{ needs.select.outputs.pr_issue }}
-      CONTEXT_DIR: ${{ runner.temp }}/issue-agent
       CLASSIFICATION_MARK: Tamanho definido pelo agente de issues
       PULL_REQUEST_LINE: Aberto pelo agente de issues.
     steps:
@@ -69,8 +68,11 @@ jobs:
         run: node .github/issue-agent/issue-context.js "$CONTEXT_DIR" ${CLASSIFY//,/ } $PR_ISSUE
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CONTEXT_DIR: ${{ runner.temp }}/issue-agent
       - id: prompt
         name: Montagem das instruções
+        env:
+          CONTEXT_DIR: ${{ runner.temp }}/issue-agent
         run: |
           {
             echo "text<<PROMPT_END"

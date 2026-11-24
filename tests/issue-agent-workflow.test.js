@@ -165,3 +165,17 @@ test('as ferramentas liberadas cobrem os subagentes, as skills, a leitura e a ed
     assert.match(allowed, new RegExp(`[",]${tool}[",]`), `faltou liberar: ${tool}`)
   }
 })
+
+test('o contexto runner não aparece fora dos passos', () => {
+  for (const name of ['select', 'agent']) {
+    const block = jobBlock(name)
+    const beforeSteps = block.slice(0, block.indexOf('    steps:'))
+    assert.doesNotMatch(beforeSteps, /runner\./, `runner usado fora dos passos em ${name}`)
+  }
+})
+
+test('os passos que usam a pasta do contexto a definem a partir de runner.temp', () => {
+  const block = jobBlock('agent')
+  const definitions = block.match(/CONTEXT_DIR: \$\{\{ runner\.temp \}\}\/issue-agent/g) || []
+  assert.equal(definitions.length, 2)
+})
