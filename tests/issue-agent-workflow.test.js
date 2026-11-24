@@ -179,3 +179,14 @@ test('os passos que usam a pasta do contexto a definem a partir de runner.temp',
   const definitions = block.match(/CONTEXT_DIR: \$\{\{ runner\.temp \}\}\/issue-agent/g) || []
   assert.equal(definitions.length, 2)
 })
+
+test('as listas de números são expandidas entre aspas no shell', () => {
+  const text = workflow()
+  assert.doesNotMatch(text, /(^|[^"])\$\{CLASSIFY\/\/,\/ \}/m)
+  assert.doesNotMatch(text, /[^"{]\$PR_ISSUE(\s|$)/m)
+  assert.match(text, /"\$\{numbers\[@\]\}"/)
+})
+
+test('os comandos do shell não têm crase dentro de aspas simples', () => {
+  assert.doesNotMatch(workflow(), /'[^'\n]*`[^'\n]*'/)
+})
