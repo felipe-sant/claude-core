@@ -89,11 +89,11 @@ Não há tarefa `[P]`: é um único dev com uma única tarefa, pequena, em que o
   - o teste novo falhou antes da mudança na regra, pelo motivo certo (trecho ausente), e passa depois;
   - o teste novo também confere que `git add .`, `git add -A`, `git add -N`, `--intent-to-add`, `git add -u` e `git commit -a` continuam no texto e que o exemplo `git commit -m "..." -- caminho/a.ts caminho/b.ts` continua lá;
   - o gate passa;
-  - `git show --stat --name-status HEAD` lista só `rules/git-standard.md`, `tests/agents.test.js` e `.claude/rules/git-standard.md`.
+  - `git show --stat --name-status HEAD` lista só `rules/git-standard.md`, `tests/agents.test.js` e `.claude/rules/git-standard.md`, mais o `.claude/claude-core.lock.json`, também regenerado pelo gancho de pré-commit e esperado no commit.
 - Teste: unitário de conteúdo. Deve falhar primeiro o teste novo "o padrão de git explica como commitar ao tirar um arquivo do controle de versão mantendo-o na pasta", em `tests/agents.test.js`.
 - Gate: `npm run lint` e `npm test`. O projeto não tem typecheck nem formatador; o lint (`oxlint` e `node lint/content.js`) é a checagem de formato.
 - Modelo: economico
-- Status: pendente
+- Status: feita. Commit `3d8f1f9`, feito pelo Inumaki (dev-backend). O teste novo falhou antes da mudança na regra (refeito pelo Kusakabe em uma worktree descartável: AssertionError pelo trecho ausente) e passa depois. Gate: `npm run lint` ok, `npm test` 113/113, `node bin/ai-sync.js --check` ok. O `.claude/` gerado foi conferido com `npm run sync` em uma cópia isolada, sem diferença. Revisão: aprovada pelo Kusakabe (reviewer).
 
 ## Dúvidas
 
