@@ -1,6 +1,6 @@
 # Regra de git: commit ao tirar um arquivo do controle de versão mantendo-o na pasta
 
-> Status: em-revisao
+> Status: aprovada
 > Tipo: bug
 > Tamanho: media
 > Branch: fix/56-commit-ao-tirar-arquivo-do-versionamento
@@ -12,7 +12,7 @@ A regra de git do time manda commitar sempre informando exatamente quais arquivo
 
 ## Comportamento esperado
 
-A regra prevê esse caso e diz exatamente o que fazer: o agente confere a lista do que está preparado para commit; se ali estiver apenas essa remoção, commita sem informar arquivos; se houver algo preparado por outro agente, pede ao dono que commite antes e espera. Todos os outros casos continuam com o commit informando os arquivos, e os atalhos proibidos continuam proibidos.
+A regra prevê esse caso e diz exatamente o que fazer: o agente confere a lista do que está preparado para commit; se ali estiver apenas essa remoção e, quando houver, a linha que ele mesmo acrescentou ao arquivo de ignorados do git para esse arquivo, commita os dois juntos sem informar arquivos; se houver algo preparado por outro agente, pede ao dono que commite antes e espera. Todos os outros casos continuam com o commit informando os arquivos, e os atalhos proibidos continuam proibidos.
 
 ## Impacto
 
@@ -40,7 +40,7 @@ Hipótese: a regra foi escrita pensando só em arquivos que existem no controle 
 ## Regras
 
 - RN-01: Ao tirar um arquivo do controle de versão mantendo-o na pasta, e só nesse caso, o agente pode commitar sem informar arquivos. Fonte: decisão do usuário na issue #56.
-- RN-02: Antes desse commit, o agente confere a lista do que está preparado para commit e só segue se ali estiver apenas essa remoção. Fonte: decisão do usuário na issue #56.
+- RN-02: Antes desse commit, o agente confere a lista do que está preparado para commit e só segue se ali estiver apenas essa remoção e, quando houver, a linha que ele mesmo acrescentou ao arquivo de ignorados do git para esse arquivo. Os dois vão juntos no mesmo commit sem informar arquivos. Fonte: decisão do usuário na issue #56 e resposta do usuário à dúvida do arquivo de ignorados.
 - RN-03: Se houver na lista algo preparado por outro agente, o agente pede ao dono que commite antes e espera, em vez de levar o trabalho dele junto. Fonte: decisão do usuário na issue #56.
 - RN-04: A exceção não autoriza nenhum atalho já proibido: adicionar tudo de uma vez, adicionar só o que já está no controle, marcar arquivo novo como intenção de adicionar, nem commitar tudo o que mudou. Fonte: decisão do usuário na issue #56, relatada pela orchestrator.
 - RN-05: Fora desse caso, continua valendo o commit informando os arquivos. Fonte: regra de git atual.
@@ -50,7 +50,7 @@ A memória do time registra a mesma decisão, mas sua lista de atalhos proibidos
 ## Critérios de aceite
 
 - CA-01: QUANDO um agente lê a regra de git ENTÃO a regra DEVE descrever o caso de tirar um arquivo do controle de versão mantendo-o na pasta. (RN-01)
-- CA-02: QUANDO o agente vai commitar essa remoção ENTÃO a regra DEVE mandar conferir antes a lista do que está preparado para commit e só commitar sem informar arquivos se ali estiver apenas essa remoção. (RN-01, RN-02)
+- CA-02: QUANDO o agente vai commitar essa remoção ENTÃO a regra DEVE mandar conferir antes a lista do que está preparado para commit e só commitar sem informar arquivos se ali estiver apenas essa remoção e, quando houver, a linha que o próprio agente acrescentou ao arquivo de ignorados do git para esse arquivo, as duas no mesmo commit. (RN-01, RN-02)
 - CA-03: QUANDO a lista do que está preparado para commit tem algo de outro agente ENTÃO a regra DEVE mandar pedir ao dono que commite antes e esperar. (RN-03)
 - CA-04: QUANDO um agente lê a exceção ENTÃO a regra DEVE continuar proibindo todos os atalhos já proibidos, sem nenhuma frase que os libere. (RN-04)
 - CA-05: QUANDO o commit não é a retirada de um arquivo do controle mantendo-o na pasta ENTÃO a regra DEVE continuar mandando commitar informando os arquivos, como antes. (RN-05)
@@ -73,7 +73,7 @@ Não há tarefa `[P]`: é um único dev com uma única tarefa, pequena, em que o
 
 ### T1 Acrescenta à regra de git a exceção conferida para tirar arquivo do controle mantendo-o na pasta
 
-- O quê: incluir na regra de git o caso de tirar arquivo do controle mantendo-o na pasta, com a conferência da lista preparada e o pedido ao dono, coberto por um teste novo.
+- O quê: incluir na regra de git o caso de tirar arquivo do controle mantendo-o na pasta, com a conferência da lista preparada (só a remoção e, quando houver, a linha do próprio agente no `.gitignore` para esse arquivo, no mesmo commit) e o pedido ao dono, coberto por um teste novo.
 - Onde: `rules/git-standard.md`, seção `## Commit`, em um item novo logo depois do item que manda commitar com caminhos explícitos; `tests/agents.test.js`, teste novo junto dos testes do padrão de git. O `.claude/rules/git-standard.md` é regenerado pelo gancho `.githooks/pre-commit` (que roda `npm run sync`) e entra no commit junto; nunca editá-lo à mão.
 - Dev: Inumaki (dev-backend)
 - Depende de: nada
@@ -82,7 +82,8 @@ Não há tarefa `[P]`: é um único dev com uma única tarefa, pequena, em que o
 - Texto que o teste e a regra devem ter em comum (âncoras):
   - `git rm --cached`
   - `git diff --cached --name-status`
-  - a condição de haver "apenas essa remoção" no stage antes de commitar sem caminhos
+  - a condição de haver no stage apenas essa remoção e, quando houver, a linha que o próprio agente acrescentou ao `.gitignore` para esse arquivo, as duas no mesmo commit sem caminhos
+  - `.gitignore`
   - o pedido ao dono para commitar antes e esperar, reaproveitando "espere ele commitar"
 - Pronto quando:
   - o teste novo falhou antes da mudança na regra, pelo motivo certo (trecho ausente), e passa depois;
@@ -98,6 +99,4 @@ Não há tarefa `[P]`: é um único dev com uma única tarefa, pequena, em que o
 
 Product-owner: nenhuma.
 
-Usuário (não bloqueia a T1):
-
-- Tirar um arquivo do controle costuma vir junto de uma linha nova no arquivo de ignorados do git. Pela decisão atual, só a remoção pode estar preparada no commit sem caminhos. A alteração do próprio agente no arquivo de ignorados pode ir no mesmo commit, ou deve ser commitada antes, à parte, informando o caminho? A regra hoje seguirá a decisão literal ("apenas essa remoção") até a resposta.
+Usuário: nenhuma.
