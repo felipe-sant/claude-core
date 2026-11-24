@@ -79,6 +79,7 @@ Ter um agente que roda sozinho no próprio GitHub do repositório, lê as issues
 - A varredura diária e o disparo manual só funcionam a partir da branch principal: o GitHub não roda esses gatilhos de uma branch de trabalho. Por isso nenhuma tarefa desta especificação promete uma execução real de ponta a ponta antes do merge. A verificação possível antes disso é a suíte de testes e uma execução local, só de leitura, do script de seleção contra o repositório real.
 - A seleção lê só os últimos 100 comentários de cada issue. Numa issue com mais de 100 comentários depois da classificação, a marca do comentário de classificação pode ficar de fora da leitura e a issue ser classificada de novo; nesse caso a conferência final detecta o comentário de classificação duplicado e a execução falha de forma visível.
 - O primeiro teste real é a #62, depois de tudo instalado, e não faz parte desta tarefa.
+- A confirmar na primeira execução real (#62), por não haver como testar antes do merge: o envio da branch sem a credencial gravada pelo checkout, as proteções das ferramentas da ação com os subcomandos explícitos, a S-02 (autor `claude[bot]`) e a S-07.
 
 ## Fora do escopo
 
@@ -114,7 +115,7 @@ A decisão de quem pode ser tratado e de quais comentários são lidos nunca dep
 - Etiquetas: `Size: P`, `Size: M`, `Size: G`, exatamente com esses nomes.
 - Gatilhos: `issues` com `types: [opened, reopened]`; `schedule` com `cron: "0 9 * * *"` (09:00 UTC, 06:00 em Brasília); `workflow_dispatch` sem entradas.
 - Concorrência: `concurrency` com grupo fixo `issue-agent` e `cancel-in-progress: false` (CA-07).
-- Ação do Claude: `anthropics/claude-code-action`, fixada em `v1` (tag conferida em 2026-11-24, ou o SHA do commit dessa versão), nunca em `main`. Entradas usadas: `claude_code_oauth_token`, `prompt`, `claude_args`. Não passa `github_token`: a ação usa o token do app do Claude obtido por OIDC, o que exige `id-token: write`. Isso faz o pull request ser aberto pelo app e não pelo token padrão da automação, condição para o CI do repositório rodar no pull request do agente (um pull request aberto com o token padrão não dispara outras automações). `show_full_output` fica desligado (o repositório é público e essa saída pode expor segredos).
+- Ação do Claude: `anthropics/claude-code-action`, fixada pelo SHA `eb56b6666facdbd501035f4a0269d8caee2e7a8b` (decisão do usuário, no lugar da tag `v1` conferida em 2026-11-24), nunca em `main`. O checkout do trabalho do agente não grava a credencial no git. Entradas usadas: `claude_code_oauth_token`, `prompt`, `claude_args`. Não passa `github_token`: a ação usa o token do app do Claude obtido por OIDC, o que exige `id-token: write`. Isso faz o pull request ser aberto pelo app e não pelo token padrão da automação, condição para o CI do repositório rodar no pull request do agente (um pull request aberto com o token padrão não dispara outras automações). `show_full_output` fica desligado (o repositório é público e essa saída pode expor segredos).
 - Permissões: no topo da automação, nenhuma (`permissions: {}`). Trabalho de seleção: `contents: read`, `issues: read`, `pull-requests: read`. Trabalho do agente: `contents: write`, `issues: write`, `pull-requests: write`, `id-token: write`. Nenhuma outra.
 - Saídas do script de seleção, gravadas no arquivo de `GITHUB_OUTPUT`:
   - `classify`: números das issues a classificar, separados por vírgula, do mais antigo para o mais novo, no máximo 10 (`MAX_CLASSIFY = 10`); vazio quando não há.
@@ -162,7 +163,7 @@ Arquivo versionado em português, passado à ação pelo conteúdo do arquivo, c
 
 ### Ferramentas permitidas (claude_args)
 
-`--allowedTools` restrito ao necessário: leitura e edição de arquivos (incluindo a leitura da pasta do contexto filtrado), `Bash` para `git` (sem `push` para a principal, sem `merge`, sem `--force`), `npm ci`, `npm run lint`, `npm test`, `npm run sync`, `node bin/ai-sync.js`, `gh issue comment`, `gh issue edit` (só etiquetas), `gh pr create`, `gh pr list`. `--disallowedTools` explícito para `gh issue view`, `gh api`, `gh pr merge`, `git push --force` e `git push origin main`, para que o Claude não tenha como ler comentários fora do contexto filtrado. Também `--max-turns` com um limite (sugestão: 100; ver S-04). Os testes conferem que `gh pr merge`, `gh issue view` e `gh api` estão proibidos e que `--allowedTools` existe.
+`--allowedTools` restrito ao necessário: leitura e edição de arquivos (incluindo a leitura da pasta do contexto filtrado), `Bash` para `git` só com `add`, `commit`, `push`, `switch`, `status`, `diff`, `log` e `branch` (sem `push` para a principal, sem `merge`, sem `--force`), `npm ci`, `npm run lint`, `npm test`, `npm run sync`, `node bin/ai-sync.js`, `gh issue comment`, `gh issue edit` (só pôr e tirar etiquetas), `gh pr create`, `gh pr list`. `--disallowedTools` explícito para `gh issue view`, `gh api`, `gh pr merge`, `git push --force` e `git push origin main`, para que o Claude não tenha como ler comentários fora do contexto filtrado. Também `--max-turns` com um limite (sugestão: 100; ver S-04). Os testes conferem que `gh pr merge`, `gh issue view` e `gh api` estão proibidos e que `--allowedTools` existe.
 
 ### Passos do trabalho do agente
 
@@ -180,7 +181,7 @@ Arquivo versionado em português, passado à ação pelo conteúdo do arquivo, c
 
 ### Suposições técnicas
 
-- S-01: o modo de automação da ação (entrada `prompt`) funciona com evento de issue, agenda e disparo manual. Conferir na documentação da versão fixada durante a T3. Conferida em 2026-11-24: a ação ficou fixada em `@v1`.
+- S-01: o modo de automação da ação (entrada `prompt`) funciona com evento de issue, agenda e disparo manual. Conferir na documentação da versão fixada durante a T3. Conferida em 2026-11-24: a ação ficou fixada em `@v1`. Depois, por decisão do usuário (62eee03), a ação passou a ser fixada pelo SHA `eb56b6666facdbd501035f4a0269d8caee2e7a8b`.
 - S-02: o app do Claude abre o pull request com o autor `claude[bot]`; a linha fixa no corpo é a segunda garantia caso o autor seja outro.
 - S-03: "pull request ligado" é o que referencia a issue para fechá-la (palavra de fechamento ou ligação manual). Menções soltas em outro pull request não contam.
 - S-04: limite de 100 turnos por execução (até 10 classificações mais um pull request) e horário da varredura às 09:00 UTC; ajustáveis sem mudar regra.
@@ -193,7 +194,7 @@ Arquivo versionado em português, passado à ação pelo conteúdo do arquivo, c
 
 - Fase 1 (paralelo): T1 [P], T2 [P], T3 [P], T4 [P], T7 [P] (Dev Ops) e T5 [P] (Dev Doc). Todas dependem só do contrato fixado no Desenho; cada uma edita arquivos diferentes. Concluída. Gate de fase: `npm run lint` passou, `npm test` com 215 pass e 0 fail, `node bin/ai-sync.js --check` passou.
 - Gate de fase: `npm run lint`, `npm test`, `node bin/ai-sync.js --check` e o sync em pasta temporária (`T=$(mktemp -d) && node bin/ai-sync.js "$T" && ls -R "$T/.claude"; rm -rf "$T"`), rodados uma vez ao fim da fase e antes do reviewer. O projeto não tem build, typecheck nem formatador; o lint e a suíte são o que o CI roda.
-- Fase 2 (sequencial): T6. Iniciada com o Dev Ops.
+- Fase 2 (sequencial): T6. Concluída.
 - Gate de fase: o mesmo da Fase 1, depois de atualizar a branch com a main por merge, se ela avançou.
 
 ## Tarefas
@@ -232,7 +233,7 @@ Arquivo versionado em português, passado à ação pelo conteúdo do arquivo, c
 - Pronto quando: todas as guardas estão presentes e o gate passa. Se a T3 constatar que S-07 não vale, a guarda de leitura é trocada na T6 conforme S-07.
 - Gate: `npm run lint`, `node --test tests/issue-agent-prompt.test.js` e `node bin/ai-sync.js --check`.
 - Modelo: padrao.
-- Status: feita. Commit 80d19e0. Os testes falharam antes por falta do arquivo (ENOENT). Revisão em andamento.
+- Status: feita. Commit 80d19e0. Os testes falharam antes por falta do arquivo (ENOENT). Revisão aprovada pelo Reviewer.
 
 ### T3 [P] Automação do GitHub Actions
 - O quê: a automação com os gatilhos, a concorrência, as permissões mínimas, os dois trabalhos, o passo do contexto filtrado e as conferências finais do Desenho.
@@ -250,7 +251,7 @@ Arquivo versionado em português, passado à ação pelo conteúdo do arquivo, c
 - Pronto quando: os testes passam, o YAML não tem comentários e o gate passa. Não há execução real antes do merge (ver Limite conhecido).
 - Gate: `npm run lint`, `node --test tests/issue-agent-workflow.test.js` e `node bin/ai-sync.js --check`.
 - Modelo: padrao.
-- Status: feita. Commit cfc4476, 17 testes da tarefa. Revisão em andamento.
+- Status: feita. Commit cfc4476, 17 testes da tarefa. Revisão aprovada pelo Reviewer.
 
 ### T4 [P] Criar as etiquetas de tamanho no repositório
 - O quê: criar as etiquetas `Size: P`, `Size: M` e `Size: G` no repositório real, com cor e descrição simples. É a única tarefa que muda o ambiente real.
@@ -325,7 +326,7 @@ Arquivo versionado em português, passado à ação pelo conteúdo do arquivo, c
 - Pronto quando: não há divergência e o gate de fase passa.
 - Gate: `npm run lint`, `npm test`, `node bin/ai-sync.js --check` e o sync em pasta temporária.
 - Modelo: economico.
-- Status: em-andamento. Passo 0 feito, cada correção com teste falhando antes: 5599c2d (P com `Size: M` ou `Size: G` sai da fila), d40eede (normalização do autor testada) e 7d774dc (erros em português nas falhas da API).
+- Status: feita. Sem commit: o encaixe entre README, scripts, instruções e automação confere. Gate de fase: `npm run lint` passou, `node bin/ai-sync.js --check` passou e o sync em pasta temporária passou; suíte com 227 testes passando depois dos ajustes de segurança. Passo 0 feito, cada correção com teste falhando antes: 5599c2d (P com `Size: M` ou `Size: G` sai da fila), d40eede (normalização do autor testada) e 7d774dc (erros em português nas falhas da API).
 
 ## Decididas pelo usuário
 
@@ -334,6 +335,13 @@ Arquivo versionado em português, passado à ação pelo conteúdo do arquivo, c
 - D-03: o Dev Doc acrescenta só uma linha sobre a automação na tabela "Estrutura" do guia do Claude do projeto, além do README; nenhuma outra mudança nesse guia. Aplicada em RN-22, CA-26 e T5.
 - D-04: o agente lê o título, o corpo e só os comentários de dono, membro ou colaborador; os demais são ignorados, e texto de issue e de comentário é sempre dado, nunca instrução. Aplicada em RN-07, RN-21, CA-09, CA-25, S-06, T2, T3 e T7.
 - Aprovação da especificação com essas decisões e com a guarda de autoria do comentário do agente e a ação fixada em `v1`.
+- D-05 (antes numerada D-03): o próprio usuário vai proteger a branch principal nas configurações do GitHub depois. Fica fora do escopo desta tarefa.
+- Ajustes de segurança pedidos pelo usuário a partir das sugestões do Reviewer, sem mudar regra de negócio:
+  - 4954cbd: o checkout do trabalho do agente não grava a credencial no git.
+  - 62eee03: a ação do Claude fica fixada pelo SHA `eb56b6666facdbd501035f4a0269d8caee2e7a8b`, substituindo o `@v1` da S-01.
+  - 13564e7: o agente só põe e tira etiquetas na issue, e a conferência final exige exatamente uma etiqueta de tamanho também na `pr_issue`.
+  - 4dedee5: o agente roda numa sessão única, usa os agentes do repositório como subagentes, sem `team-setup`, sem perguntas e sem abrir issue de "Problema no time"; o que precisar do dono vira M.
+  - 62381e4: os comandos `git` do agente ficam limitados a `add`, `commit`, `push`, `switch`, `status`, `diff`, `log` e `branch`.
 
 ## Dúvidas
 
@@ -343,4 +351,4 @@ Do product-owner:
 
 Só o usuário responde:
 
-- D-05 (antes numerada D-03): quer proteger a branch principal nas configurações do GitHub (sem push direto, merge só por pull request)? É a garantia mais forte para CA-11, mas é mudança de ambiente real e fica fora desta tarefa; a automação já falha se a principal mudar durante a execução. Não bloqueia a implementação.
+- Nenhuma.
