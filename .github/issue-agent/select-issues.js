@@ -180,4 +180,4 @@ if (require.main === module) {
   })
 }
 
-module.exports = { selectIssues, writeOutputs, MAX_CLASSIFY }
+module.exports = { selectIssues, writeOutputs, normalizeAuthor, normalizeIssue, MAX_CLASSIFY }

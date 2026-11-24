@@ -8,7 +8,7 @@ const h = require('./helpers')
 afterEach(h.cleanup)
 
 const scriptPath = path.join(h.repoRoot, '.github', 'issue-agent', 'select-issues.js')
-const { selectIssues, MAX_CLASSIFY, writeOutputs } = require(scriptPath)
+const { selectIssues, MAX_CLASSIFY, writeOutputs, normalizeAuthor, normalizeIssue } = require(scriptPath)
 
 let counter = 0
 function issue(overrides = {}) {
@@ -179,4 +179,33 @@ test('sem GITHUB_TOKEN o script sai com erro em português', () => {
   const result = spawnSync('node', [scriptPath], { encoding: 'utf8', env: { PATH: process.env.PATH } })
   assert.notEqual(result.status, 0)
   assert.match(result.stderr, /GITHUB_TOKEN/)
+})
+
+test('autor com caminho de app vira login com [bot]', () => {
+  assert.equal(normalizeAuthor({ login: 'claude', resourcePath: '/apps/claude' }), 'claude[bot]')
+})
+
+test('usuário comum mantém o login, mesmo chamado claude', () => {
+  assert.equal(normalizeAuthor({ login: 'claude', resourcePath: '/claude' }), 'claude')
+})
+
+test('autor nulo de conta apagada vira texto vazio', () => {
+  assert.equal(normalizeAuthor(null), '')
+})
+
+test('normalizeIssue converte o nó da API para o formato da seleção', () => {
+  const node = {
+    number: 9,
+    createdAt: '2026-01-01T00:00:00Z',
+    authorAssociation: 'OWNER',
+    assignees: { totalCount: 2 },
+    labels: { nodes: [{ name: 'Size: P' }] },
+    closedByPullRequestsReferences: { totalCount: 1 },
+    comments: { nodes: [{ body: 'oi', author: { login: 'claude', resourcePath: '/apps/claude' } }, { body: 'x', author: null }] }
+  }
+  const normalized = normalizeIssue(node)
+  assert.equal(normalized.assignees.length, 2)
+  assert.deepEqual(normalized.labels, ['Size: P'])
+  assert.equal(normalized.linkedPullRequests, 1)
+  assert.deepEqual(normalized.comments.map((comment) => comment.author), ['claude[bot]', ''])
 })
