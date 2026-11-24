@@ -49,6 +49,8 @@ const guards = {
   'nunca usar git checkout': 'nunca use `git checkout`',
   'texto longo direto em --body': 'Passe o texto dos comentários e do pull request direto em `--body`, sem arquivo',
   'commit com vários -m e sem substituição': 'Passe a mensagem do commit em um ou mais `-m`, sem `$(...)` nem heredoc',
+  'workflows e automações são sempre M': 'Mudar workflows, a pasta `.github`, automações, permissões ou segredos é sempre M',
+  'apagar arquivo é M': 'Apagar arquivo também é M, porque você não pode apagar',
   'padrão de commits e branches': 'commit-standard',
   'skill de pull request': 'create-pull-request'
 }
