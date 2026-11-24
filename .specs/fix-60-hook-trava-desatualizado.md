@@ -107,7 +107,7 @@ Reverter os commits da tarefa (`git revert`) volta o hook ao comportamento anter
 
 - Fase 1 (paralelo): T1 [P] e T2 [P]. Reaberta pela revisão (achados em T1 e T2) e concluída depois das correções `06bd27f` e `5dc30b3`.
 - Gate de fase: `npm run lint`, `npm test`, `node bin/ai-sync.js --check` e o sync em pasta temporária (`T=$(mktemp -d) && node bin/ai-sync.js "$T" && ls -R "$T/.claude"; rm -rf "$T"`). O projeto não tem build, typecheck nem formatador; o lint e a suíte são o que o CI roda.
-- Fase 2 (sequencial): T3, porque mexe no hook e no mesmo arquivo de teste da T1, e o merge com a main precisa vir por último. Concluída: gate depois do merge com `npm run lint` ok, `npm test` 124/124, `node bin/ai-sync.js --check` ok e sync em pasta temporária ok.
+- Fase 2 (sequencial): T3, porque mexe no hook e no mesmo arquivo de teste da T1, e o merge com a main precisa vir por último. Reaberta pela segunda revisão (achados na T3). Gate rodado depois do merge, antes da reabertura: `npm run lint` ok, `npm test` 124/124, `node bin/ai-sync.js --check` ok e sync em pasta temporária ok.
 - Gate de fase: o mesmo da Fase 1, rodado depois do merge com a main e antes do reviewer.
 
 ## Tarefas
@@ -172,7 +172,7 @@ Reverter os commits da tarefa (`git revert`) volta o hook ao comportamento anter
 - Pronto quando: os testes novos passam, nenhuma pasta temporária sobra, o merge com a main está feito e o gate passa depois do merge.
 - Gate: `npm run lint`, `npm test`, `node bin/ai-sync.js --check` e o sync em pasta temporária (o projeto não tem typecheck nem formatador).
 - Modelo: padrao.
-- Status: feita. Commit `7705a03`, feito pelo Todo (dev-devops). O teste das pastas temporárias usa `TMPDIR` próprio e `NODE_DISABLE_COMPILE_CACHE=1`; não foi provado que ele falha quando o script deixa sobra, e o reviewer vai conferir. Inclui a comparação por `git ls-files -s` e a mensagem de falha do sync, com o teste falhando antes. Merge de `origin/main` no commit `5deb1de`, sem conflito. Gate depois do merge: `npm run lint` ok, `npm test` 124/124, `node bin/ai-sync.js --check` ok, sync em pasta temporária ok.
+- Status: em-andamento. Primeira entrega: Commit `7705a03`, feito pelo Todo (dev-devops). O teste das pastas temporárias usa `TMPDIR` próprio e `NODE_DISABLE_COMPILE_CACHE=1`; não foi provado que ele falha quando o script deixa sobra, e o reviewer vai conferir. Inclui a comparação por `git ls-files -s` e a mensagem de falha do sync, com o teste falhando antes. Merge de `origin/main` no commit `5deb1de`, sem conflito. Gate depois do merge: `npm run lint` ok, `npm test` 124/124, `node bin/ai-sync.js --check` ok, sync em pasta temporária ok. Achados da segunda revisão (Kusakabe, bloqueiam): CA-16, a falha do sync só no stage mostra a pilha de erro crua em vez da mensagem em português, e o teste não cobre o commit sem caminhos; CA-14, falta conferir a pasta temporária também depois de um commit aceito; CA-15, o teste precisa comparar as duas saídas (`git diff --cached --name-status` e `git ls-files -s`). O Todo está corrigindo dentro da T3. Nota: a pasta `node-compile-cache` que aparece na pasta temporária do teste é cache do Node e do npm, esperada, e não conta como sobra do hook.
 
 ## Dúvidas
 
