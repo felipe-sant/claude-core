@@ -86,8 +86,8 @@ jobs:
           claude_args: |
             --max-turns 100
             --add-dir ${{ runner.temp }}/issue-agent
-            --allowedTools "Read,Glob,Grep,Edit,Write,Bash(git:*),Bash(npm ci),Bash(npm run lint),Bash(npm test),Bash(npm run sync),Bash(node bin/ai-sync.js:*),Bash(gh issue comment:*),Bash(gh issue edit:*),Bash(gh pr create:*),Bash(gh pr list:*)"
-            --disallowedTools "Bash(gh pr merge:*),Bash(gh issue view:*),Bash(gh api:*),Bash(git push --force:*),Bash(git push -f:*),Bash(git push --force-with-lease:*),Bash(git push origin main:*),Bash(git push origin HEAD:main:*)"
+            --allowedTools "Read,Glob,Grep,Edit,Write,Bash(git:*),Bash(npm ci),Bash(npm run lint),Bash(npm test),Bash(npm run sync),Bash(node bin/ai-sync.js:*),Bash(gh issue comment:*),Bash(gh issue edit * --add-label *),Bash(gh issue edit * --remove-label *),Bash(gh pr create:*),Bash(gh pr list:*)"
+            --disallowedTools "Bash(gh issue edit *--title*),Bash(gh issue edit *--body*),Bash(gh issue edit *--add-assignee*),Bash(gh issue edit *--remove-assignee*),Bash(gh issue edit *--add-project*),Bash(gh issue edit *--remove-project*),Bash(gh issue edit *--milestone*),Bash(gh pr merge:*),Bash(gh issue view:*),Bash(gh api:*),Bash(git push --force:*),Bash(git push -f:*),Bash(git push --force-with-lease:*),Bash(git push origin main:*),Bash(git push origin HEAD:main:*)"
       - name: Conferência final
         if: always()
         env:
@@ -105,8 +105,10 @@ jobs:
             echo "Issue $number: etiquetas de tamanho=$sizes, comentários de classificação=$marks"
             [ "$marks" -le 1 ] || fail "A issue $number tem mais de um comentário de classificação."
             [ "$sizes" -le 1 ] || fail "A issue $number tem mais de uma etiqueta de tamanho."
+            if [ "$number" = "$PR_ISSUE" ] || [ "$CLAUDE_OUTCOME" = "success" ]; then
+              [ "$sizes" -eq 1 ] || fail "A issue $number deveria ter exatamente uma etiqueta de tamanho."
+            fi
             if [ "$CLAUDE_OUTCOME" = "success" ] && [ "$number" != "$PR_ISSUE" ]; then
-              [ "$sizes" -eq 1 ] || fail "A issue $number ficou sem etiqueta de tamanho."
               [ "$marks" -eq 1 ] || fail "A issue $number ficou sem comentário de classificação."
             fi
           done

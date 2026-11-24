@@ -125,3 +125,20 @@ test('o workflow não tem comentários', () => {
 test('o checkout do agente não deixa o token gravado na configuração do git', () => {
   assert.match(jobBlock('agent'), /uses: actions\/checkout@v4\n\s+with:\n\s+fetch-depth: 0\n\s+persist-credentials: false/)
 })
+
+test('a edição de issue só pode pôr e tirar etiquetas', () => {
+  const block = jobBlock('agent')
+  const allowed = block.slice(block.indexOf('--allowedTools'), block.indexOf('--disallowedTools'))
+  const disallowed = block.slice(block.indexOf('--disallowedTools'))
+  assert.doesNotMatch(allowed, /gh issue edit:\*/)
+  assert.ok(allowed.includes('Bash(gh issue edit * --add-label *)'))
+  assert.ok(allowed.includes('Bash(gh issue edit * --remove-label *)'))
+  for (const flag of ['--title', '--body', '--add-assignee', '--remove-assignee', '--add-project', '--remove-project', '--milestone']) {
+    assert.ok(disallowed.includes(`Bash(gh issue edit *${flag}*)`), `faltou proibir: ${flag}`)
+  }
+})
+
+test('a conferência final exige exatamente uma etiqueta de tamanho também para a issue do pull request', () => {
+  const block = jobBlock('agent')
+  assert.match(block, /if \[ "\$number" = "\$PR_ISSUE" \] \|\| \[ "\$CLAUDE_OUTCOME" = "success" \]; then\n\s+\[ "\$sizes" -eq 1 \]/)
+})
