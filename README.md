@@ -6,9 +6,9 @@ Ferramenta que roda em outros repositórios para configurar o Claude Code e o si
 
 | O que | Quantos | Onde fica no projeto |
 | --- | --- | --- |
-| Agentes (o time) | 14 | `.claude/agents/` |
+| Agentes (o time) | 13 | `.claude/agents/` |
 | Regras (padrões de desenvolvimento) | 6 gerais e 4 por stack | `.claude/rules/` |
-| Skills | 5 gerais e 2 por stack | `.claude/skills/` |
+| Skills | 6 gerais e 2 por stack | `.claude/skills/` |
 | Configuração base do Claude | 1 modelo | `.claude/settings.json` |
 
 Stacks com conteúdo hoje: React, NestJS, Laravel e AdonisJS.
@@ -27,11 +27,13 @@ Ou, dentro do repositório, sem argumento de pasta:
 node ~/claude-core/bin/ai-sync.js
 ```
 
-Depois, abra o orquestrador:
+Depois, abra o Claude normalmente no repositório e transforme a sessão na orquestradora do time:
 
 ```
-claude --agent orchestrator
+/team-setup
 ```
+
+Não é preciso abrir o Claude com `--agent`: a própria sessão principal vira a `orchestrator` ao carregar a skill `team-setup`, com o modelo que a sessão já usa.
 
 Opções:
 
@@ -68,7 +70,7 @@ Ficam em `profiles/*.json` e só valem com `--profile`. Cada perfil lista `agent
 - `frontend`: `dev-frontend`, `dev-fullstack` e `dev-doc`, com `designer`.
 - `backend`: `dev-backend`, `dev-fullstack`, `dev-database`, `dev-devops` e `dev-doc`, sem `designer`.
 
-Todos incluem `orchestrator`, `product-owner`, `sdd`, `executor`, `reviewer` e `qa`, as seis regras gerais, as cinco skills gerais e a configuração base. Para uma configuração manual nova, crie `profiles/nome.json`.
+Todos incluem `product-owner`, `sdd`, `executor`, `reviewer` e `qa`, as seis regras gerais, as seis skills gerais (entre elas a `team-setup`, que faz da sessão a `orchestrator`) e a configuração base. Para uma configuração manual nova, crie `profiles/nome.json`.
 
 ## Sincronização segura
 
@@ -104,9 +106,10 @@ Como é aplicada:
 
 ## Time de agentes
 
+A `orchestrator` não é um agente: é a sessão principal depois de rodar `/team-setup`. Ela é a única que fala com o usuário, monta o time de cada tarefa e só delega.
+
 | Agente | Modelo | Papel |
 | --- | --- | --- |
-| `orchestrator` | opus | Orquestrador. Única sessão que fala com o usuário. Só delega, apesar de ter as ferramentas de edição: no modo time, os integrantes recebem no máximo as dela. |
 | `product-owner` | sonnet | Fonte das regras de negócio. Consulta e cria tarefas, nunca define prioridade, e edita ou apaga só a pedido explícito do usuário. |
 | `sdd` | opus | Escreve a especificação da tarefa e é o único que escreve nela, inclusive o `Status`. Só o dev o chama para escrever. |
 | `executor` | haiku | Ajudante dos devs. Executa uma tarefa da especificação, com teste primeiro, gate e commit. Só é chamado por um dev. |
@@ -134,7 +137,7 @@ O fluxo é o mesmo nos dois modos, e a escolha é sua:
 
 - O recurso é experimental e vem desligado. O `ai-sync` nunca o liga sozinho, e ligar ou desligar exige abrir uma sessão nova.
 - Com ele ligado, qualquer agente chamado com nome vira integrante, então em um repositório com o recurso ligado os agentes aparecem no painel mesmo sem você pedir um time.
-- Só a `orchestrator` cria integrantes. Ela precisa ter as ferramentas que os integrantes usam (leitura, edição e terminal), porque cada um recebe no máximo as da líder. Por isso ela as tem e se limita a delegar por instrução.
+- Só a `orchestrator` cria integrantes. Como ela é a sessão principal, tem todas as ferramentas que os integrantes usam e se limita a delegar por instrução da skill `team-setup`.
 - A especificação continua a única fonte de verdade: a lista de tarefas do time só a espelha.
 - Não há retomada de integrantes: depois de `/resume`, a `orchestrator` recria quem sumiu e avisa você.
 - Cada sessão tem um time só. Para tarefas ao mesmo tempo, abra outra sessão.
@@ -193,6 +196,7 @@ Ficam em `rules/*.md` (gerais) e `stacks/<stack>/rules/*.md` (por stack). O Clau
 
 Gerais:
 
+- `team-setup`: transforma a sessão principal na `orchestrator`, que pergunta os nomes, monta o time de cada tarefa e só delega. Rode `/team-setup` no início da sessão.
 - `commit-standard`: tipos de alteração com ícone e padrão de branches e commits (`Fix :bug: [#5] Troca <a href> por <Link>`).
 - `code-standard`: estilo de código, incluindo nunca escrever comentários.
 - `testing-standard`: testes primeiro (TDD), teste para cada bug e nunca alterar teste só para passar.
@@ -241,7 +245,7 @@ O campo `applies` de cada item do catálogo diz a que projetos ele serve: `["all
 1. Crie o arquivo: `agents/nome.md` (com o cabeçalho `name`, `description`, `model`), `rules/nome.md` ou `skills/nome/SKILL.md`. Se for só de uma stack, use `stacks/<stack>/...`.
 2. Registre em `catalog.json`, no grupo certo, com `path`, `applies` e `description`. É o único lugar de registro.
 3. Rode o `ai-sync`: com `applies: ["all"]` ou uma stack detectada, o item é aplicado sozinho. Para um perfil manual receber o item, inclua o nome em `profiles/*.json`.
-4. Se o item é um agente que a `orchestrator` pode chamar, inclua o nome na lista `Agent(...)` dela.
+4. Se o item é um agente que a `orchestrator` pode chamar, inclua o nome na lista de agentes do time em `skills/team-setup/SKILL.md`.
 
 Um modelo de configuração fica em `templates/settings.nome.json` e é registrado no grupo `settings` do catálogo; o lint reprova modelo que conceda permissões amplas.
 

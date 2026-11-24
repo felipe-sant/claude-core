@@ -26,11 +26,6 @@
     }
   },
   "agents": {
-    "orchestrator": {
-      "path": "agents/orchestrator.md",
-      "applies": ["all"],
-      "description": "Única sessão que fala com o usuário. Monta o time de cada tarefa e só delega."
-    },
     "product-owner": {
       "path": "agents/product-owner.md",
       "applies": ["all"],
@@ -150,6 +145,11 @@
     }
   },
   "skills": {
+    "team-setup": {
+      "path": "skills/team-setup",
+      "applies": ["all"],
+      "description": "Transforma a sessão principal na orchestrator, que monta o time de cada tarefa e só delega."
+    },
     "commit-message": {
       "path": "skills/commit-message",
       "applies": ["all"],

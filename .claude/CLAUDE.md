@@ -26,7 +26,7 @@ Todo o texto dos agentes, das regras e da documentação é em **português**. N
 
 ## O time
 
-- `orchestrator`: única sessão que fala com o usuário e só delega. Tem as ferramentas de edição só porque, no modo time, os integrantes recebem no máximo as da líder; delegar é regra do prompt. Funciona com subagentes (padrão) e com time de agentes, que o usuário liga com `ai-sync --teams` e nunca é ligado sozinho.
+- `orchestrator`: não é agente, é a sessão principal depois de `/team-setup` (skill `skills/team-setup`). Única que fala com o usuário e só delega; delegar é regra da skill. Funciona com subagentes (padrão) e com time de agentes, que o usuário liga com `ai-sync --teams` e nunca é ligado sozinho.
 - `product-owner`: fonte das regras de negócio. Consulta e cria tarefas, nunca define prioridade, e só edita ou apaga tarefa quando o usuário pediu isso de forma explícita.
 - `sdd`: escreve a especificação da tarefa, só a pedido de um dev, e não grava na memória. É o único que escreve no arquivo da especificação (inclusive o `Status`) e commita só ele; devs e executores relatam o andamento à orchestrator.
 - `executor`: ajudante dos devs, executa uma tarefa da especificação (teste primeiro, gate, commit). Só um dev o chama e ele leva no prompt a regra de não escrever comentários.
@@ -47,7 +47,7 @@ Fluxo: o `product-owner` define as regras, um dev chama o `sdd` para a especific
 - O `ai-sync` nunca apaga nem sobrescreve arquivo do usuário: qualquer mudança nele precisa manter essa garantia e ser conferida com arquivo criado, editado e retirado do catálogo.
 - Agente que escreve código leva no prompt a regra de não escrever comentários.
 - Tarefas escritas por agentes usam linguagem simples, que um PO e um QA entendam, sem caminhos de arquivo, código ou detalhes internos.
-- Ao criar ou renomear um papel, atualize o `catalog.json`, `profiles/`, o `README.md` e a lista acima.
+- Ao criar ou renomear um papel, atualize o `catalog.json`, `profiles/`, a lista de agentes da skill `team-setup`, o `README.md` e a lista acima.
 
 ## Verificar uma mudança
 
