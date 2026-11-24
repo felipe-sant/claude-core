@@ -1,6 +1,6 @@
 # Agente automático que classifica as issues por tamanho e abre PR das pequenas
 
-> Status: aprovada
+> Status: em-andamento
 > Tipo: funcionalidade
 > Tamanho: grande
 > Branch: feat/64-agente-de-issues
@@ -287,7 +287,7 @@ Arquivo versionado em português, passado à ação pelo conteúdo do arquivo, c
 - Pronto quando: o README cobre tudo de CA-18, o `.claude/CLAUDE.md` tem só a linha nova (CA-26), nada define regra nova e o gate passa.
 - Gate: `npm run lint` e `npm test`.
 - Modelo: economico.
-- Status: pendente.
+- Status: feita. Commit 2d750fd. Gate: `npm run lint` passou e `npm test` com 127 pass e 0 fail. Entraram a seção nova no README, uma linha na tabela "Estrutura" do README e uma única linha na tabela "Estrutura" do `.claude/CLAUDE.md` (CA-26).
 
 ### T7 [P] Script do contexto filtrado da issue
 - O quê: script Node sem dependências que grava, para cada issue pedida, o arquivo de contexto com título, corpo, etiquetas e só os comentários de dono, membro ou colaborador.
@@ -315,7 +315,7 @@ Arquivo versionado em português, passado à ação pelo conteúdo do arquivo, c
 - Reaproveita: os testes das tarefas anteriores.
 - Atende: CA-20 e o encaixe de todos os critérios.
 - Passos:
-  1. Conferir nomes de arquivos, saídas (`classify`, `pr_allowed`, `pr_issue`, `reason`), pasta e formato do contexto filtrado, marca do comentário, linha do pull request, segredo e etiquetas entre os arquivos e o README.
+  1. Conferir nomes de arquivos, saídas (`classify`, `pr_allowed`, `pr_issue`, `reason`), pasta e formato do contexto filtrado, marca do comentário, linha do pull request, segredo e etiquetas entre os arquivos e o README. O README da T5 foi escrito só a partir da especificação: conferir contra a entrega do Dev Ops o nome do workflow "Agente de issues", o arquivo `issue-agent.yml`, o segredo `CLAUDE_CODE_OAUTH_TOKEN` e o horário 09:00 UTC (06:00 em Brasília).
   2. Se a T3 registrou que S-07 não vale, aplicar a alternativa de S-07 na automação e nas instruções, com o teste antes.
   3. Atualizar a branch com a main por merge, se ela avançou.
   4. Rodar o gate de fase.
