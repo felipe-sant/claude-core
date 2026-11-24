@@ -1,19 +1,19 @@
 {
   "files": {
     ".claude/agents/dev-backend.md": {
-      "hash": "b1cf8a0f75d09b57d52cef85038763e66d0e5e16746ea7010e96f3a491b4e8bc",
+      "hash": "39d4d52ef66a6a27d506bb489001a639020f783a239a360f0a567ff94de5f780",
       "version": "0.1.0"
     },
     ".claude/agents/dev-devops.md": {
-      "hash": "47f73c5a809f349526584ac3ca04688826f5dfaec9011f66f75086f0c646116b",
+      "hash": "aaea51907586905a3e40dd08b357bc4e4af5b805821d46eb19edc896da944551",
       "version": "0.1.0"
     },
     ".claude/agents/dev-doc.md": {
-      "hash": "d3f1929409f6667e1612edac3065602834411212679b4d4659290bbf0768f71d",
+      "hash": "6e3f151c2fa1c1d2d8bec172887d4377fda2ff4571d159a2934d32e825e6f14d",
       "version": "0.1.0"
     },
     ".claude/agents/executor.md": {
-      "hash": "8873eb7c783acb08d5173081db45409ac9cd1d943dbd0f78e648176fd21fa88d",
+      "hash": "d74a78042793180b262c3085d31839d11f0f57436f12650926578c19579b4a82",
       "version": "0.1.0"
     },
     ".claude/agents/product-owner.md": {

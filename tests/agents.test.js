@@ -24,6 +24,17 @@ test('todo agente que commita manda adicionar e commitar só os próprios arquiv
   }
 })
 
+test('todo agente que commita cita a exceção de tirar arquivo do controle de versão e remete à regra, sem repetir o passo a passo', () => {
+  for (const name of committers) {
+    const text = body(name)
+    assert.match(text, /tirar um arquivo do controle de versão mantendo-o na pasta/, `${name} deve citar o caso`)
+    assert.match(text, /git rm --cached/, `${name} deve citar git rm --cached`)
+    assert.match(text, /tirar um arquivo do controle de versão mantendo-o na pasta[^\n]*\.claude\/rules\/git-standard\.md/, `${name} deve remeter à regra na mesma frase`)
+    assert.ok(!text.includes('git diff --cached --name-status'), `${name} não deve repetir a conferência do stage`)
+    assert.ok(!text.includes('git diff .gitignore'), `${name} não deve repetir a conferência do .gitignore`)
+  }
+})
+
 test('o reviewer confere commit a commit se só há arquivos da própria tarefa', () => {
   assert.match(body('reviewer'), /commit a commit.*git-standard\.md/)
 })
