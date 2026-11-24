@@ -239,7 +239,7 @@ test('sync falhando na pasta recusa o commit por caminho com mensagem em portugu
   git(repo, 'add', '.specs/tarefa.md')
   const before = head(repo)
   const stageBefore = stageSnapshot(repo)
-  assertSyncFailureRefused(repo, before, stageBefore, commitWithScratch(repo, '-m', 'Docs', '--', '.specs/tarefa.md'))
+  assertSyncFailureRefused(repo, before, stageBefore, commitWithScratch(repo, '-m', 'Docs', '--', '.specs/tarefa.md'), /npm run sync/)
 })
 
 test('sync falhando na pasta recusa o commit sem caminhos com mensagem em português', () => {
@@ -248,7 +248,7 @@ test('sync falhando na pasta recusa o commit sem caminhos com mensagem em portug
   git(repo, 'add', 'catalog.json')
   const before = head(repo)
   const stageBefore = stageSnapshot(repo)
-  assertSyncFailureRefused(repo, before, stageBefore, commitWithScratch(repo, '-m', 'Quebra catálogo'))
+  assertSyncFailureRefused(repo, before, stageBefore, commitWithScratch(repo, '-m', 'Quebra catálogo'), /npm run sync/)
 })
 
 test('sync falhando só no stage recusa o commit sem caminhos com mensagem em português', () => {
