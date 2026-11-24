@@ -33,6 +33,23 @@ function exportStage(destination) {
   if (result.status !== 0) throw new Error(`Não consegui ler o que está no stage: ${result.stderr}`)
 }
 
+function exportHead(destination) {
+  const archive = spawnSync('git', ['archive', 'HEAD'], { maxBuffer: 1024 * 1024 * 512 })
+  if (archive.status !== 0) return false
+  const extraction = spawnSync('tar', ['-x', '-C', destination], { input: archive.stdout })
+  return extraction.status === 0
+}
+
+function headDifferences(workspace) {
+  const exportedHead = path.join(workspace, 'head')
+  const syncedHead = path.join(workspace, 'head-synced')
+  fs.mkdirSync(exportedHead)
+  fs.mkdirSync(syncedHead)
+  if (!exportHead(exportedHead)) return []
+  syncFromExport(exportedHead, syncedHead)
+  return differences(readGenerated(exportedHead), readGenerated(syncedHead))
+}
+
 function syncFromExport(exported, destination) {
   const result = spawnSync('node', [path.join(exported, 'bin', 'ai-sync.js'), destination, '--profile', 'tooling'], { encoding: 'utf8' })
   if (result.status !== 0) throw new Error(`O sync das fontes do stage falhou: ${result.stdout}${result.stderr}`)
@@ -55,24 +72,44 @@ function refusalMessage(files) {
   ].join('\n')
 }
 
+function headRefusalMessage(files) {
+  return [
+    'Commit recusado: o último commit está fora de sincronia com o .claude/, e este commit não o corrige.',
+    '',
+    'Arquivos fora de sincronia no último commit:',
+    ...files.map((file) => `  - ${file}`),
+    '',
+    'Como corrigir:',
+    '  1. Rode npm run sync.',
+    '  2. Commite os arquivos gerados do .claude/ que mudaram, pelos caminhos exatos (git add e git commit -- <gerados>).',
+    '  3. Faça este commit de novo.',
+    '',
+    'Se esses arquivos têm trabalho de outro agente, espere o dono commitar ou trabalhe em uma worktree isolada.'
+  ].join('\n')
+}
+
 function main() {
   const compareWith = process.argv[2] === COMPARE_FOLDER ? COMPARE_FOLDER : COMPARE_STAGE
-  const exported = fs.mkdtempSync(path.join(os.tmpdir(), TEMP_PREFIX))
-  const synced = fs.mkdtempSync(path.join(os.tmpdir(), TEMP_PREFIX))
+  const workspace = fs.mkdtempSync(path.join(os.tmpdir(), TEMP_PREFIX))
+  const exported = path.join(workspace, 'stage')
+  const synced = path.join(workspace, 'stage-synced')
+  fs.mkdirSync(exported)
+  fs.mkdirSync(synced)
   try {
     exportStage(exported)
     syncFromExport(exported, synced)
     const actualRoot = compareWith === COMPARE_FOLDER ? process.cwd() : exported
     const outOfSync = differences(readGenerated(actualRoot), readGenerated(synced))
     if (outOfSync.length === 0) return 0
-    process.stderr.write(`${refusalMessage(outOfSync)}\n`)
+    const headOutOfSync = headDifferences(workspace)
+    const message = headOutOfSync.length > 0 ? headRefusalMessage(headOutOfSync) : refusalMessage(outOfSync)
+    process.stderr.write(`${message}\n`)
     return 1
   } catch (error) {
     process.stderr.write(`${error.message}\n`)
     return 1
   } finally {
-    fs.rmSync(exported, { recursive: true, force: true })
-    fs.rmSync(synced, { recursive: true, force: true })
+    fs.rmSync(workspace, { recursive: true, force: true })
   }
 }
 

@@ -177,6 +177,7 @@ test('o último commit fora de sincronia faz recusar até o commit que não toca
   git(repo, 'add', '.specs/tarefa.md')
   const result = git(repo, 'commit', '-m', 'Docs', '--', '.specs/tarefa.md')
   assert.notEqual(result.status, 0, result.output)
+  assert.match(result.output, /o último commit está fora de sincronia/)
   assert.match(result.output, new RegExp(refusalHint))
 })
 
