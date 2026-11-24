@@ -81,7 +81,7 @@ Ter um agente que roda sozinho no próprio GitHub do repositório, lê as issues
 - O primeiro teste real é a #62, depois de tudo instalado, e não faz parte desta tarefa.
 - A confirmar na primeira execução real (#62), por não haver como testar antes do merge: o envio da branch sem a credencial gravada pelo checkout, as proteções das ferramentas da ação com os subcomandos explícitos, a S-02 (autor `claude[bot]`) e a S-07; e, no log da primeira execução, que as negações do `dontAsk` aparecem, que os subagentes rodaram e que o autor das ações é `claude[bot]`.
 - O agente pode editar testes ou o `package.json` e rodar `npm test`, executando código com o token do app. Isso é inerente a um agente que escreve e testa código; o que contém o risco é só texto de colaborador chegar a ele (RN-06, RN-21).
-- Ficam negados `git show`, `git rm`, `rm`, worktree e `git fetch`. Uma P que exige apagar arquivo tende a virar M.
+- Ficam negados `git rm`, `rm`, worktree e `git fetch`. Uma P que exige apagar arquivo tende a virar M.
 
 ## Fora do escopo
 
@@ -165,7 +165,7 @@ Arquivo versionado em português, passado à ação pelo conteúdo do arquivo, c
 
 ### Ferramentas permitidas (claude_args)
 
-`--permission-mode dontAsk`, para que tudo o que não foi liberado seja negado sem pergunta (o modo padrão da ação, `auto`, não serve; corrigido no 3b7fceb), e `--allowedTools` restrito ao necessário: `Agent` e `Skill` (os subagentes e as skills do repositório), leitura e edição de arquivos (incluindo a leitura da pasta do contexto filtrado), `Bash` para `git` só com `add`, `commit`, `push`, `switch`, `status`, `diff`, `log` e `branch` (sem `push` para a principal, sem `merge`, sem `--force`), `npm ci`, `npm run lint`, `npm test`, `npm run sync`, `node bin/ai-sync.js`, `gh issue comment`, `gh issue edit` (só pôr e tirar etiquetas), `gh pr create`, `gh pr list`. `--disallowedTools` explícito para `gh issue view`, `gh api`, `gh pr merge`, `git push --force` e `git push origin main`, para que o Claude não tenha como ler comentários fora do contexto filtrado. Também `--max-turns` com um limite (sugestão: 100; ver S-04). Os testes conferem o modo `dontAsk`, que `gh pr merge`, `gh issue view` e `gh api` estão proibidos e que `--allowedTools` existe.
+`--permission-mode dontAsk`, para que tudo o que não foi liberado seja negado sem pergunta (o modo padrão da ação, `auto`, não serve; corrigido no 3b7fceb), e `--allowedTools` restrito ao necessário: `Agent` e `Skill` (os subagentes e as skills do repositório), leitura e edição de arquivos (incluindo a leitura da pasta do contexto filtrado), `Bash` para `git` só com `add`, `commit`, `push`, `switch`, `status`, `diff`, `log`, `branch`, `show` e `rev-parse` (os dois últimos só leem, liberados pelo usuário no 9dcffbb para a conferência pós-commit da git-standard) (sem `push` para a principal, sem `merge`, sem `--force`), `npm ci`, `npm run lint`, `npm test`, `npm run sync`, `node bin/ai-sync.js`, `gh issue comment`, `gh issue edit` (só pôr e tirar etiquetas), `gh pr create`, `gh pr list`. `--disallowedTools` explícito para `gh issue view`, `gh api`, `gh pr merge`, `git push --force` e `git push origin main`, para que o Claude não tenha como ler comentários fora do contexto filtrado. Também `--max-turns` com um limite (sugestão: 100; ver S-04). Os testes conferem o modo `dontAsk`, que `gh pr merge`, `gh issue view` e `gh api` estão proibidos e que `--allowedTools` existe.
 
 ### Passos do trabalho do agente
 
