@@ -1,4 +1,17 @@
 #!/bin/sh
 set -e
-npm run sync > /dev/null
-git add -A -- .claude/agents .claude/rules .claude/skills .claude/settings.json .claude/claude-core.lock.json
+if ! npm run sync > /dev/null 2>&1; then
+  echo "Commit recusado: o sync falhou ao atualizar o .claude/." >&2
+  echo "Confira se o catalog.json, os perfis em profiles/ e as fontes (agents/, rules/, skills/, templates/) estão válidos." >&2
+  echo "Rode npm run sync para ver o erro, corrija e commite de novo." >&2
+  exit 1
+fi
+case "$GIT_INDEX_FILE" in
+  *next-index-*)
+    node .githooks/check-sync.js stage
+    ;;
+  *)
+    node .githooks/check-sync.js folder
+    git add -A -- .claude/agents .claude/rules .claude/skills .claude/settings.json .claude/claude-core.lock.json
+    ;;
+esac
