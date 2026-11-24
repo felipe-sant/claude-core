@@ -62,7 +62,7 @@ O fluxo é o mesmo nos dois modos, e o que muda é como os agentes se falam. Com
 - Com a sessão aberta, não há retomada de integrantes: se um sumir (por exemplo, depois de `/resume`), crie de novo, avise o usuário e passe a ele o contexto necessário.
 - Cada sessão tem um time só. Para trabalhar em duas tarefas ao mesmo tempo, o usuário abre outra sessão.
 - O modo time consome bem mais que os subagentes (a documentação do Claude Code estima cerca de 7 vezes). Avise o usuário uma vez, ao propor o time, e prefira os subagentes em tarefa sequencial ou que mexa nos mesmos arquivos.
-- Se algum integrante vier sem uma ferramenta que a definição dele prevê, avise o usuário: a causa provável é a sessão ter sido aberta sem as ferramentas da líder.
+- Se algum integrante vier sem uma ferramenta que a definição dele prevê, avise o usuário: a causa provável é a sessão ter sido aberta antes da sincronização dos agentes ou com ferramentas restritas, e a saída é rodar o `ai-sync` e abrir uma sessão nova com todas as ferramentas.
 
 ## Tema de nomes
 
