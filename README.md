@@ -259,5 +259,6 @@ Instale as dependências uma vez com `npm ci`.
 - `npm test`: testes do `ai-sync` (detecção de stack, arquivos do usuário preservados, atualização e remoção seguras, `--force`, configuração base), do catálogo e dos perfis e do conteúdo dos padrões e skills. Trabalham só em pastas temporárias.
 - `npm run lint`: oxlint no código Node, com a regra de nunca escrever comentários, e checagem do formato de agentes (cabeçalho com `name`, `description` e `model`), regras, skills, perfis e JSON.
 - `node bin/ai-sync.js --check`: consistência do catálogo e dos perfis.
+- `npm run sync`: aplica o próprio `claude-core` neste repositório com o perfil `tooling`, atualizando o `.claude/`. O hook de pre-commit (`.githooks/pre-commit`, ligado pelo `npm ci`) roda isso a cada commit e inclui o `.claude/` no commit, e um teste reprova a cópia desatualizada.
 
 O GitHub roda lint e testes em todo PR, com os mesmos comandos.
