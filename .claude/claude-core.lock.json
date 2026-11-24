@@ -1,0 +1,91 @@
+{
+  "files": {
+    ".claude/agents/dev-backend.md": {
+      "hash": "b1cf8a0f75d09b57d52cef85038763e66d0e5e16746ea7010e96f3a491b4e8bc",
+      "version": "0.1.0"
+    },
+    ".claude/agents/dev-devops.md": {
+      "hash": "47f73c5a809f349526584ac3ca04688826f5dfaec9011f66f75086f0c646116b",
+      "version": "0.1.0"
+    },
+    ".claude/agents/dev-doc.md": {
+      "hash": "d3f1929409f6667e1612edac3065602834411212679b4d4659290bbf0768f71d",
+      "version": "0.1.0"
+    },
+    ".claude/agents/executor.md": {
+      "hash": "8873eb7c783acb08d5173081db45409ac9cd1d943dbd0f78e648176fd21fa88d",
+      "version": "0.1.0"
+    },
+    ".claude/agents/product-owner.md": {
+      "hash": "2eb3d116b03f31402d3f7d40117f8e1d1c45980df200568d2c84ad1c08265939",
+      "version": "0.1.0"
+    },
+    ".claude/agents/qa.md": {
+      "hash": "91255e743e23282f2e99e0966ae3fc0d6bf05e21e4cf95cf5b92c3db478de989",
+      "version": "0.1.0"
+    },
+    ".claude/agents/reviewer.md": {
+      "hash": "0010c2311e3d77207fb4c81c754c9bc7e4cbda08994a072b8e98c685e2af2cac",
+      "version": "0.1.0"
+    },
+    ".claude/agents/sdd.md": {
+      "hash": "712554f8303891e8aae516bf9fd6c3142bfdf3630afd331f6772359bb8e1acc9",
+      "version": "0.1.0"
+    },
+    ".claude/rules/code-standard.md": {
+      "hash": "68dbbe15146d21e06f25115b0ac43919ecf626d1381bda0c3a7506d0433d197d",
+      "version": "0.1.0"
+    },
+    ".claude/rules/commit-standard.md": {
+      "hash": "e8c5dc1b45d12df909680300b2852b5c38d2a1530fe2f51bf0f9aff2285778b3",
+      "version": "0.1.0"
+    },
+    ".claude/rules/git-standard.md": {
+      "hash": "9e104885f0eee3eeffab99e437985654e5a1bc887541696204bded6120a211d8",
+      "version": "0.1.0"
+    },
+    ".claude/rules/review-standard.md": {
+      "hash": "5b23361e1d45361a2a45ef7cbb62d2c0128e819caf975beb8738e00d078919ee",
+      "version": "0.1.0"
+    },
+    ".claude/rules/security-standard.md": {
+      "hash": "7fc1895d2843d75541bf33793473f58b7b5f2b53a0c3add50fedc1495cf3eb2c",
+      "version": "0.1.0"
+    },
+    ".claude/rules/testing-standard.md": {
+      "hash": "3d262a50ff72bc470b917ce87d91eedd090393145ac9d657b0c88578399dc6f0",
+      "version": "0.1.0"
+    },
+    ".claude/skills/bug-investigation/SKILL.md": {
+      "hash": "a23aa1716f9cdbf06a93a260599d7073c630c9ca1193f5cbf1ac39abbb7eac63",
+      "version": "0.1.0"
+    },
+    ".claude/skills/code-review/SKILL.md": {
+      "hash": "73160f357028ec2c7c7d17123630e4cd0a9069539023c458e12a9c944bad872f",
+      "version": "0.1.0"
+    },
+    ".claude/skills/commit-message/SKILL.md": {
+      "hash": "b30840e7fa8c1c5b095d5c2d9d66debad599f280ffe5543b0faf1c9b6e449316",
+      "version": "0.1.0"
+    },
+    ".claude/skills/create-pull-request/SKILL.md": {
+      "hash": "2613fb741e6b6fa8696448c1f5db34c77a20818e68a1015baae6e6df42f12fd1",
+      "version": "0.1.0"
+    },
+    ".claude/skills/documentation/SKILL.md": {
+      "hash": "ebcf8a1cbf8111b3916d3708215e2d405d3058e703f5511e85e610cdc8e43bf2",
+      "version": "0.1.0"
+    },
+    ".claude/skills/team-setup/SKILL.md": {
+      "hash": "738a5a065356d79afb6bad51074cdd7e21310e0220fe4b325c67e11e9c0f8018",
+      "version": "0.1.0"
+    }
+  },
+  "settings": {
+    "applied": [
+      "$schema",
+      "effortLevel",
+      "env.CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY"
+    ]
+  }
+}

@@ -1,0 +1,4 @@
+#!/bin/sh
+set -e
+npm run sync > /dev/null
+git add -A -- .claude/agents .claude/rules .claude/skills .claude/settings.json .claude/claude-core.lock.json

@@ -69,6 +69,7 @@ Ficam em `profiles/*.json` e só valem com `--profile`. Cada perfil lista `agent
 - `default`: o time completo.
 - `frontend`: `dev-frontend`, `dev-fullstack` e `dev-doc`, com `designer`.
 - `backend`: `dev-backend`, `dev-fullstack`, `dev-database`, `dev-devops` e `dev-doc`, sem `designer`.
+- `tooling`: para repositórios de ferramentas, scripts, CLIs e conteúdo (como o próprio `claude-core`), sem telas nem banco. `dev-backend` (scripts e lógica), `dev-devops` (CI) e `dev-doc` (documentação e conteúdo em markdown), sem `designer`. Como esses repositórios não têm stack detectável, use `--profile tooling`.
 
 Todos incluem `product-owner`, `sdd`, `executor`, `reviewer` e `qa`, as seis regras gerais, as seis skills gerais (entre elas a `team-setup`, que faz da sessão a `orchestrator`) e a configuração base. Para uma configuração manual nova, crie `profiles/nome.json`.
 
@@ -258,5 +259,6 @@ Instale as dependências uma vez com `npm ci`.
 - `npm test`: testes do `ai-sync` (detecção de stack, arquivos do usuário preservados, atualização e remoção seguras, `--force`, configuração base), do catálogo e dos perfis e do conteúdo dos padrões e skills. Trabalham só em pastas temporárias.
 - `npm run lint`: oxlint no código Node, com a regra de nunca escrever comentários, e checagem do formato de agentes (cabeçalho com `name`, `description` e `model`), regras, skills, perfis e JSON.
 - `node bin/ai-sync.js --check`: consistência do catálogo e dos perfis.
+- `npm run sync`: aplica o próprio `claude-core` neste repositório com o perfil `tooling`, atualizando o `.claude/`. O hook de pre-commit (`.githooks/pre-commit`, ligado pelo `npm ci`) roda isso a cada commit e inclui o `.claude/` no commit, e um teste reprova a cópia desatualizada.
 
 O GitHub roda lint e testes em todo PR, com os mesmos comandos.
