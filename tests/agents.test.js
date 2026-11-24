@@ -30,8 +30,9 @@ test('todo agente que commita cita a exceção de tirar arquivo do controle de v
     assert.match(text, /tirar um arquivo do controle de versão mantendo-o na pasta/, `${name} deve citar o caso`)
     assert.match(text, /git rm --cached/, `${name} deve citar git rm --cached`)
     assert.match(text, /tirar um arquivo do controle de versão mantendo-o na pasta[^\n]*\.claude\/rules\/git-standard\.md/, `${name} deve remeter à regra na mesma frase`)
+    assert.match(text, /confira o stage antes, como manda `\.claude\/rules\/git-standard\.md`/, `${name} deve mandar conferir o stage antes, como manda a regra`)
     assert.ok(!text.includes('git diff --cached --name-status'), `${name} não deve repetir a conferência do stage`)
-    assert.ok(!text.includes('git diff .gitignore'), `${name} não deve repetir a conferência do .gitignore`)
+    assert.ok(!text.includes('git diff HEAD -- .gitignore'), `${name} não deve repetir a conferência do .gitignore`)
   }
 })
 
@@ -134,7 +135,7 @@ test('o padrão de git explica como commitar ao tirar um arquivo do controle de 
   assert.match(text, /git rm --cached/)
   assert.match(text, /git diff --cached --name-status/)
   assert.match(text, /apenas essa remoção e, quando houver, a linha que você mesmo acrescentou ao `\.gitignore` para esse arquivo/)
-  assert.match(text, /git diff \.gitignore/)
+  assert.match(text, /git diff HEAD -- \.gitignore/)
   assert.match(text, /não adicione o `\.gitignore` e peça ao dono que commite antes/)
   assert.match(text, /peça ao dono que commite antes e espere ele commitar/)
   assert.match(text, /`git add \.`/)
