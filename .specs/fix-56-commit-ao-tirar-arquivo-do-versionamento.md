@@ -1,6 +1,6 @@
 # Regra de git: commit ao tirar um arquivo do controle de versão mantendo-o na pasta
 
-> Status: em-revisao
+> Status: em-andamento
 > Tipo: bug
 > Tamanho: media
 > Branch: fix/56-commit-ao-tirar-arquivo-do-versionamento
