@@ -151,3 +151,17 @@ test('o git do agente é limitado aos subcomandos necessários', () => {
     assert.ok(allowed.includes(`Bash(git ${subcommand}:*)`), `faltou permitir: git ${subcommand}`)
   }
 })
+
+test('o agente roda em dontAsk, negando tudo o que não foi liberado', () => {
+  const block = jobBlock('agent')
+  assert.match(block, /^\s+--permission-mode dontAsk$/m)
+  assert.equal(block.match(/--permission-mode/g).length, 1)
+})
+
+test('as ferramentas liberadas cobrem os subagentes, as skills, a leitura e a edição', () => {
+  const block = jobBlock('agent')
+  const allowed = block.slice(block.indexOf('--allowedTools'), block.indexOf('--disallowedTools'))
+  for (const tool of ['Read', 'Glob', 'Grep', 'Edit', 'Write', 'Agent', 'Skill']) {
+    assert.match(allowed, new RegExp(`[",]${tool}[",]`), `faltou liberar: ${tool}`)
+  }
+})
