@@ -76,9 +76,9 @@ A memória do time registra a mesma decisão, mas sua lista de atalhos proibidos
 
 - Fase 1 (sequencial): T1 (feita)
 - Gate de fase: `npm run lint`, `npm test` e `node bin/ai-sync.js --check`, rodados uma vez ao fim da fase e antes do reviewer.
-- Fase 2 (sequencial): T2
+- Fase 2 (sequencial): T2 (feita)
 - Gate de fase: `npm run lint`, `npm test` e `node bin/ai-sync.js --check`.
-- Fase 3 (sequencial): T3
+- Fase 3 (sequencial): T3 (feita)
 - Gate de fase: `npm run lint`, `npm test` e `node bin/ai-sync.js --check`, antes do reviewer.
 
 Não há tarefa `[P]`. T2 e T3 editam o mesmo arquivo de teste (`tests/agents.test.js`), e o gancho de pré-commit roda `npm run sync` e adiciona ao stage toda a pasta `.claude/` gerada (`git add -A -- .claude/agents .claude/rules ...`): com as duas em andamento na mesma worktree, o commit de uma levaria a cópia gerada dos arquivos ainda não commitados da outra. T3 vem depois de T2 para que o texto curto dos agentes remeta à regra já ajustada. O projeto não tem typecheck.
@@ -129,7 +129,7 @@ Não há tarefa `[P]`. T2 e T3 editam o mesmo arquivo de teste (`tests/agents.te
 - Teste: unitário de conteúdo. Deve falhar primeiro o teste do padrão de git com as âncoras novas do `.gitignore` opcional e do `git diff .gitignore`.
 - Gate: `npm run lint` e `npm test`. O projeto não tem typecheck nem formatador; o lint (`oxlint` e `node lint/content.js`) é a checagem de formato.
 - Modelo: padrao
-- Status: pendente
+- Status: feita. Commit `eb8a314`, feito pelo Inumaki (dev-backend). O teste falhou antes da mudança (112 passando e 1 falhando, pelo trecho ausente) e passa depois. Gate: `npm run lint` ok, `npm test` 113/113, `node bin/ai-sync.js --check` ok. O arquivo de travamento entrou atualizado, sem amend.
 
 ### T3 Faz os agentes que commitam citarem a exceção de forma curta, remetendo à regra de git
 
@@ -152,7 +152,7 @@ Não há tarefa `[P]`. T2 e T3 editam o mesmo arquivo de teste (`tests/agents.te
 - Teste: unitário de conteúdo. Deve falhar primeiro o teste que exige a citação curta da exceção em cada agente que commita.
 - Gate: `npm run lint` e `npm test`. O projeto não tem typecheck nem formatador; o lint (`oxlint` e `node lint/content.js`) é a checagem de formato.
 - Modelo: economico
-- Status: pendente
+- Status: feita. Commit `51e7593`, feito pelo Inumaki (dev-backend). O teste falhou antes da mudança (113 passando e 1 falhando, pelo trecho ausente) e passa depois. Gate: `npm run lint` ok, `npm test` 114/114, `node bin/ai-sync.js --check` ok. O arquivo de travamento entrou atualizado, sem amend.
 
 ## Dúvidas
 
