@@ -121,3 +121,7 @@ test('nenhum campo de texto livre da issue ou do comentário é interpolado', ()
 test('o workflow não tem comentários', () => {
   assert.doesNotMatch(workflow(), /^\s*#/m)
 })
+
+test('o checkout do agente não deixa o token gravado na configuração do git', () => {
+  assert.match(jobBlock('agent'), /uses: actions\/checkout@v4\n\s+with:\n\s+fetch-depth: 0\n\s+persist-credentials: false/)
+})
