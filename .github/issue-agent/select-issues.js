@@ -7,6 +7,7 @@ const CLASSIFICATION_MARK = 'Tamanho definido pelo agente de issues'
 const PULL_REQUEST_LINE = 'Aberto pelo agente de issues.'
 const SIZE_PREFIX = 'Size:'
 const SIZE_SMALL = 'Size: P'
+const SIZES_NOT_TREATED = ['Size: M', 'Size: G']
 const API_URL = 'https://api.github.com'
 const PAGE_SIZE = 100
 const BOT_PATH_PREFIX = '/apps/'
@@ -50,7 +51,7 @@ function selectIssues({ issues, openPulls, branches, eventIssue }) {
     .slice(0, eventIssue === null ? MAX_CLASSIFY : 1)
     .map((issue) => issue.number)
 
-  const queued = eligible.filter((issue) => issue.labels.includes(SIZE_SMALL) && !hasOwnBranch(issue, branches))
+  const queued = eligible.filter((issue) => issue.labels.includes(SIZE_SMALL) && !SIZES_NOT_TREATED.some((size) => issue.labels.includes(size)) && !hasOwnBranch(issue, branches))
   const prIssue = prAllowed && queued.length > 0 ? queued[0].number : ''
 
   return { classify, prAllowed, prIssue, reason: buildReason({ classify, prAllowed, prIssue, queued }) }

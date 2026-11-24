@@ -85,6 +85,11 @@ test('P com comentário de classificação do agente continua na fila', () => {
   assert.equal(select([target]).prIssue, target.number)
 })
 
+test('P que também tem M ou G nunca entra na fila', () => {
+  const result = select([issue({ labels: ['Size: P', 'Size: M'] }), issue({ labels: ['Size: G', 'Size: P'] })])
+  assert.equal(result.prIssue, '')
+})
+
 test('P com branch própria é ignorada', () => {
   const target = issue({ labels: ['Size: P'] })
   const result = select([target], { branches: [`feat/${target.number}-algo`] })
