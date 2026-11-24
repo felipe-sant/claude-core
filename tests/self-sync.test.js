@@ -92,6 +92,16 @@ function committedFiles(repo) {
   return git(repo, 'show', '--name-only', '--format=', 'HEAD').stdout.split('\n').filter(Boolean)
 }
 
+function stageSnapshot(repo) {
+  return `${git(repo, 'diff', '--cached', '--name-status').stdout}\n${git(repo, 'ls-files', '-s').stdout}`
+}
+
+function commitWithScratch(repo, ...args) {
+  const scratch = h.tempDir('scratch')
+  const result = gitWithEnv(repo, { TMPDIR: scratch, NODE_DISABLE_COMPILE_CACHE: '1' }, 'commit', ...args)
+  return { result, scratch }
+}
+
 function head(repo) {
   return git(repo, 'rev-parse', 'HEAD').stdout.trim()
 }
@@ -133,12 +143,12 @@ test('commit sem caminhos com fonte de outro agente fora do stage é recusado se
   appendLine(repo, 'rules/commit-standard.md')
   appendLine(repo, 'rules/git-standard.md')
   git(repo, 'add', 'rules/commit-standard.md')
-  const stagedBefore = git(repo, 'ls-files', '-s').stdout
+  const stagedBefore = stageSnapshot(repo)
   const result = git(repo, 'commit', '-m', 'Altera regra')
   assert.notEqual(result.status, 0, result.output)
   assert.match(result.output, new RegExp(refusalHint))
   assert.equal(head(repo), before)
-  assert.equal(git(repo, 'ls-files', '-s').stdout, stagedBefore)
+  assert.equal(stageSnapshot(repo), stagedBefore)
 })
 
 test('commit por caminho de uma fonte com outra fonte alterada por outro agente é recusado', () => {
@@ -197,25 +207,56 @@ test('em worktree vinculada o commit por caminho da fonte é recusado e o da esp
   assert.deepEqual(committedFiles(linked), ['.specs/tarefa.md'])
 })
 
-test('a recusa não deixa pastas temporárias para trás', () => {
+test('commits recusados e aceitos não deixam pastas temporárias para trás', () => {
   const repo = makeHookedRepo()
-  const scratch = h.tempDir('scratch')
   appendLine(repo, 'rules/commit-standard.md')
-  const result = gitWithEnv(repo, { TMPDIR: scratch, NODE_DISABLE_COMPILE_CACHE: '1' }, 'commit', '-m', 'Altera regra', '--', 'rules/commit-standard.md')
-  assert.notEqual(result.status, 0, result.output)
-  assert.deepEqual(fs.readdirSync(scratch), [])
-})
-
-test('quando o sync falha o commit é recusado com uma mensagem em português', () => {
-  const repo = makeHookedRepo()
-  const before = head(repo)
-  fs.writeFileSync(path.join(repo, 'catalog.json'), '{ quebrado')
+  const refused = commitWithScratch(repo, '-m', 'Altera regra', '--', 'rules/commit-standard.md')
+  assert.notEqual(refused.result.status, 0, refused.result.output)
+  assert.deepEqual(fs.readdirSync(refused.scratch), [])
   h.write(path.join(repo, '.specs/tarefa.md'), 'especificação\n')
   git(repo, 'add', '.specs/tarefa.md')
-  const result = git(repo, 'commit', '-m', 'Docs', '--', '.specs/tarefa.md')
+  git(repo, 'restore', '--source=HEAD', '--worktree', '--staged', 'rules/commit-standard.md')
+  const accepted = commitWithScratch(repo, '-m', 'Docs', '--', '.specs/tarefa.md')
+  assert.equal(accepted.result.status, 0, accepted.result.output)
+  assert.deepEqual(fs.readdirSync(accepted.scratch), [])
+})
+
+function assertSyncFailureRefused(repo, before, stageBefore, { result, scratch }) {
   assert.notEqual(result.status, 0, result.output)
   assert.match(result.output, /o sync falhou/)
   assert.match(result.output, /catalog\.json/)
   assert.doesNotMatch(result.output, /SyntaxError/)
   assert.equal(head(repo), before)
+  assert.equal(stageSnapshot(repo), stageBefore)
+  assert.deepEqual(fs.readdirSync(scratch), [])
+}
+
+test('sync falhando na pasta recusa o commit por caminho com mensagem em português', () => {
+  const repo = makeHookedRepo()
+  fs.writeFileSync(path.join(repo, 'catalog.json'), '{ quebrado')
+  h.write(path.join(repo, '.specs/tarefa.md'), 'especificação\n')
+  git(repo, 'add', '.specs/tarefa.md')
+  const before = head(repo)
+  const stageBefore = stageSnapshot(repo)
+  assertSyncFailureRefused(repo, before, stageBefore, commitWithScratch(repo, '-m', 'Docs', '--', '.specs/tarefa.md'))
+})
+
+test('sync falhando na pasta recusa o commit sem caminhos com mensagem em português', () => {
+  const repo = makeHookedRepo()
+  fs.writeFileSync(path.join(repo, 'catalog.json'), '{ quebrado')
+  git(repo, 'add', 'catalog.json')
+  const before = head(repo)
+  const stageBefore = stageSnapshot(repo)
+  assertSyncFailureRefused(repo, before, stageBefore, commitWithScratch(repo, '-m', 'Quebra catálogo'))
+})
+
+test('sync falhando só no stage recusa o commit sem caminhos com mensagem em português', () => {
+  const repo = makeHookedRepo()
+  const validCatalog = fs.readFileSync(path.join(repo, 'catalog.json'), 'utf8')
+  fs.writeFileSync(path.join(repo, 'catalog.json'), '{ quebrado')
+  git(repo, 'add', 'catalog.json')
+  fs.writeFileSync(path.join(repo, 'catalog.json'), validCatalog)
+  const before = head(repo)
+  const stageBefore = stageSnapshot(repo)
+  assertSyncFailureRefused(repo, before, stageBefore, commitWithScratch(repo, '-m', 'Quebra catálogo'))
 })

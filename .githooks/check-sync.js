@@ -50,9 +50,17 @@ function headDifferences(workspace) {
   return differences(readGenerated(exportedHead), readGenerated(syncedHead))
 }
 
+function syncFailureMessage() {
+  return [
+    'Commit recusado: o sync falhou ao atualizar o .claude/ a partir do que está no stage.',
+    'Confira se o catalog.json, os perfis em profiles/ e as fontes (agents/, rules/, skills/, templates/) preparados para o commit estão válidos.',
+    'Corrija, prepare de novo e commite de novo. Rode npm run sync para ver o erro.'
+  ].join('\n')
+}
+
 function syncFromExport(exported, destination) {
   const result = spawnSync('node', [path.join(exported, 'bin', 'ai-sync.js'), destination, '--profile', 'tooling'], { encoding: 'utf8' })
-  if (result.status !== 0) throw new Error(`O sync das fontes do stage falhou: ${result.stdout}${result.stderr}`)
+  if (result.status !== 0) throw new Error(syncFailureMessage())
 }
 
 function refusalMessage(files) {
