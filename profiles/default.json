@@ -1,6 +1,5 @@
 {
   "agents": [
-    "orchestrator",
     "product-owner",
     "sdd",
     "executor",
@@ -24,6 +23,7 @@
     "review-standard"
   ],
   "skills": [
+    "team-setup",
     "commit-message",
     "create-pull-request",
     "code-review",

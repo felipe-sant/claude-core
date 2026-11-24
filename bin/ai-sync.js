@@ -503,4 +503,4 @@ if (profile) {
   if (detected.length === 0) console.log('Nenhuma stack reconhecida: foi aplicado só o que vale para qualquer projeto.')
   console.log(`Aplicado em ${target}`)
 }
-console.log('Para conversar com o orquestrador: claude --agent orchestrator')
+console.log('Para montar o time, abra o Claude e rode /team-setup')

@@ -85,7 +85,7 @@ test('cada padrão de stack se limita aos arquivos da stack e todo padrão é cu
   }
 })
 
-const generalSkills = ['bug-investigation', 'code-review', 'commit-message', 'create-pull-request', 'documentation']
+const generalSkills = ['bug-investigation', 'code-review', 'commit-message', 'create-pull-request', 'documentation', 'team-setup']
 const stackSkills = { react: 'react-component', nestjs: 'nestjs-module' }
 
 function skillsOf(target) {
