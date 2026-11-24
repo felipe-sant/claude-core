@@ -1,6 +1,6 @@
 # Agente automático que classifica as issues por tamanho e abre PR das pequenas
 
-> Status: em-andamento
+> Status: implementada
 > Tipo: funcionalidade
 > Tamanho: grande
 > Branch: feat/64-agente-de-issues
@@ -79,7 +79,9 @@ Ter um agente que roda sozinho no próprio GitHub do repositório, lê as issues
 - A varredura diária e o disparo manual só funcionam a partir da branch principal: o GitHub não roda esses gatilhos de uma branch de trabalho. Por isso nenhuma tarefa desta especificação promete uma execução real de ponta a ponta antes do merge. A verificação possível antes disso é a suíte de testes e uma execução local, só de leitura, do script de seleção contra o repositório real.
 - A seleção lê só os últimos 100 comentários de cada issue. Numa issue com mais de 100 comentários depois da classificação, a marca do comentário de classificação pode ficar de fora da leitura e a issue ser classificada de novo; nesse caso a conferência final detecta o comentário de classificação duplicado e a execução falha de forma visível.
 - O primeiro teste real é a #62, depois de tudo instalado, e não faz parte desta tarefa.
-- A confirmar na primeira execução real (#62), por não haver como testar antes do merge: o envio da branch sem a credencial gravada pelo checkout, as proteções das ferramentas da ação com os subcomandos explícitos, a S-02 (autor `claude[bot]`) e a S-07.
+- A confirmar na primeira execução real (#62), por não haver como testar antes do merge: o envio da branch sem a credencial gravada pelo checkout, as proteções das ferramentas da ação com os subcomandos explícitos, a S-02 (autor `claude[bot]`) e a S-07; e, no log da primeira execução, que as negações do `dontAsk` aparecem, que os subagentes rodaram e que o autor das ações é `claude[bot]`.
+- O agente pode editar testes ou o `package.json` e rodar `npm test`, executando código com o token do app. Isso é inerente a um agente que escreve e testa código; o que contém o risco é só texto de colaborador chegar a ele (RN-06, RN-21).
+- Ficam negados `git show`, `git rm`, `rm`, worktree e `git fetch`. Uma P que exige apagar arquivo tende a virar M.
 
 ## Fora do escopo
 
@@ -115,7 +117,7 @@ A decisão de quem pode ser tratado e de quais comentários são lidos nunca dep
 - Etiquetas: `Size: P`, `Size: M`, `Size: G`, exatamente com esses nomes.
 - Gatilhos: `issues` com `types: [opened, reopened]`; `schedule` com `cron: "0 9 * * *"` (09:00 UTC, 06:00 em Brasília); `workflow_dispatch` sem entradas.
 - Concorrência: `concurrency` com grupo fixo `issue-agent` e `cancel-in-progress: false` (CA-07).
-- Ação do Claude: `anthropics/claude-code-action`, fixada pelo SHA `eb56b6666facdbd501035f4a0269d8caee2e7a8b` (decisão do usuário, no lugar da tag `v1` conferida em 2026-11-24), nunca em `main`. O checkout do trabalho do agente não grava a credencial no git. Entradas usadas: `claude_code_oauth_token`, `prompt`, `claude_args`. Não passa `github_token`: a ação usa o token do app do Claude obtido por OIDC, o que exige `id-token: write`. Isso faz o pull request ser aberto pelo app e não pelo token padrão da automação, condição para o CI do repositório rodar no pull request do agente (um pull request aberto com o token padrão não dispara outras automações). `show_full_output` fica desligado (o repositório é público e essa saída pode expor segredos).
+- Ação do Claude: `anthropics/claude-code-action`, fixada pelo SHA `eb56b6666facdbd501035f4a0269d8caee2e7a8b` (decisão do usuário, no lugar da tag `v1` conferida em 2026-11-24), nunca em `main`. O checkout do trabalho do agente não grava a credencial no git. Entradas usadas: `claude_code_oauth_token`, `prompt`, `claude_args` (com `--permission-mode dontAsk`). Não passa `github_token`: a ação usa o token do app do Claude obtido por OIDC, o que exige `id-token: write`. Isso faz o pull request ser aberto pelo app e não pelo token padrão da automação, condição para o CI do repositório rodar no pull request do agente (um pull request aberto com o token padrão não dispara outras automações). `show_full_output` fica desligado (o repositório é público e essa saída pode expor segredos).
 - Permissões: no topo da automação, nenhuma (`permissions: {}`). Trabalho de seleção: `contents: read`, `issues: read`, `pull-requests: read`. Trabalho do agente: `contents: write`, `issues: write`, `pull-requests: write`, `id-token: write`. Nenhuma outra.
 - Saídas do script de seleção, gravadas no arquivo de `GITHUB_OUTPUT`:
   - `classify`: números das issues a classificar, separados por vírgula, do mais antigo para o mais novo, no máximo 10 (`MAX_CLASSIFY = 10`); vazio quando não há.
@@ -163,7 +165,7 @@ Arquivo versionado em português, passado à ação pelo conteúdo do arquivo, c
 
 ### Ferramentas permitidas (claude_args)
 
-`--allowedTools` restrito ao necessário: leitura e edição de arquivos (incluindo a leitura da pasta do contexto filtrado), `Bash` para `git` só com `add`, `commit`, `push`, `switch`, `status`, `diff`, `log` e `branch` (sem `push` para a principal, sem `merge`, sem `--force`), `npm ci`, `npm run lint`, `npm test`, `npm run sync`, `node bin/ai-sync.js`, `gh issue comment`, `gh issue edit` (só pôr e tirar etiquetas), `gh pr create`, `gh pr list`. `--disallowedTools` explícito para `gh issue view`, `gh api`, `gh pr merge`, `git push --force` e `git push origin main`, para que o Claude não tenha como ler comentários fora do contexto filtrado. Também `--max-turns` com um limite (sugestão: 100; ver S-04). Os testes conferem que `gh pr merge`, `gh issue view` e `gh api` estão proibidos e que `--allowedTools` existe.
+`--permission-mode dontAsk`, para que tudo o que não foi liberado seja negado sem pergunta (o modo padrão da ação, `auto`, não serve; corrigido no 3b7fceb), e `--allowedTools` restrito ao necessário: `Agent` e `Skill` (os subagentes e as skills do repositório), leitura e edição de arquivos (incluindo a leitura da pasta do contexto filtrado), `Bash` para `git` só com `add`, `commit`, `push`, `switch`, `status`, `diff`, `log` e `branch` (sem `push` para a principal, sem `merge`, sem `--force`), `npm ci`, `npm run lint`, `npm test`, `npm run sync`, `node bin/ai-sync.js`, `gh issue comment`, `gh issue edit` (só pôr e tirar etiquetas), `gh pr create`, `gh pr list`. `--disallowedTools` explícito para `gh issue view`, `gh api`, `gh pr merge`, `git push --force` e `git push origin main`, para que o Claude não tenha como ler comentários fora do contexto filtrado. Também `--max-turns` com um limite (sugestão: 100; ver S-04). Os testes conferem o modo `dontAsk`, que `gh pr merge`, `gh issue view` e `gh api` estão proibidos e que `--allowedTools` existe.
 
 ### Passos do trabalho do agente
 
