@@ -221,11 +221,12 @@ test('commits recusados e aceitos não deixam pastas temporárias para trás', (
   assert.deepEqual(fs.readdirSync(accepted.scratch), [])
 })
 
-function assertSyncFailureRefused(repo, before, stageBefore, { result, scratch }) {
+function assertSyncFailureRefused(repo, before, stageBefore, { result, scratch }, hint) {
   assert.notEqual(result.status, 0, result.output)
   assert.match(result.output, /o sync falhou/)
   assert.match(result.output, /catalog\.json/)
   assert.doesNotMatch(result.output, /SyntaxError/)
+  if (hint) assert.match(result.output, hint)
   assert.equal(head(repo), before)
   assert.equal(stageSnapshot(repo), stageBefore)
   assert.deepEqual(fs.readdirSync(scratch), [])
@@ -258,5 +259,19 @@ test('sync falhando só no stage recusa o commit sem caminhos com mensagem em po
   fs.writeFileSync(path.join(repo, 'catalog.json'), validCatalog)
   const before = head(repo)
   const stageBefore = stageSnapshot(repo)
-  assertSyncFailureRefused(repo, before, stageBefore, commitWithScratch(repo, '-m', 'Quebra catálogo'))
+  assertSyncFailureRefused(repo, before, stageBefore, commitWithScratch(repo, '-m', 'Quebra catálogo'), /o que está preparado/)
+})
+
+test('catálogo inválido no último commit recusa o commit por caminho da especificação mandando conferir o último commit', () => {
+  const repo = makeHookedRepo()
+  const validCatalog = fs.readFileSync(path.join(repo, 'catalog.json'), 'utf8')
+  fs.writeFileSync(path.join(repo, 'catalog.json'), '{ quebrado')
+  git(repo, 'add', 'catalog.json')
+  git(repo, 'commit', '-q', '--no-verify', '-m', 'Catálogo quebrado')
+  fs.writeFileSync(path.join(repo, 'catalog.json'), validCatalog)
+  h.write(path.join(repo, '.specs/tarefa.md'), 'especificação\n')
+  git(repo, 'add', '.specs/tarefa.md')
+  const before = head(repo)
+  const stageBefore = stageSnapshot(repo)
+  assertSyncFailureRefused(repo, before, stageBefore, commitWithScratch(repo, '-m', 'Docs', '--', '.specs/tarefa.md'), /o último commit/)
 })

@@ -40,27 +40,44 @@ function exportHead(destination) {
   return extraction.status === 0
 }
 
-function headDifferences(workspace) {
+function syncSucceeds(exported, destination) {
+  const result = spawnSync('node', [path.join(exported, 'bin', 'ai-sync.js'), destination, '--profile', 'tooling'], { encoding: 'utf8' })
+  return result.status === 0
+}
+
+function prepareHeadFolders(workspace) {
   const exportedHead = path.join(workspace, 'head')
   const syncedHead = path.join(workspace, 'head-synced')
   fs.mkdirSync(exportedHead)
   fs.mkdirSync(syncedHead)
-  if (!exportHead(exportedHead)) return []
-  syncFromExport(exportedHead, syncedHead)
+  return { exportedHead, syncedHead }
+}
+
+function headDifferences(workspace) {
+  const { exportedHead, syncedHead } = prepareHeadFolders(workspace)
+  if (!exportHead(exportedHead) || !syncSucceeds(exportedHead, syncedHead)) return []
   return differences(readGenerated(exportedHead), readGenerated(syncedHead))
 }
 
-function syncFailureMessage() {
+function headSyncFails(workspace) {
+  const { exportedHead, syncedHead } = prepareHeadFolders(workspace)
+  return exportHead(exportedHead) && !syncSucceeds(exportedHead, syncedHead)
+}
+
+function stageSyncFailureMessage() {
   return [
     'Commit recusado: o sync falhou ao atualizar o .claude/ a partir do que está no stage.',
-    'Confira se o catalog.json, os perfis em profiles/ e as fontes (agents/, rules/, skills/, templates/) preparados para o commit estão válidos.',
-    'Corrija, prepare de novo e commite de novo. Rode npm run sync para ver o erro.'
+    'Confira o que está preparado para o commit (stage): o catalog.json, os perfis em profiles/ e as fontes (agents/, rules/, skills/, templates/).',
+    'Corrija, prepare de novo e commite de novo.'
   ].join('\n')
 }
 
-function syncFromExport(exported, destination) {
-  const result = spawnSync('node', [path.join(exported, 'bin', 'ai-sync.js'), destination, '--profile', 'tooling'], { encoding: 'utf8' })
-  if (result.status !== 0) throw new Error(syncFailureMessage())
+function headSyncFailureMessage() {
+  return [
+    'Commit recusado: o sync falhou ao atualizar o .claude/ a partir do último commit.',
+    'Confira o último commit: o catalog.json, os perfis em profiles/ e as fontes (agents/, rules/, skills/, templates/) estão inválidos nele.',
+    'Corrija esses arquivos e commite a correção pelos caminhos exatos antes de fazer este commit.'
+  ].join('\n')
 }
 
 function refusalMessage(files) {
@@ -105,7 +122,10 @@ function main() {
   fs.mkdirSync(synced)
   try {
     exportStage(exported)
-    syncFromExport(exported, synced)
+    if (!syncSucceeds(exported, synced)) {
+      process.stderr.write(`${headSyncFails(workspace) ? headSyncFailureMessage() : stageSyncFailureMessage()}\n`)
+      return 1
+    }
     const actualRoot = compareWith === COMPARE_FOLDER ? process.cwd() : exported
     const outOfSync = differences(readGenerated(actualRoot), readGenerated(synced))
     if (outOfSync.length === 0) return 0
