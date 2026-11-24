@@ -203,3 +203,10 @@ test('o passo que monta o prompt calcula o link da execução com as variáveis 
   assert.match(step, /\$GITHUB_SERVER_URL\/\$GITHUB_REPOSITORY\/actions\/runs\/\$GITHUB_RUN_ID/)
   assert.match(step, /Link da execução: %s/)
 })
+
+test('o git checkout só é liberado para criar branch', () => {
+  const block = jobBlock('agent')
+  const allowed = block.slice(block.indexOf('--allowedTools'), block.indexOf('--disallowedTools'))
+  assert.ok(allowed.includes('Bash(git checkout -b:*)'))
+  assert.ok(!allowed.includes('Bash(git checkout:*)'))
+})
