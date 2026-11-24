@@ -229,3 +229,18 @@ test('o sdd grava a especificação nova em em-revisao e o ciclo de vida não te
   assert.doesNotMatch(sdd, /`rascunho`/)
   for (const name of devs) assert.doesNotMatch(body(name), /`rascunho`/, `${name} não cita rascunho como status`)
 })
+
+test('o perfil tooling serve repositórios de ferramentas, scripts e conteúdo, sem telas nem banco', () => {
+  const profile = JSON.parse(fs.readFileSync(path.join(repoRoot, 'profiles', 'tooling.json'), 'utf8'))
+  const readme = fs.readFileSync(path.join(repoRoot, 'README.md'), 'utf8')
+
+  for (const agent of ['product-owner', 'sdd', 'executor', 'dev-backend', 'dev-devops', 'dev-doc', 'reviewer', 'qa']) {
+    assert.ok(profile.agents.includes(agent), `tooling deve incluir ${agent}`)
+  }
+  for (const agent of ['dev-frontend', 'dev-mobile', 'dev-database', 'dev-fullstack', 'designer']) {
+    assert.ok(!profile.agents.includes(agent), `tooling não deve incluir ${agent}`)
+  }
+  assert.ok(profile.skills.includes('team-setup'))
+  assert.deepEqual(profile.settings, ['base'])
+  assert.match(readme, /- `tooling`:/)
+})
