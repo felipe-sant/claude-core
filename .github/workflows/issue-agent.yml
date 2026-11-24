@@ -50,7 +50,6 @@ jobs:
       CLASSIFY: ${{ needs.select.outputs.classify }}
       PR_ALLOWED: ${{ needs.select.outputs.pr_allowed }}
       PR_ISSUE: ${{ needs.select.outputs.pr_issue }}
-      CONTEXT_DIR: ${{ runner.temp }}/issue-agent
       CLASSIFICATION_MARK: Tamanho definido pelo agente de issues
       PULL_REQUEST_LINE: Aberto pelo agente de issues.
     steps:
@@ -66,16 +65,21 @@ jobs:
       - id: main_before
         run: echo "sha=$(git ls-remote origin refs/heads/main | cut -f1)" >> "$GITHUB_OUTPUT"
       - name: Contexto filtrado das issues
-        run: node .github/issue-agent/issue-context.js "$CONTEXT_DIR" ${CLASSIFY//,/ } $PR_ISSUE
+        run: |
+          read -r -a numbers <<< "${CLASSIFY//,/ } $PR_ISSUE"
+          node .github/issue-agent/issue-context.js "$CONTEXT_DIR" "${numbers[@]}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CONTEXT_DIR: ${{ runner.temp }}/issue-agent
       - id: prompt
         name: Montagem das instruções
+        env:
+          CONTEXT_DIR: ${{ runner.temp }}/issue-agent
         run: |
           {
             echo "text<<PROMPT_END"
             cat .github/issue-agent/prompt.md
-            printf '\n## Valores desta execução\n\n- `classify`: %s\n- `pr_allowed`: %s\n- `pr_issue`: %s\n- Pasta do contexto filtrado: %s\n' "$CLASSIFY" "$PR_ALLOWED" "$PR_ISSUE" "$CONTEXT_DIR"
+            printf '\n## Valores desta execução\n\n- classify: %s\n- pr_allowed: %s\n- pr_issue: %s\n- Pasta do contexto filtrado: %s\n' "$CLASSIFY" "$PR_ALLOWED" "$PR_ISSUE" "$CONTEXT_DIR"
             echo "PROMPT_END"
           } >> "$GITHUB_OUTPUT"
       - id: claude
@@ -100,7 +104,8 @@ jobs:
           fail() { echo "::error::$1"; failures=$((failures + 1)); }
           main_after=$(git ls-remote origin refs/heads/main | cut -f1)
           [ "$main_after" = "$MAIN_BEFORE" ] || fail "A branch principal mudou durante a execução."
-          for number in ${CLASSIFY//,/ } $PR_ISSUE; do
+          read -r -a numbers <<< "${CLASSIFY//,/ } $PR_ISSUE"
+          for number in "${numbers[@]}"; do
             sizes=$(gh api "repos/$GITHUB_REPOSITORY/issues/$number" --jq '[.labels[].name | select(startswith("Size:"))] | length')
             marks=$(gh api --paginate "repos/$GITHUB_REPOSITORY/issues/$number/comments" --jq "[.[] | select(.user.login == \"claude[bot]\") | select(.body | contains(\"$CLASSIFICATION_MARK\"))] | length" | awk '{total += $1} END {print total + 0}')
             echo "Issue $number: etiquetas de tamanho=$sizes, comentários de classificação=$marks"
