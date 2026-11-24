@@ -24,6 +24,18 @@ test('todo agente que commita manda adicionar e commitar só os próprios arquiv
   }
 })
 
+test('todo agente que commita cita a exceção de tirar arquivo do controle de versão e remete à regra, sem repetir o passo a passo', () => {
+  for (const name of committers) {
+    const text = body(name)
+    assert.match(text, /tirar um arquivo do controle de versão mantendo-o na pasta/, `${name} deve citar o caso`)
+    assert.match(text, /git rm --cached/, `${name} deve citar git rm --cached`)
+    assert.match(text, /tirar um arquivo do controle de versão mantendo-o na pasta[^\n]*\.claude\/rules\/git-standard\.md/, `${name} deve remeter à regra na mesma frase`)
+    assert.match(text, /confira o stage antes, como manda `\.claude\/rules\/git-standard\.md`/, `${name} deve mandar conferir o stage antes, como manda a regra`)
+    assert.ok(!text.includes('git diff --cached --name-status'), `${name} não deve repetir a conferência do stage`)
+    assert.ok(!text.includes('git diff HEAD -- .gitignore'), `${name} não deve repetir a conferência do .gitignore`)
+  }
+})
+
 test('o reviewer confere commit a commit se só há arquivos da própria tarefa', () => {
   assert.match(body('reviewer'), /commit a commit.*git-standard\.md/)
 })
@@ -115,4 +127,22 @@ test('o padrão de git explica como isolar uma falha de teste sem tocar nos arqu
   assert.match(text, /## Isolar uma falha/)
   assert.match(text, /git worktree add/)
   assert.match(text, /avise o dono do arquivo e espere ele commitar/)
+})
+
+test('o padrão de git explica como commitar ao tirar um arquivo do controle de versão mantendo-o na pasta', () => {
+  const text = fs.readFileSync(path.join(h.repoRoot, catalog.rules['git-standard'].path), 'utf8')
+
+  assert.match(text, /git rm --cached/)
+  assert.match(text, /git diff --cached --name-status/)
+  assert.match(text, /apenas essa remoção e, quando houver, a linha que você mesmo acrescentou ao `\.gitignore` para esse arquivo/)
+  assert.match(text, /git diff HEAD -- \.gitignore/)
+  assert.match(text, /não adicione o `\.gitignore` e peça ao dono que commite antes/)
+  assert.match(text, /peça ao dono que commite antes e espere ele commitar/)
+  assert.match(text, /`git add \.`/)
+  assert.match(text, /`git add -A`/)
+  assert.match(text, /`git add -N`/)
+  assert.match(text, /--intent-to-add/)
+  assert.match(text, /`git add -u`/)
+  assert.match(text, /`git commit -a`/)
+  assert.match(text, /git commit -m "Feat :sparkles: \[#1\] Adiciona X" -- caminho\/a\.ts caminho\/b\.ts/)
 })
