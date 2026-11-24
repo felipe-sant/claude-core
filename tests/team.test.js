@@ -10,6 +10,10 @@ function body(name) {
   return fs.readFileSync(path.join(repoRoot, catalog.agents[name].path), 'utf8')
 }
 
+function teamSetup() {
+  return fs.readFileSync(path.join(repoRoot, catalog.skills['team-setup'].path, 'SKILL.md'), 'utf8')
+}
+
 const devs = ['dev-frontend', 'dev-backend', 'dev-mobile', 'dev-devops', 'dev-database', 'dev-fullstack']
 
 test('o gate de cada tarefa inclui o typecheck e o de fase roda uma vez ao fim da fase', () => {
@@ -49,8 +53,8 @@ test('o reviewer confere a evidência do typecheck e roda o gate de fase uma vez
 })
 
 test('o orquestrador exige o gate com typecheck e o gate de fase', () => {
-  assert.match(body('orchestrator'), /nunca sem o typecheck.*`Gate de fase`/s)
-  assert.match(body('orchestrator'), /checagem de formatação/)
+  assert.match(teamSetup(), /nunca sem o typecheck.*`Gate de fase`/s)
+  assert.match(teamSetup(), /checagem de formatação/)
 })
 
 test('quem chama executor ou sdd avisa a orchestrator quando o agente não está disponível, e ela orienta o usuário', () => {
@@ -60,13 +64,13 @@ test('quem chama executor ou sdd avisa a orchestrator quando o agente não está
     assert.match(text, /abrir uma sessão nova/, `${name} deve dizer a causa provável`)
     assert.match(text, /registrando no resumo final que não houve delegação/, `${name} deve registrar a falta de delegação`)
   }
-  const orchestrator = body('orchestrator')
+  const orchestrator = teamSetup()
   assert.match(orchestrator, /não está disponível na sessão/)
   assert.match(orchestrator, /rodar o `ai-sync` e abrir uma sessão nova/)
 })
 
 test('o orquestrador identifica cada agente pelo nome seguido da função abreviada', () => {
-  const text = body('orchestrator')
+  const text = teamSetup()
 
   assert.match(text, /## Nome com a função/)
   assert.match(text, /`Rika \(PO\)`/)
@@ -77,7 +81,7 @@ test('o orquestrador identifica cada agente pelo nome seguido da função abrevi
 })
 
 test('o orquestrador mostra uma tabela do que cada agente do time está fazendo', () => {
-  const text = body('orchestrator')
+  const text = teamSetup()
 
   assert.match(text, /## Painel do time/)
   assert.match(text, /\| Agente \| Fazendo \| Estado \| Espera por \|/)
@@ -93,7 +97,7 @@ test('o modelo base não nega a leitura do .env e as regras mandam copiar sem ex
   assert.doesNotMatch(template, /\.env/)
   assert.match(security, /O `\.env` pode ser lido e copiado/)
   assert.match(security, /nunca imprima os valores/)
-  assert.match(body('orchestrator'), /copia para ela, com `cp`, os arquivos de configuração locais/)
+  assert.match(teamSetup(), /copia para ela, com `cp`, os arquivos de configuração locais/)
 })
 
 test('só o sdd escreve na especificação e commita só o arquivo dela', () => {
@@ -111,7 +115,7 @@ test('só o sdd escreve na especificação e commita só o arquivo dela', () => 
   assert.match(sdd, /commite só o arquivo da especificação/)
   assert.match(sdd, /-- \.specs\/<arquivo>\.md/)
 
-  const orchestrator = body('orchestrator')
+  const orchestrator = teamSetup()
   assert.match(orchestrator, /nunca editam a especificação/)
   assert.match(orchestrator, /única instância do `sdd` de andamento/)
 })
@@ -126,7 +130,7 @@ test('devs e executor guardam a evidência do vermelho antes do código e o revi
 })
 
 test('os relatórios são curtos e a orchestrator repassa resultado preso e ignora duplicata', () => {
-  const orchestrator = body('orchestrator')
+  const orchestrator = teamSetup()
   assert.match(orchestrator, /## Relatórios e avisos/)
   assert.match(orchestrator, /de até 30 linhas/)
   assert.match(orchestrator, /repasse o conteúdo ao dev na hora/)
@@ -143,18 +147,32 @@ test('o README documenta a permissão de commit, a coautoria por repositório e 
   assert.match(readme, /"attribution": \{ "commit": "", "pr": "" \}/)
 })
 
-test('a orchestrator funciona como líder de time e como sessão de subagentes', () => {
-  const text = body('orchestrator')
+test('a sessão principal vira a orchestrator pela skill team-setup, sem agente orchestrator', () => {
+  const text = teamSetup()
+  const profiles = fs.readdirSync(path.join(repoRoot, 'profiles'))
+  const sync = fs.readFileSync(path.join(repoRoot, 'bin', 'ai-sync.js'), 'utf8')
 
-  assert.match(text, /^tools: .*Read, Grep, Glob, Edit, Write, Bash/m)
-  assert.match(text, /só porque, no modo time, cada integrante recebe no máximo as ferramentas da líder/)
+  assert.equal(catalog.agents.orchestrator, undefined)
+  assert.deepEqual(catalog.skills['team-setup'].applies, ['all'])
+  for (const file of profiles) {
+    const profile = JSON.parse(fs.readFileSync(path.join(repoRoot, 'profiles', file), 'utf8'))
+    assert.ok(!profile.agents.includes('orchestrator'), `${file} não deve citar o agente orchestrator`)
+    assert.ok(profile.skills.includes('team-setup'), `${file} deve incluir a skill team-setup`)
+  }
+  assert.match(sync, /\/team-setup/)
+  assert.doesNotMatch(sync, /claude --agent orchestrator/)
+
+  assert.match(text, /^name: team-setup$/m)
+  assert.match(text, /a sessão principal/)
+  assert.match(text, /`product-owner` não aparecer na lista de agentes/)
+  assert.match(text, /Não use os agentes genéricos do Claude Code/)
+  assert.doesNotMatch(text, /só porque, no modo time/)
   assert.match(text, /## Subagentes ou time de agentes/)
   assert.match(text, /`ai-sync --teams`/)
   assert.match(text, /A especificação continua sendo a única fonte de verdade/)
   assert.match(text, /consome bem mais/)
   assert.match(text, /Chame sempre cada agente com o nome escolhido/)
   assert.match(text, /SendMessage.*pelo nome/s)
-  assert.doesNotMatch(text, /usando esse identificador, em vez de criar um novo/)
 })
 
 test('os devs chamam o sdd e o executor com nome, com alternativa sem nome, e tratam o modo time', () => {
@@ -200,7 +218,7 @@ test('o reviewer confere quantos commits a branch está atrás da base e simula 
 
 test('o reviewer remove a worktree de revisão que criou e o orquestrador não mexe nela', () => {
   assert.match(body('reviewer'), /Remova ao fim da revisão a worktree de revisão que você criou, se não houver alteração sem commit/)
-  assert.match(body('orchestrator'), /worktrees de revisão criadas pelo reviewer são removidas por ele/)
+  assert.match(teamSetup(), /worktrees de revisão criadas pelo reviewer são removidas por ele/)
 })
 
 test('o sdd grava a especificação nova em em-revisao e o ciclo de vida não tem rascunho', () => {
