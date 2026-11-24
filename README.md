@@ -233,7 +233,7 @@ Uma automação do GitHub Actions, só deste repositório (não vai para outros 
 | Etiqueta | Significado |
 | --- | --- |
 | `Size: P` | Tarefa pequena e clara, que o agente resolve sozinho, incluindo ajustes pequenos nas regras, nos agentes e nas skills do time. É a única que vira pull request. |
-| `Size: M` | Precisa da atenção do Felipe. |
+| `Size: M` | Precisa da atenção do dono do repositório. |
 | `Size: G` | Grande migração ou mudança que envolve o fluxo inteiro do repositório. |
 
 Na dúvida entre P e M, o tamanho é M. As issues M e G recebem só o tamanho e um comentário curto com o motivo e o link da execução. Se o agente começa uma P e percebe que ela é maior, ele para, explica na issue e troca o tamanho para M, sem deixar pull request.
@@ -244,7 +244,7 @@ Na dúvida entre P e M, o tamanho é M. As issues M e G recebem só o tamanho e 
 - Todo dia às 06:00 de Brasília (09:00 UTC), para pegar o que escapou.
 - Na mão: em Actions, "Agente de issues", Run workflow, ou `gh workflow run issue-agent.yml`.
 
-Na varredura diária e no disparo manual, classifica no máximo 10 issues sem tamanho por execução, das mais antigas para as mais novas. Cada execução abre no máximo um pull request, e só há um pull request do agente aberto por vez. A P que fica sem pull request entra numa fila e é retomada na varredura ou no disparo manual, quando não há pull request do agente aberto, sem classificar de novo. Rodar o agente outra vez na mesma issue não repete o tamanho, o comentário nem o pull request.
+Na varredura diária e no disparo manual, classifica no máximo 10 issues sem tamanho por execução, das mais antigas para as mais novas. Cada execução abre no máximo um pull request, e só há um pull request do agente aberto por vez. Só a P sem pull request, sem branch própria e sem responsável fica numa fila; a P que já tem branch ou responsável sai dela. A da fila é retomada na varredura ou no disparo manual, quando não há pull request do agente aberto, sem classificar de novo. Rodar o agente outra vez na mesma issue não repete o tamanho, o comentário nem o pull request.
 
 ### O que ele trata e o que nunca faz
 
