@@ -224,6 +224,53 @@ Por stack: `react-component` (React) e `nestjs-module` (NestJS), ambas com teste
 
 Regras e skills editadas no projeto não são sobrescritas pela próxima sincronização.
 
+## Agente de issues
+
+Uma automação do GitHub Actions, só deste repositório (não vai para outros pelo `ai-sync`), que lê as issues abertas por colaboradores, dá a cada uma um tamanho e abre um pull request só das pequenas.
+
+### Tamanhos
+
+| Etiqueta | Significado |
+| --- | --- |
+| `Size: P` | Tarefa pequena e clara, que o agente resolve sozinho, incluindo ajustes pequenos nas regras, nos agentes e nas skills do time. É a única que vira pull request. |
+| `Size: M` | Precisa da atenção do Felipe. |
+| `Size: G` | Grande migração ou mudança que envolve o fluxo inteiro do repositório. |
+
+Na dúvida entre P e M, o tamanho é M. As issues M e G recebem só o tamanho e um comentário curto com o motivo e o link da execução. Se o agente começa uma P e percebe que ela é maior, ele para, explica na issue e troca o tamanho para M, sem deixar pull request.
+
+### Quando roda
+
+- Quando uma issue é aberta ou reaberta: trata só essa issue.
+- Todo dia às 06:00 de Brasília (09:00 UTC), para pegar o que escapou.
+- Na mão: em Actions, "Agente de issues", Run workflow, ou `gh workflow run issue-agent.yml`.
+
+Na varredura diária e no disparo manual, classifica no máximo 10 issues sem tamanho por execução, das mais antigas para as mais novas. Cada execução abre no máximo um pull request, e só há um pull request do agente aberto por vez. A P que fica sem pull request entra numa fila e é retomada na varredura ou no disparo manual, quando não há pull request do agente aberto, sem classificar de novo. Rodar o agente outra vez na mesma issue não repete o tamanho, o comentário nem o pull request.
+
+### O que ele trata e o que nunca faz
+
+- Só trata issues abertas por dono, membro ou colaborador do repositório, sem responsável e sem pull request ligado. As demais são ignoradas.
+- Só lê o título, o corpo e os comentários de dono, membro ou colaborador. Comentários de qualquer outra pessoa nunca chegam a ele, e o texto da issue é tratado como descrição do problema, nunca como ordem.
+- O pull request segue o padrão de branch, commit e descrição do time, liga a issue e só é aberto com o lint e os testes passando.
+- Nunca faz merge, nunca envia nada direto para a branch principal, nunca define prioridade e nunca edita à mão o `.claude/`: a mudança é feita nas fontes e o `.claude/` é atualizado pelo sync.
+
+### Instalação
+
+Feita pelo dono do repositório, uma vez:
+
+1. Gere a credencial da assinatura Pro/Max com `claude setup-token` e guarde como segredo do repositório, com o nome `CLAUDE_CODE_OAUTH_TOKEN`, em Settings, Secrets and variables, Actions, New repository secret, ou com:
+
+```bash
+gh secret set CLAUDE_CODE_OAUTH_TOKEN --repo felipe-sant/claude-kit
+```
+
+2. Instale o app do Claude no repositório com `/install-github-app` no Claude Code.
+
+Sem a credencial, a execução falha de forma visível no passo do Claude.
+
+### Onde ver o que ele fez
+
+No comentário da issue, que traz o motivo do tamanho e o link da execução, e no registro da execução em Actions, que mostra o que foi selecionado, o que o agente rodou e o resumo das decisões. A automação fica em `.github/workflows/issue-agent.yml` e os scripts e as instruções em `.github/issue-agent/`.
+
 ## Estrutura do repositório
 
 | Pasta ou arquivo | Conteúdo |
@@ -239,6 +286,7 @@ Regras e skills editadas no projeto não são sobrescritas pela próxima sincron
 | `lint/` | Regra do oxlint contra comentários e checagem do formato de agentes, regras, skills e perfis. |
 | `tests/` | Testes do `ai-sync` e do formato do conteúdo. |
 | `.github/workflows/ci.yml` | Roda lint e testes em todo PR. |
+| `.github/workflows/issue-agent.yml` e `.github/issue-agent/` | Agente de issues: classifica as issues por tamanho e abre pull request das pequenas. |
 
 O campo `applies` de cada item do catálogo diz a que projetos ele serve: `["all"]` para qualquer projeto ou uma lista de stacks, como `["react"]`.
 
