@@ -190,3 +190,9 @@ test('as listas de números são expandidas entre aspas no shell', () => {
 test('os comandos do shell não têm crase dentro de aspas simples', () => {
   assert.doesNotMatch(workflow(), /'[^'\n]*`[^'\n]*'/)
 })
+
+test('o relatório da execução aparece no resumo, sem mostrar a saída completa', () => {
+  const text = workflow()
+  assert.match(text, /^\s+display_report: true$/m)
+  assert.doesNotMatch(text, /show_full_output: true/)
+})
