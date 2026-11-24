@@ -142,3 +142,12 @@ test('a conferência final exige exatamente uma etiqueta de tamanho também para
   const block = jobBlock('agent')
   assert.match(block, /if \[ "\$number" = "\$PR_ISSUE" \] \|\| \[ "\$CLAUDE_OUTCOME" = "success" \]; then\n\s+\[ "\$sizes" -eq 1 \]/)
 })
+
+test('o git do agente é limitado aos subcomandos necessários', () => {
+  const block = jobBlock('agent')
+  const allowed = block.slice(block.indexOf('--allowedTools'), block.indexOf('--disallowedTools'))
+  assert.ok(!allowed.includes('Bash(git:*)'))
+  for (const subcommand of ['add', 'commit', 'push', 'switch', 'status', 'diff', 'log', 'branch']) {
+    assert.ok(allowed.includes(`Bash(git ${subcommand}:*)`), `faltou permitir: git ${subcommand}`)
+  }
+})
