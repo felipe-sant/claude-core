@@ -48,7 +48,11 @@ function gitEnv() {
 }
 
 function git(cwd, ...args) {
-  const result = spawnSync('git', args, { cwd, encoding: 'utf8', env: gitEnv() })
+  return gitWithEnv(cwd, {}, ...args)
+}
+
+function gitWithEnv(cwd, extraEnv, ...args) {
+  const result = spawnSync('git', args, { cwd, encoding: 'utf8', env: { ...gitEnv(), ...extraEnv } })
   return { status: result.status, output: result.stdout + result.stderr, stdout: result.stdout }
 }
 
@@ -92,10 +96,6 @@ function head(repo) {
   return git(repo, 'rev-parse', 'HEAD').stdout.trim()
 }
 
-function leftoverTemporaryFolders() {
-  return fs.readdirSync(require('node:os').tmpdir()).filter((name) => name.startsWith('claude-core-hook-'))
-}
-
 test('commit por caminho só da fonte alterada é recusado e nada é commitado', () => {
   const repo = makeHookedRepo()
   const before = head(repo)
@@ -133,12 +133,12 @@ test('commit sem caminhos com fonte de outro agente fora do stage é recusado se
   appendLine(repo, 'rules/commit-standard.md')
   appendLine(repo, 'rules/git-standard.md')
   git(repo, 'add', 'rules/commit-standard.md')
-  const stagedBefore = git(repo, 'diff', '--cached', '--name-only').stdout
+  const stagedBefore = git(repo, 'ls-files', '-s').stdout
   const result = git(repo, 'commit', '-m', 'Altera regra')
   assert.notEqual(result.status, 0, result.output)
   assert.match(result.output, new RegExp(refusalHint))
   assert.equal(head(repo), before)
-  assert.equal(git(repo, 'diff', '--cached', '--name-only').stdout, stagedBefore)
+  assert.equal(git(repo, 'ls-files', '-s').stdout, stagedBefore)
 })
 
 test('commit por caminho de uma fonte com outra fonte alterada por outro agente é recusado', () => {
@@ -199,8 +199,23 @@ test('em worktree vinculada o commit por caminho da fonte é recusado e o da esp
 
 test('a recusa não deixa pastas temporárias para trás', () => {
   const repo = makeHookedRepo()
-  const before = leftoverTemporaryFolders()
+  const scratch = h.tempDir('scratch')
   appendLine(repo, 'rules/commit-standard.md')
-  git(repo, 'commit', '-m', 'Altera regra', '--', 'rules/commit-standard.md')
-  assert.deepEqual(leftoverTemporaryFolders(), before)
+  const result = gitWithEnv(repo, { TMPDIR: scratch, NODE_DISABLE_COMPILE_CACHE: '1' }, 'commit', '-m', 'Altera regra', '--', 'rules/commit-standard.md')
+  assert.notEqual(result.status, 0, result.output)
+  assert.deepEqual(fs.readdirSync(scratch), [])
+})
+
+test('quando o sync falha o commit é recusado com uma mensagem em português', () => {
+  const repo = makeHookedRepo()
+  const before = head(repo)
+  fs.writeFileSync(path.join(repo, 'catalog.json'), '{ quebrado')
+  h.write(path.join(repo, '.specs/tarefa.md'), 'especificação\n')
+  git(repo, 'add', '.specs/tarefa.md')
+  const result = git(repo, 'commit', '-m', 'Docs', '--', '.specs/tarefa.md')
+  assert.notEqual(result.status, 0, result.output)
+  assert.match(result.output, /o sync falhou/)
+  assert.match(result.output, /catalog\.json/)
+  assert.doesNotMatch(result.output, /SyntaxError/)
+  assert.equal(head(repo), before)
 })
