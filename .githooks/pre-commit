@@ -1,4 +1,12 @@
 #!/bin/sh
 set -e
 npm run sync > /dev/null
-git add -A -- .claude/agents .claude/rules .claude/skills .claude/settings.json .claude/claude-core.lock.json
+case "$GIT_INDEX_FILE" in
+  *next-index-*)
+    node .githooks/check-sync.js stage
+    ;;
+  *)
+    node .githooks/check-sync.js folder
+    git add -A -- .claude/agents .claude/rules .claude/skills .claude/settings.json .claude/claude-core.lock.json
+    ;;
+esac

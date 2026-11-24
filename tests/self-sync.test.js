@@ -34,3 +34,172 @@ test('o hook de pre-commit roda o sync e adiciona o .claude ao commit', () => {
   assert.ok(fs.statSync(path.join(h.repoRoot, '.githooks', 'pre-commit')).mode & 0o111, 'o hook precisa ser executável')
   assert.match(claude, /npm run sync/)
 })
+
+const { spawnSync } = require('node:child_process')
+
+const generatedPaths = ['.claude/agents', '.claude/rules', '.claude/skills', '.claude/settings.json', '.claude/claude-core.lock.json']
+const copiedPaths = ['bin', 'catalog.json', 'agents', 'rules', 'skills', 'stacks', 'templates', 'profiles', '.claude', '.githooks', 'package.json']
+const refusalHint = 'npm run sync'
+
+function gitEnv() {
+  const env = { ...process.env }
+  for (const name of Object.keys(env)) if (name.startsWith('GIT_')) delete env[name]
+  return env
+}
+
+function git(cwd, ...args) {
+  const result = spawnSync('git', args, { cwd, encoding: 'utf8', env: gitEnv() })
+  return { status: result.status, output: result.stdout + result.stderr, stdout: result.stdout }
+}
+
+function makeHookedRepo() {
+  const repo = h.tempDir('hooked')
+  for (const rel of copiedPaths) fs.cpSync(path.join(h.repoRoot, rel), path.join(repo, rel), { recursive: true })
+  git(repo, 'init', '-q', '-b', 'main')
+  git(repo, 'config', 'user.name', 'Teste')
+  git(repo, 'config', 'user.email', 'teste@example.com')
+  git(repo, 'config', 'commit.gpgsign', 'false')
+  git(repo, 'config', 'core.hooksPath', '.githooks')
+  git(repo, 'add', '-A')
+  git(repo, 'commit', '-q', '--no-verify', '-m', 'base')
+  return repo
+}
+
+function appendLine(repo, rel, line = 'linha nova') {
+  fs.appendFileSync(path.join(repo, rel), `\n${line}\n`)
+}
+
+function headIsInSync(repo) {
+  const exported = h.tempDir('head')
+  const archive = spawnSync('sh', ['-c', `git archive HEAD | tar -x -C "${exported}"`], { cwd: repo, env: gitEnv() })
+  assert.equal(archive.status, 0)
+  const fresh = h.tempDir('fresh')
+  const synced = h.run(exported, fresh, '--profile', 'tooling')
+  assert.equal(synced.status, 0, synced.output)
+  return generatedPaths.every((rel) => {
+    const left = path.join(exported, rel)
+    const right = path.join(fresh, rel)
+    if (!fs.existsSync(left) || !fs.existsSync(right)) return fs.existsSync(left) === fs.existsSync(right)
+    return fs.statSync(left).isDirectory() ? h.snapshot(left) === h.snapshot(right) : fs.readFileSync(left, 'utf8') === fs.readFileSync(right, 'utf8')
+  })
+}
+
+function committedFiles(repo) {
+  return git(repo, 'show', '--name-only', '--format=', 'HEAD').stdout.split('\n').filter(Boolean)
+}
+
+function head(repo) {
+  return git(repo, 'rev-parse', 'HEAD').stdout.trim()
+}
+
+function leftoverTemporaryFolders() {
+  return fs.readdirSync(require('node:os').tmpdir()).filter((name) => name.startsWith('claude-core-hook-'))
+}
+
+test('commit por caminho só da fonte alterada é recusado e nada é commitado', () => {
+  const repo = makeHookedRepo()
+  const before = head(repo)
+  appendLine(repo, 'rules/commit-standard.md')
+  const result = git(repo, 'commit', '-m', 'Altera regra', '--', 'rules/commit-standard.md')
+  assert.notEqual(result.status, 0, result.output)
+  assert.match(result.output, new RegExp(refusalHint))
+  assert.match(result.output, /\.claude\/rules\/commit-standard\.md/)
+  assert.equal(head(repo), before)
+})
+
+test('commit por caminho da fonte com os gerados atualizados passa e fica em sincronia', () => {
+  const repo = makeHookedRepo()
+  appendLine(repo, 'rules/commit-standard.md')
+  const synced = spawnSync('npm', ['run', 'sync'], { cwd: repo, encoding: 'utf8', env: gitEnv() })
+  assert.equal(synced.status, 0, synced.stderr)
+  const result = git(repo, 'commit', '-m', 'Altera regra', '--', 'rules/commit-standard.md', '.claude/rules/commit-standard.md', '.claude/claude-core.lock.json')
+  assert.equal(result.status, 0, result.output)
+  assert.ok(headIsInSync(repo))
+})
+
+test('commit sem caminhos com a fonte no stage passa, leva os gerados e fica em sincronia', () => {
+  const repo = makeHookedRepo()
+  appendLine(repo, 'rules/commit-standard.md')
+  git(repo, 'add', 'rules/commit-standard.md')
+  const result = git(repo, 'commit', '-m', 'Altera regra')
+  assert.equal(result.status, 0, result.output)
+  assert.ok(committedFiles(repo).includes('.claude/claude-core.lock.json'))
+  assert.ok(headIsInSync(repo))
+})
+
+test('commit sem caminhos com fonte de outro agente fora do stage é recusado sem mexer no stage', () => {
+  const repo = makeHookedRepo()
+  const before = head(repo)
+  appendLine(repo, 'rules/commit-standard.md')
+  appendLine(repo, 'rules/git-standard.md')
+  git(repo, 'add', 'rules/commit-standard.md')
+  const stagedBefore = git(repo, 'diff', '--cached', '--name-only').stdout
+  const result = git(repo, 'commit', '-m', 'Altera regra')
+  assert.notEqual(result.status, 0, result.output)
+  assert.match(result.output, new RegExp(refusalHint))
+  assert.equal(head(repo), before)
+  assert.equal(git(repo, 'diff', '--cached', '--name-only').stdout, stagedBefore)
+})
+
+test('commit por caminho de uma fonte com outra fonte alterada por outro agente é recusado', () => {
+  const repo = makeHookedRepo()
+  const before = head(repo)
+  appendLine(repo, 'rules/commit-standard.md')
+  appendLine(repo, 'rules/git-standard.md')
+  const refused = git(repo, 'commit', '-m', 'Altera regra', '--', 'rules/commit-standard.md')
+  assert.notEqual(refused.status, 0, refused.output)
+  assert.match(refused.output, /outro agente/)
+  assert.equal(head(repo), before)
+  const withGenerated = git(repo, 'commit', '-m', 'Altera regra', '--', 'rules/commit-standard.md', '.claude/rules/commit-standard.md', '.claude/rules/git-standard.md', '.claude/claude-core.lock.json')
+  assert.notEqual(withGenerated.status, 0, withGenerated.output)
+  assert.equal(head(repo), before)
+})
+
+test('commit por caminho só da especificação não leva nada do .claude nem é recusado', () => {
+  const repo = makeHookedRepo()
+  appendLine(repo, 'rules/commit-standard.md')
+  appendLine(repo, 'rules/git-standard.md')
+  h.write(path.join(repo, '.specs/tarefa.md'), 'especificação\n')
+  git(repo, 'add', '.specs/tarefa.md')
+  const result = git(repo, 'commit', '-m', 'Docs', '--', '.specs/tarefa.md')
+  assert.equal(result.status, 0, result.output)
+  assert.deepEqual(committedFiles(repo), ['.specs/tarefa.md'])
+  const staged = git(repo, 'diff', '--cached', '--name-only').stdout
+  assert.equal(staged, '')
+})
+
+test('o último commit fora de sincronia faz recusar até o commit que não toca fonte', () => {
+  const repo = makeHookedRepo()
+  appendLine(repo, 'rules/commit-standard.md')
+  git(repo, 'add', 'rules/commit-standard.md')
+  git(repo, 'commit', '-q', '--no-verify', '-m', 'Fonte sem gerados')
+  h.write(path.join(repo, '.specs/tarefa.md'), 'especificação\n')
+  git(repo, 'add', '.specs/tarefa.md')
+  const result = git(repo, 'commit', '-m', 'Docs', '--', '.specs/tarefa.md')
+  assert.notEqual(result.status, 0, result.output)
+  assert.match(result.output, new RegExp(refusalHint))
+})
+
+test('em worktree vinculada o commit por caminho da fonte é recusado e o da especificação passa', () => {
+  const repo = makeHookedRepo()
+  const linked = path.join(h.tempDir('linked'), 'trabalho')
+  assert.equal(git(repo, 'worktree', 'add', '-q', '-b', 'tarefa', linked).status, 0)
+  appendLine(linked, 'rules/commit-standard.md')
+  const before = head(linked)
+  const refused = git(linked, 'commit', '-m', 'Altera regra', '--', 'rules/commit-standard.md')
+  assert.notEqual(refused.status, 0, refused.output)
+  assert.equal(head(linked), before)
+  h.write(path.join(linked, '.specs/tarefa.md'), 'especificação\n')
+  git(linked, 'add', '.specs/tarefa.md')
+  const accepted = git(linked, 'commit', '-m', 'Docs', '--', '.specs/tarefa.md')
+  assert.equal(accepted.status, 0, accepted.output)
+  assert.deepEqual(committedFiles(linked), ['.specs/tarefa.md'])
+})
+
+test('a recusa não deixa pastas temporárias para trás', () => {
+  const repo = makeHookedRepo()
+  const before = leftoverTemporaryFolders()
+  appendLine(repo, 'rules/commit-standard.md')
+  git(repo, 'commit', '-m', 'Altera regra', '--', 'rules/commit-standard.md')
+  assert.deepEqual(leftoverTemporaryFolders(), before)
+})
