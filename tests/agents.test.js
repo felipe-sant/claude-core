@@ -122,7 +122,9 @@ test('o padrão de git explica como commitar ao tirar um arquivo do controle de 
 
   assert.match(text, /git rm --cached/)
   assert.match(text, /git diff --cached --name-status/)
-  assert.match(text, /apenas essa remoção e o `\.gitignore` que você mesmo alterou/)
+  assert.match(text, /apenas essa remoção e, quando houver, a linha que você mesmo acrescentou ao `\.gitignore` para esse arquivo/)
+  assert.match(text, /git diff \.gitignore/)
+  assert.match(text, /não adicione o `\.gitignore` e peça ao dono que commite antes/)
   assert.match(text, /peça ao dono que commite antes e espere ele commitar/)
   assert.match(text, /`git add \.`/)
   assert.match(text, /`git add -A`/)
