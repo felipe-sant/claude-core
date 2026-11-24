@@ -180,20 +180,20 @@ Arquivo versionado em português, passado à ação pelo conteúdo do arquivo, c
 
 ### Suposições técnicas
 
-- S-01: o modo de automação da ação (entrada `prompt`) funciona com evento de issue, agenda e disparo manual. Conferir na documentação da versão fixada durante a T3.
+- S-01: o modo de automação da ação (entrada `prompt`) funciona com evento de issue, agenda e disparo manual. Conferir na documentação da versão fixada durante a T3. Conferida em 2026-11-24: a ação ficou fixada em `@v1`.
 - S-02: o app do Claude abre o pull request com o autor `claude[bot]`; a linha fixa no corpo é a segunda garantia caso o autor seja outro.
 - S-03: "pull request ligado" é o que referencia a issue para fechá-la (palavra de fechamento ou ligação manual). Menções soltas em outro pull request não contam.
 - S-04: limite de 100 turnos por execução (até 10 classificações mais um pull request) e horário da varredura às 09:00 UTC; ajustáveis sem mudar regra.
 - S-05: o `gh` já vem instalado no runner do GitHub e é autenticado pela própria ação.
 - S-06: o agente lê o título, o corpo e só os comentários de dono, membro ou colaborador, entregues pelo arquivo de contexto filtrado. Garantido pelo script e pelas ferramentas permitidas, não só pelas instruções.
-- S-07: a ação do Claude consegue ler arquivos na pasta temporária do runner, fora do checkout. Conferir durante a T3. Se não conseguir, o conteúdo dos arquivos de contexto entra no `prompt` pela entrada da ação (montado em um passo que lê os arquivos, nunca interpolado em comando de shell), e a T2 troca a guarda de leitura para "use só o contexto que veio no prompt".
+- S-07: a ação do Claude consegue ler arquivos na pasta temporária do runner, fora do checkout. Conferir durante a T3. Se não conseguir, o conteúdo dos arquivos de contexto entra no `prompt` pela entrada da ação (montado em um passo que lê os arquivos, nunca interpolado em comando de shell), e a T2 troca a guarda de leitura para "use só o contexto que veio no prompt". Resultado da T3: segue sem confirmação antes do merge, mitigada com `--add-dir` na pasta do contexto. A alternativa entra só se o primeiro teste real, com a #62, mostrar que não funciona.
 - S-08: a branch própria de uma P é reconhecida pelo nome `<tipo>/<número>-<descrição>` do padrão de branches do time.
 
 ## Plano de execução
 
-- Fase 1 (paralelo): T1 [P], T2 [P], T3 [P], T4 [P], T7 [P] (Dev Ops) e T5 [P] (Dev Doc). Todas dependem só do contrato fixado no Desenho; cada uma edita arquivos diferentes.
+- Fase 1 (paralelo): T1 [P], T2 [P], T3 [P], T4 [P], T7 [P] (Dev Ops) e T5 [P] (Dev Doc). Todas dependem só do contrato fixado no Desenho; cada uma edita arquivos diferentes. Concluída. Gate de fase: `npm run lint` passou, `npm test` com 215 pass e 0 fail, `node bin/ai-sync.js --check` passou.
 - Gate de fase: `npm run lint`, `npm test`, `node bin/ai-sync.js --check` e o sync em pasta temporária (`T=$(mktemp -d) && node bin/ai-sync.js "$T" && ls -R "$T/.claude"; rm -rf "$T"`), rodados uma vez ao fim da fase e antes do reviewer. O projeto não tem build, typecheck nem formatador; o lint e a suíte são o que o CI roda.
-- Fase 2 (sequencial): T6.
+- Fase 2 (sequencial): T6. Iniciada com o Dev Ops.
 - Gate de fase: o mesmo da Fase 1, depois de atualizar a branch com a main por merge, se ela avançou.
 
 ## Tarefas
@@ -232,7 +232,7 @@ Arquivo versionado em português, passado à ação pelo conteúdo do arquivo, c
 - Pronto quando: todas as guardas estão presentes e o gate passa. Se a T3 constatar que S-07 não vale, a guarda de leitura é trocada na T6 conforme S-07.
 - Gate: `npm run lint`, `node --test tests/issue-agent-prompt.test.js` e `node bin/ai-sync.js --check`.
 - Modelo: padrao.
-- Status: pendente.
+- Status: feita. Commit 80d19e0. Os testes falharam antes por falta do arquivo (ENOENT). Revisão em andamento.
 
 ### T3 [P] Automação do GitHub Actions
 - O quê: a automação com os gatilhos, a concorrência, as permissões mínimas, os dois trabalhos, o passo do contexto filtrado e as conferências finais do Desenho.
@@ -250,7 +250,7 @@ Arquivo versionado em português, passado à ação pelo conteúdo do arquivo, c
 - Pronto quando: os testes passam, o YAML não tem comentários e o gate passa. Não há execução real antes do merge (ver Limite conhecido).
 - Gate: `npm run lint`, `node --test tests/issue-agent-workflow.test.js` e `node bin/ai-sync.js --check`.
 - Modelo: padrao.
-- Status: pendente.
+- Status: feita. Commit cfc4476, 17 testes da tarefa. Revisão em andamento.
 
 ### T4 [P] Criar as etiquetas de tamanho no repositório
 - O quê: criar as etiquetas `Size: P`, `Size: M` e `Size: G` no repositório real, com cor e descrição simples. É a única tarefa que muda o ambiente real.
@@ -318,14 +318,14 @@ Arquivo versionado em português, passado à ação pelo conteúdo do arquivo, c
 - Passos:
   0. Antes desta tarefa, ajustes do Dev Ops na T1, sem mudar regra: tirar da fila a P que também tenha `Size: M` ou `Size: G` (RN-08), testar a normalização do autor do comentário e do pull request do agente e dar erro em português nas falhas da API.
   1. Conferir nomes de arquivos, saídas (`classify`, `pr_allowed`, `pr_issue`, `reason`), pasta e formato do contexto filtrado, marca do comentário, linha do pull request, segredo e etiquetas entre os arquivos e o README. O README da T5 foi escrito só a partir da especificação: conferir contra a entrega do Dev Ops o nome do workflow "Agente de issues", o arquivo `issue-agent.yml`, o segredo `CLAUDE_CODE_OAUTH_TOKEN` e o horário 09:00 UTC (06:00 em Brasília).
-  2. Se a T3 registrou que S-07 não vale, aplicar a alternativa de S-07 na automação e nas instruções, com o teste antes.
+  2. A T3 não confirmou S-07 antes do merge e a mitigou com `--add-dir`; a alternativa de S-07 só entra se o primeiro teste real, com a #62, mostrar que não funciona.
   3. Atualizar a branch com a main por merge, se ela avançou.
   4. Rodar o gate de fase.
 - Teste: nenhum novo, a menos que apareça uma divergência; nesse caso, primeiro um teste que a mostra.
 - Pronto quando: não há divergência e o gate de fase passa.
 - Gate: `npm run lint`, `npm test`, `node bin/ai-sync.js --check` e o sync em pasta temporária.
 - Modelo: economico.
-- Status: pendente.
+- Status: em-andamento. Passo 0 feito, cada correção com teste falhando antes: 5599c2d (P com `Size: M` ou `Size: G` sai da fila), d40eede (normalização do autor testada) e 7d774dc (erros em português nas falhas da API).
 
 ## Decididas pelo usuário
 
