@@ -79,7 +79,7 @@ jobs:
           {
             echo "text<<PROMPT_END"
             cat .github/issue-agent/prompt.md
-            printf '\n## Valores desta execução\n\n- classify: %s\n- pr_allowed: %s\n- pr_issue: %s\n- Pasta do contexto filtrado: %s\n' "$CLASSIFY" "$PR_ALLOWED" "$PR_ISSUE" "$CONTEXT_DIR"
+            printf '\n## Valores desta execução\n\n- classify: %s\n- pr_allowed: %s\n- pr_issue: %s\n- Pasta do contexto filtrado: %s\n- Link da execução: %s\n' "$CLASSIFY" "$PR_ALLOWED" "$PR_ISSUE" "$CONTEXT_DIR" "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
             echo "PROMPT_END"
           } >> "$GITHUB_OUTPUT"
       - id: claude
@@ -87,6 +87,7 @@ jobs:
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           prompt: ${{ steps.prompt.outputs.text }}
+          display_report: true
           claude_args: |
             --max-turns 100
             --add-dir ${{ runner.temp }}/issue-agent
