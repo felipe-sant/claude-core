@@ -1,6 +1,6 @@
 # Hook de pre-commit grava o .claude desatualizado ou de outro agente no commit que escolhe os arquivos
 
-> Status: em-revisao
+> Status: em-andamento
 > Tipo: bug
 > Tamanho: media
 > Branch: fix/60-hook-trava-desatualizado
@@ -21,7 +21,7 @@ Quando o commit escolhe os arquivos (o jeito de commitar que a regra de git exig
 
 ## Comportamento esperado
 
-O hook nunca deixa sair um commit com a cópia do time fora de sincronia com as fontes que estão no commit, e nunca põe no commit, por conta própria, arquivos que quem commita não pediu. No commit que escolhe os arquivos, se a cópia gerada não estiver atualizada e incluída, o hook recusa o commit e orienta, em português, a rodar o sync, incluir os arquivos gerados nos caminhos do commit e commitar de novo. Se o commit não toca fonte nem arquivo gerado, o hook não recusa nem adiciona nada.
+O hook nunca deixa sair um commit com a cópia do time fora de sincronia com as fontes que estão no commit, e nunca põe no commit, por conta própria, arquivos que quem commita não pediu. No commit que escolhe os arquivos, se a cópia gerada não estiver atualizada e incluída, o hook recusa o commit e orienta, em português, a rodar o sync, incluir os arquivos gerados nos caminhos do commit e commitar de novo. A mensagem de recusa também orienta o caso de outro agente com fonte alterada na pasta: esperar o dono commitar ou trabalhar em uma worktree isolada. No commit sem caminhos, a conferência acontece antes de o hook adicionar qualquer coisa; se recusar, o stage fica como estava. Se o commit não toca fonte nem arquivo gerado e o último commit está em sincronia, o hook não recusa nem adiciona nada. Se o último commit já estiver fora de sincronia, o hook recusa até um commit que não toca fonte, e a mensagem diz como corrigir.
 
 ## Impacto
 
@@ -57,8 +57,10 @@ Hipótese: o caso relatado originalmente na issue (lock com o registro antigo) �
 - RN-02: O hook atualiza a cópia do time na pasta de trabalho e, se o commit não levar os gerados atualizados e coerentes com as fontes do commit, recusa o commit com mensagem clara em português: rodar o sync, incluir os arquivos gerados nos caminhos do commit e commitar de novo. Fonte: usuário.
 - RN-03: A coerência é conferida a partir do que está no stage do commit, nunca a partir da pasta de trabalho. Fonte: usuário (via orchestrator).
 - RN-04: O commit sem caminhos continua adicionando os gerados como hoje, e passa pela mesma conferência. Fonte: usuário.
-- RN-05: Commit que não toca fonte nem arquivo gerado, com o último commit em sincronia, não é recusado nem recebe nada do hook. Fonte: orchestrator, a partir do caso da #56.
+- RN-05: Commit que não toca fonte nem arquivo gerado, com o último commit em sincronia, não é recusado nem recebe nada do hook. Exceção: se o último commit já estiver fora de sincronia, o hook recusa também esse commit, e a mensagem diz que o último commit está fora de sincronia e como corrigir. Fonte: orchestrator, a partir do caso da #56; a exceção é resposta do usuário à dúvida sobre o último commit fora de sincronia.
 - RN-06: O formato do lock, o comportamento do sync e o texto da regra de git não mudam nesta tarefa. Fonte: usuário.
+- RN-07: A mensagem de recusa cita também o caso de outro agente com fonte alterada na pasta: esperar o dono commitar ou trabalhar em uma worktree isolada. Fonte: usuário, resposta à dúvida sobre a mensagem.
+- RN-08: No commit sem caminhos, a conferência roda antes de o hook adicionar os gerados. Se recusar, o stage fica exatamente como estava e nada é adicionado. Fonte: usuário, resposta à dúvida sobre o commit sem caminhos.
 
 ## Critérios de aceite
 
@@ -71,6 +73,9 @@ Hipótese: o caso relatado originalmente na issue (lock com o registro antigo) �
 - CA-07: QUANDO um commit que escolhe os arquivos termina ENTÃO o stage real NÃO DEVE ficar com versões antigas dos arquivos gerados (nada aparece no stage que quem commitou não pediu). (RN-01)
 - CA-08: QUANDO o commit é feito dentro de uma worktree vinculada (o jeito que o time trabalha) ENTÃO o sistema DEVE se comportar como nos critérios CA-01 a CA-06. (RN-01 a RN-05)
 - CA-09: QUANDO o hook recusa um commit, com ou sem caminhos ENTÃO o sistema NÃO DEVE deixar arquivos temporários para trás nem alterar o stage. (RN-01, RN-04)
+- CA-11: QUANDO o hook recusa um commit ENTÃO a mensagem DEVE orientar também o caso de outro agente com fonte alterada na pasta: esperar o dono commitar ou trabalhar em uma worktree isolada. (RN-07)
+- CA-12: QUANDO alguém faz um commit sem escolher arquivos e o hook o recusa ENTÃO o stage DEVE ficar exatamente como estava antes do commit, sem nenhum arquivo gerado adicionado. (RN-04, RN-08)
+- CA-13: QUANDO o último commit já está fora de sincronia e alguém faz um commit que não toca fonte nem arquivo gerado (como a especificação) ENTÃO o sistema DEVE recusar o commit com uma mensagem que diz que o último commit está fora de sincronia e como corrigir, e nada é commitado. (RN-05)
 - CA-10: QUANDO a tarefa termina ENTÃO o lint e a suíte de testes do projeto DEVEM passar, incluindo o teste que já existe do hook (o hook continua rodando o sync e adicionando a cópia do time no commit sem caminhos). (RN-04, RN-06)
 
 ## Critérios de sucesso
@@ -106,11 +111,12 @@ Reverter os commits da tarefa (`git revert`) volta o hook ao comportamento anter
 - Dev: Todo (dev-devops).
 - Depende de: nada.
 - Reaproveita: `bin/ai-sync.js` (sem alterá-lo), o teste de sincronização existente (mesma conferência: sync em pasta vazia comparado ao `.claude/`), `tests/helpers.js` (`tempDir`, `cleanup`, `write`, `read`).
-- Atende: RN-01 a RN-06, CA-01 a CA-10.
+- Atende: RN-01 a RN-08, CA-01 a CA-13.
 - Desenho do hook:
   - O shell continua com `npm run sync` (atualiza a pasta) e com o `git add -A -- .claude/agents .claude/rules .claude/skills .claude/settings.json .claude/claude-core.lock.json`, este só no fluxo sem caminhos, isto é, quando o índice em uso NÃO casa `*next-index-*`. A condição depende só desse padrão no `GIT_INDEX_FILE`; é proibido comparar com o literal `.git/index` (na worktree vinculada o índice é `.git/worktrees/<nome>/index`). `commit -a` (índice `index.lock`) segue o fluxo sem caminhos.
   - Commit por caminho (`*next-index-*`): chama a validação comparando os gerados do stage do commit; não roda `git add`.
-  - Commit sem caminhos: chama a validação ANTES do `git add`, comparando o sync das fontes do stage com os gerados da pasta (que são os que o `git add` levaria). Se baterem, roda o `git add` como hoje; se não, recusa sem tocar no stage.
+  - Commit sem caminhos: chama a validação ANTES do `git add`, comparando o sync das fontes do stage com os gerados da pasta (que são os que o `git add` levaria). Se baterem, roda o `git add` como hoje; se não, recusa sem tocar no stage e sem adicionar nada (RN-08, CA-12).
+  - Mensagem de recusa: além de rodar o sync, incluir os gerados nos caminhos e commitar de novo, orienta o caso de outro agente com fonte alterada na pasta (esperar o dono commitar ou trabalhar em uma worktree isolada) (RN-07, CA-11). Quando o próprio HEAD está fora de sincronia, a mensagem diz isso e como corrigir (RN-05, CA-13); sugestão para detectar: aplicar a mesma comparação ao HEAD exportado (`git archive HEAD` extraído em pasta temporária), também apagada sempre.
   - Validação: exporta o stage em uso para uma pasta temporária A (`git checkout-index -a --prefix=<A>/`); roda o ai-sync exportado, `node <A>/bin/ai-sync.js <B> --profile tooling`, com B vazia (o ai-sync resolve as fontes pela própria pasta, então rodar o do worktree leria a fonte B do outro agente; e sincronizar em cima de A não serve, porque o ai-sync mantém arquivo cujo hash difere do lock e deixaria passar gerados parciais); compara os gerados de A com os de B (`.claude/agents`, `.claude/rules`, `.claude/skills`, `.claude/settings.json`, `.claude/claude-core.lock.json`), contando arquivo mudado, a mais e a menos. Qualquer diferença: sai com código 1 e imprime a mensagem em português com a lista. Apaga A e B sempre, inclusive na recusa e em erro.
   - Justificativa do script em Node: comparar árvores, listar criados e removidos e limpar temporários de forma portátil, passando pelo oxlint e pela regra sem comentários; o repositório já é só Node. Sem comentários em nenhum arquivo.
 - Teste (escrito primeiro, deve falhar antes da mudança; tudo na mesma tarefa, sem commitar teste quebrado): em `tests/self-sync.test.js`, repositório temporário com `git init`, cópia de `bin`, `catalog.json`, `agents`, `rules`, `skills`, `stacks`, `templates`, `profiles`, `.claude`, `.githooks` e `package.json`, `chmod` do hook, `core.hooksPath .githooks`, `user.name`, `user.email`, `commit.gpgsign=false`, primeiro commit com `--no-verify`; no spawn do git, retirar `GIT_INDEX_FILE`, `GIT_DIR` e `GIT_WORK_TREE` do ambiente e garantir `npm` no PATH. Casos:
@@ -121,6 +127,9 @@ Reverter os commits da tarefa (`git revert`) volta o hook ao comportamento anter
   - (d) commit por caminho de A com B alterada e não commitada: recusado, nem B nem gerados no commit; incluir os gerados da pasta também é recusado (limite documentado). (CA-05)
   - (e) commit por caminho só da especificação com fontes de outro agente alteradas: passa, o commit tem só esse arquivo, nenhum arquivo do `.claude/`, e o stage real fica sem diferenças depois. (CA-06, CA-07)
   - (f) o caso (a) e o (e) dentro de uma worktree vinculada (`git worktree add`). (CA-08)
+  - (g) nas recusas de (a) e (d), a mensagem cita esperar o dono commitar ou trabalhar em uma worktree isolada. (CA-11)
+  - (h) na recusa de (c2), o stage depois da tentativa é igual ao de antes (mesma saída de `git diff --cached --name-status` e de `git ls-files -s`). (CA-12)
+  - (i) com o HEAD fora de sincronia (criado com `--no-verify`), commit por caminho só da especificação: recusado, com a mensagem de último commit fora de sincronia e como corrigir, HEAD inalterado. (CA-13)
   - O teste existente "o hook de pre-commit roda o sync e adiciona o .claude ao commit" continua valendo sem mudança, porque o hook mantém `npm run sync` e o `git add` dos gerados; se precisar de ajuste, só o que o desenho tornar necessário, explicado no commit.
 - Pronto quando: os casos acima passam, nenhuma pasta temporária sobra (CA-09) e o gate passa.
 - Gate: `npm run lint` e `npm test` (o projeto não tem typecheck nem formatador).
@@ -133,8 +142,8 @@ Reverter os commits da tarefa (`git revert`) volta o hook ao comportamento anter
 - Dev: Todo (dev-devops).
 - Depende de: nada (o comportamento está fixado nesta especificação).
 - Reaproveita: o texto atual dos dois arquivos.
-- Atende: RN-02, CA-10.
-- Pronto quando: os dois textos descrevem o novo comportamento e o gate passa.
+- Atende: RN-02, RN-05, RN-07, CA-10.
+- Pronto quando: os dois textos descrevem o novo comportamento, incluindo a orientação de esperar o dono commitar ou usar worktree isolada e a recusa quando o último commit está fora de sincronia, e o gate passa.
 - Teste: nenhum (só texto); o teste existente que confere `npm run sync` no `.claude/CLAUDE.md` continua passando.
 - Gate: `npm run lint` e `npm test`.
 - Modelo: economico.
@@ -142,10 +151,6 @@ Reverter os commits da tarefa (`git revert`) volta o hook ao comportamento anter
 
 ## Dúvidas
 
-Product-owner:
-- Nenhuma.
+Product-owner: nenhuma.
 
-Usuário:
-- A mensagem de recusa deve citar o caso de outro agente com fontes alteradas na pasta (esperar o dono commitar ou usar worktree isolada), ou fica só "rode o sync, inclua os gerados e commite de novo"?
-- A memória do time registra uma exceção para commit sem caminhos ao tirar um arquivo do controle de versão. Com o novo hook, o commit sem caminhos é recusado (sem mexer no stage) enquanto outro agente tiver fonte alterada na pasta. Está de acordo?
-- Se o último commit já estiver fora de sincronia (por um commit antigo), até um commit que não toca fonte será recusado até alguém commitar os gerados corretos. Está de acordo, ou o hook deve deixar passar commit que não toca fonte nem gerado nesse caso?
+Usuário: nenhuma. As três dúvidas foram respondidas e viraram RN-07, RN-08 e a exceção da RN-05.
