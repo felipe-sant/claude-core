@@ -80,7 +80,7 @@ A memória do time registra a mesma decisão, mas sua lista de atalhos proibidos
 - Gate de fase: `npm run lint`, `npm test` e `node bin/ai-sync.js --check`.
 - Fase 3 (sequencial): T3 (feita)
 - Gate de fase: `npm run lint`, `npm test` e `node bin/ai-sync.js --check`.
-- Fase 4 (sequencial): T4
+- Fase 4 (sequencial): T4 (feita)
 - Gate de fase: `npm run lint`, `npm test` e `node bin/ai-sync.js --check`, antes do reviewer.
 
 Não há tarefa `[P]`. T2, T3 e T4 editam o mesmo arquivo de teste (`tests/agents.test.js`), e o gancho de pré-commit roda `npm run sync` e adiciona ao stage toda a pasta `.claude/` gerada (`git add -A -- .claude/agents .claude/rules ...`): com as duas em andamento na mesma worktree, o commit de uma levaria a cópia gerada dos arquivos ainda não commitados da outra. T3 vem depois de T2 para que o texto curto dos agentes remeta à regra já ajustada. O projeto não tem typecheck.
@@ -176,7 +176,7 @@ Não há tarefa `[P]`. T2, T3 e T4 editam o mesmo arquivo de teste (`tests/agent
 - Teste: unitário de conteúdo. Devem falhar primeiro o teste do padrão de git que exige `git diff HEAD -- .gitignore` e o teste dos agentes que exige a frase direta "confira o stage antes".
 - Gate: `npm run lint` e `npm test`. O projeto não tem typecheck nem formatador; o lint (`oxlint` e `node lint/content.js`) é a checagem de formato.
 - Modelo: padrao
-- Status: pendente
+- Status: feita. Commit `0b45d83`, feito pelo Inumaki (dev-backend). Os testes da regra e dos agentes falharam antes da mudança (112 passando e 2 falhando, pelos trechos ausentes) e passam depois. Gate: `npm run lint` ok, `npm test` 114/114, `node bin/ai-sync.js --check` ok. As cópias geradas em `.claude/` e o `.claude/claude-core.lock.json` entraram antes, no commit `35f6a84` da especificação, porque o gancho de pré-commit as adicionou sozinho (caso registrado na issue #60).
 
 ## Dúvidas
 
