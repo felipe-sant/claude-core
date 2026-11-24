@@ -11,8 +11,8 @@ test('o CI roda o actionlint em todos os workflows', () => {
   assert.match(ci, /\.\/actionlint/)
 })
 
-test('o actionlint é baixado de uma versão fixa, nunca de main', () => {
-  assert.match(ci, /rhysd\/actionlint\/v\d+\.\d+\.\d+\/scripts\/download-actionlint\.bash\) \d+\.\d+\.\d+/)
+test('o actionlint é baixado de um commit fixo, nunca de tag ou main', () => {
+  assert.match(ci, /rhysd\/actionlint\/[0-9a-f]{40}\/scripts\/download-actionlint\.bash\) \d+\.\d+\.\d+/)
   assert.doesNotMatch(ci, /actionlint\/main/)
 })
 
