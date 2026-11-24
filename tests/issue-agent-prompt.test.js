@@ -54,6 +54,7 @@ const guards = {
   'comandos a partir da raiz, sem cd, sem substituição e sem pastas temporárias': 'Rode os comandos a partir da raiz do repositório, sem `cd`, sem `$(...)` e sem pastas temporárias',
   'o mesmo vale para os subagentes': 'Peça o mesmo aos subagentes que chamar',
   'subagente sem merge simulado segue sem isso': 'se não conseguir simular o merge ou criar worktree, siga sem isso',
+  'sem crase nem cifrão nos textos de --body e -m': 'Nos textos de `--body` e `-m`, não use crase nem cifrão',
   'padrão de commits e branches': 'commit-standard',
   'skill de pull request': 'create-pull-request'
 }

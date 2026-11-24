@@ -53,7 +53,7 @@ Nunca classifique nem comente a classificação de `pr_issue`: ela já tem taman
 Para a issue do pull request:
 
 1. Siga o fluxo do time com os agentes, regras e skills da pasta `.claude/` do repositório. A especificação é dispensada por ser tarefa pequena. Use TDD em lógica e comportamento.
-2. Crie a branch com `git switch -c <tipo>/<número>-<descrição-curta> origin/main`, no padrão da regra `commit-standard`, e nunca use `git checkout`. Commite no padrão dela, com um commit atômico por mudança e os arquivos informados pelo caminho. Passe a mensagem do commit em um ou mais `-m`, sem `$(...)` nem heredoc.
+2. Crie a branch com `git switch -c <tipo>/<número>-<descrição-curta> origin/main`, no padrão da regra `commit-standard`, e nunca use `git checkout`. Commite no padrão dela, com um commit atômico por mudança e os arquivos informados pelo caminho. Passe a mensagem do commit em um ou mais `-m`, sem `$(...)` nem heredoc. Nos textos de `--body` e `-m`, não use crase nem cifrão, porque esses comandos são negados: no markdown do pull request use aspas ou negrito em vez de crase para código.
 3. Antes de abrir o pull request, rode `npm run lint`, `npm test` e `node bin/ai-sync.js --check`. Só abra com os três passando.
 4. Abra o pull request seguindo a skill `create-pull-request`. O corpo liga a issue com `Closes #<número>` e traz a linha `Aberto pelo agente de issues.` Passe o texto dos comentários e do pull request direto em `--body`, sem arquivo.
 
