@@ -25,7 +25,12 @@ function writeContexts(directory, contexts) {
 }
 
 async function request(token, url) {
-  const response = await fetch(url, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json' } })
+  let response
+  try {
+    response = await fetch(url, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json' } })
+  } catch {
+    throw new Error(`Não foi possível falar com a API do GitHub em ${url}.`)
+  }
   if (!response.ok) throw new Error(`A API do GitHub respondeu ${response.status} em ${url}.`)
   return response.json()
 }
@@ -62,4 +67,4 @@ if (require.main === module) {
   })
 }
 
-module.exports = { buildContext, writeContexts }
+module.exports = { buildContext, writeContexts, request }

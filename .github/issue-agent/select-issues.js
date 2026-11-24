@@ -72,10 +72,15 @@ function writeOutputs(file, { classify, prAllowed, prIssue, reason }) {
 }
 
 async function request(token, url, options = {}) {
-  const response = await fetch(url, {
-    ...options,
-    headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' }
-  })
+  let response
+  try {
+    response = await fetch(url, {
+      ...options,
+      headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' }
+    })
+  } catch {
+    throw new Error(`Não foi possível falar com a API do GitHub em ${url}.`)
+  }
   if (!response.ok) throw new Error(`A API do GitHub respondeu ${response.status} em ${url}.`)
   return response.json()
 }
@@ -133,6 +138,7 @@ async function fetchIssues(token, repository) {
     const body = JSON.stringify({ query: ISSUES_QUERY, variables: { owner, name, cursor } })
     const payload = await request(token, `${API_URL}/graphql`, { method: 'POST', body })
     if (payload.errors) throw new Error(`A API GraphQL do GitHub devolveu erro: ${payload.errors[0].message}`)
+    if (!payload.data || !payload.data.repository) throw new Error(`A API do GitHub não devolveu o repositório ${repository}.`)
     const connection = payload.data.repository.issues
     issues.push(...connection.nodes.map(normalizeIssue))
     if (!connection.pageInfo.hasNextPage) return issues
@@ -180,4 +186,4 @@ if (require.main === module) {
   })
 }
 
-module.exports = { selectIssues, writeOutputs, normalizeAuthor, normalizeIssue, MAX_CLASSIFY }
+module.exports = { selectIssues, writeOutputs, normalizeAuthor, normalizeIssue, fetchIssues, MAX_CLASSIFY }

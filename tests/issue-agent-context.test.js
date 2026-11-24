@@ -8,7 +8,7 @@ const h = require('./helpers')
 afterEach(h.cleanup)
 
 const scriptPath = path.join(h.repoRoot, '.github', 'issue-agent', 'issue-context.js')
-const { buildContext, writeContexts } = require(scriptPath)
+const { buildContext, writeContexts, request } = require(scriptPath)
 
 const issue = { number: 7, title: 'Titulo', body: 'Corpo', labels: [{ name: 'enhancement' }] }
 
@@ -67,4 +67,16 @@ test('sem a pasta e os números o script sai com erro em português', () => {
   const result = spawnSync('node', [scriptPath], { encoding: 'utf8', env: { PATH: process.env.PATH, GITHUB_TOKEN: 'x', GITHUB_REPOSITORY: 'a/b' } })
   assert.notEqual(result.status, 0)
   assert.match(result.stderr, /pasta/)
+})
+
+test('falha de rede na API dá erro em português', async () => {
+  const original = globalThis.fetch
+  globalThis.fetch = async () => {
+    throw new TypeError('fetch failed')
+  }
+  try {
+    await assert.rejects(request('token', 'https://api.github.com/x'), /Não foi possível falar com a API do GitHub/)
+  } finally {
+    globalThis.fetch = original
+  }
 })

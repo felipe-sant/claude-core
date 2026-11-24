@@ -8,7 +8,7 @@ const h = require('./helpers')
 afterEach(h.cleanup)
 
 const scriptPath = path.join(h.repoRoot, '.github', 'issue-agent', 'select-issues.js')
-const { selectIssues, MAX_CLASSIFY, writeOutputs, normalizeAuthor, normalizeIssue } = require(scriptPath)
+const { selectIssues, MAX_CLASSIFY, writeOutputs, normalizeAuthor, normalizeIssue, fetchIssues } = require(scriptPath)
 
 let counter = 0
 function issue(overrides = {}) {
@@ -208,4 +208,32 @@ test('normalizeIssue converte o nó da API para o formato da seleção', () => {
   assert.deepEqual(normalized.labels, ['Size: P'])
   assert.equal(normalized.linkedPullRequests, 1)
   assert.deepEqual(normalized.comments.map((comment) => comment.author), ['claude[bot]', ''])
+})
+
+function stubFetch(implementation) {
+  const original = globalThis.fetch
+  globalThis.fetch = implementation
+  return () => {
+    globalThis.fetch = original
+  }
+}
+
+test('falha de rede na API dá erro em português', async () => {
+  const restore = stubFetch(async () => {
+    throw new TypeError('fetch failed')
+  })
+  try {
+    await assert.rejects(fetchIssues('token', 'a/b'), /Não foi possível falar com a API do GitHub/)
+  } finally {
+    restore()
+  }
+})
+
+test('resposta GraphQL sem repositório dá erro em português', async () => {
+  const restore = stubFetch(async () => ({ ok: true, json: async () => ({ data: { repository: null } }) }))
+  try {
+    await assert.rejects(fetchIssues('token', 'a/b'), /repositório a\/b/)
+  } finally {
+    restore()
+  }
 })
