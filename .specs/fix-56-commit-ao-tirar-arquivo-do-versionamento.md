@@ -1,6 +1,6 @@
 # Regra de git: commit ao tirar um arquivo do controle de versão mantendo-o na pasta
 
-> Status: em-andamento
+> Status: resolvida
 > Tipo: bug
 > Tamanho: media
 > Branch: fix/56-commit-ao-tirar-arquivo-do-versionamento
@@ -177,6 +177,11 @@ Não há tarefa `[P]`. T2, T3 e T4 editam o mesmo arquivo de teste (`tests/agent
 - Gate: `npm run lint` e `npm test`. O projeto não tem typecheck nem formatador; o lint (`oxlint` e `node lint/content.js`) é a checagem de formato.
 - Modelo: padrao
 - Status: feita. Commit `0b45d83`, feito pelo Inumaki (dev-backend). Os testes da regra e dos agentes falharam antes da mudança (112 passando e 2 falhando, pelos trechos ausentes) e passam depois. Gate: `npm run lint` ok, `npm test` 114/114, `node bin/ai-sync.js --check` ok. As cópias geradas em `.claude/` e o `.claude/claude-core.lock.json` entraram antes, no commit `35f6a84` da especificação, porque o gancho de pré-commit as adicionou sozinho (caso registrado na issue #60).
+
+## Revisão
+
+- Aprovada pelo Kusakabe (reviewer) na terceira rodada, cobrindo T1 a T4, sem achado que bloqueie. Ele refez o teste que falha antes da mudança e o gate (`npm test` 114/114) e conferiu o `.claude/` com `npm run sync`, sem diferença.
+- Nota: o commit intermediário `35f6a84` (da especificação) falha o teste de sincronização do `.claude/` se for testado sozinho, porque o gancho de pré-commit levou para ele as cópias geradas a partir da T4 ainda não commitada (caso registrado na issue #60). O estado final da branch está correto.
 
 ## Dúvidas
 
