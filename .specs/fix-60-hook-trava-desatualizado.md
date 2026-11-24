@@ -105,9 +105,9 @@ Reverter os commits da tarefa (`git revert`) volta o hook ao comportamento anter
 
 ## Plano de execução
 
-- Fase 1 (paralelo): T1 [P] e T2 [P]. Gate de fase rodado uma vez (`npm run lint` ok, `npm test` 121/121, `node bin/ai-sync.js --check` ok e sync em pasta temporária ok), mas a fase foi reaberta pela revisão (achados em T1 e T2).
+- Fase 1 (paralelo): T1 [P] e T2 [P]. Reaberta pela revisão (achados em T1 e T2) e concluída depois das correções `06bd27f` e `5dc30b3`.
 - Gate de fase: `npm run lint`, `npm test`, `node bin/ai-sync.js --check` e o sync em pasta temporária (`T=$(mktemp -d) && node bin/ai-sync.js "$T" && ls -R "$T/.claude"; rm -rf "$T"`). O projeto não tem build, typecheck nem formatador; o lint e a suíte são o que o CI roda.
-- Fase 2 (sequencial): T3, porque mexe no hook e no mesmo arquivo de teste da T1, e o merge com a main precisa vir por último.
+- Fase 2 (sequencial): T3, porque mexe no hook e no mesmo arquivo de teste da T1, e o merge com a main precisa vir por último. Concluída: gate depois do merge com `npm run lint` ok, `npm test` 124/124, `node bin/ai-sync.js --check` ok e sync em pasta temporária ok.
 - Gate de fase: o mesmo da Fase 1, rodado depois do merge com a main e antes do reviewer.
 
 ## Tarefas
@@ -141,7 +141,7 @@ Reverter os commits da tarefa (`git revert`) volta o hook ao comportamento anter
 - Pronto quando: os casos acima passam, nenhuma pasta temporária sobra (CA-09) e o gate passa.
 - Gate: `npm run lint` e `npm test` (o projeto não tem typecheck nem formatador).
 - Modelo: padrao.
-- Status: em-andamento. Primeira entrega no commit `27c22b3`, feito pelo Todo (dev-devops). Antes da mudança, 6 dos 9 testes novos falharam, porque o commit saía quando devia ser recusado; depois, `npm test` 121/121. Gate: `npm run lint` ok, 121/121, `node bin/ai-sync.js --check` ok, sync em pasta temporária ok. Achado da revisão (Kusakabe, bloqueia): falta a detecção do último commit fora de sincronia pedida no CA-13. O Todo está corrigindo dentro da T1.
+- Status: feita. Primeira entrega no commit `27c22b3`, feito pelo Todo (dev-devops). Antes da mudança, 6 dos 9 testes novos falharam, porque o commit saía quando devia ser recusado; depois, `npm test` 121/121. Gate: `npm run lint` ok, 121/121, `node bin/ai-sync.js --check` ok, sync em pasta temporária ok. Achado da revisão (Kusakabe, bloqueia): falta a detecção do último commit fora de sincronia pedida no CA-13. Correção no commit `06bd27f` (detecção do último commit fora de sincronia); o teste 9 falhou antes, por falta da mensagem, e passa depois.
 
 ### T2 [P] Atualizar a descrição do hook na documentação
 - O quê: a documentação passa a dizer que o hook atualiza o `.claude/` na pasta e recusa o commit que não leva os gerados coerentes, orientando a rodar o sync e incluí-los nos caminhos, e cita o limite com dois agentes mexendo em fontes.
@@ -154,7 +154,7 @@ Reverter os commits da tarefa (`git revert`) volta o hook ao comportamento anter
 - Teste: nenhum (só texto); o teste existente que confere `npm run sync` no `.claude/CLAUDE.md` continua passando.
 - Gate: `npm run lint` e `npm test`.
 - Modelo: economico.
-- Status: em-andamento. Primeira entrega no commit `8e5867e`, feito pelo Todo (dev-devops). Só texto, no `README.md` e no `.claude/CLAUDE.md`. Gate: `npm run lint` ok, `npm test` 121/121, `node bin/ai-sync.js --check` ok. Achado da revisão (Kusakabe, bloqueia): a documentação não cita a recusa quando o último commit está fora de sincronia. O Todo está corrigindo dentro da T2.
+- Status: feita. Primeira entrega no commit `8e5867e`, feito pelo Todo (dev-devops). Só texto, no `README.md` e no `.claude/CLAUDE.md`. Gate: `npm run lint` ok, `npm test` 121/121, `node bin/ai-sync.js --check` ok. Achado da revisão (Kusakabe, bloqueia): a documentação não cita a recusa quando o último commit está fora de sincronia. Correção no commit `5dc30b3`, no `README.md` e no `.claude/CLAUDE.md`.
 
 ### T3 Reforça os testes do hook, trata a falha do sync e atualiza a branch com a main
 - O quê: o teste das pastas temporárias passa a usar um `TMPDIR` próprio e falha se sobrar algo; o teste da recusa sem caminhos compara também `git ls-files -s`; o hook recusa com mensagem em português quando o sync falha; e a branch é atualizada com a main por merge antes do PR.
@@ -172,7 +172,7 @@ Reverter os commits da tarefa (`git revert`) volta o hook ao comportamento anter
 - Pronto quando: os testes novos passam, nenhuma pasta temporária sobra, o merge com a main está feito e o gate passa depois do merge.
 - Gate: `npm run lint`, `npm test`, `node bin/ai-sync.js --check` e o sync em pasta temporária (o projeto não tem typecheck nem formatador).
 - Modelo: padrao.
-- Status: pendente.
+- Status: feita. Commit `7705a03`, feito pelo Todo (dev-devops). O teste das pastas temporárias usa `TMPDIR` próprio e `NODE_DISABLE_COMPILE_CACHE=1`; não foi provado que ele falha quando o script deixa sobra, e o reviewer vai conferir. Inclui a comparação por `git ls-files -s` e a mensagem de falha do sync, com o teste falhando antes. Merge de `origin/main` no commit `5deb1de`, sem conflito. Gate depois do merge: `npm run lint` ok, `npm test` 124/124, `node bin/ai-sync.js --check` ok, sync em pasta temporária ok.
 
 ## Dúvidas
 
