@@ -69,6 +69,7 @@ Ficam em `profiles/*.json` e só valem com `--profile`. Cada perfil lista `agent
 - `default`: o time completo.
 - `frontend`: `dev-frontend`, `dev-fullstack` e `dev-doc`, com `designer`.
 - `backend`: `dev-backend`, `dev-fullstack`, `dev-database`, `dev-devops` e `dev-doc`, sem `designer`.
+- `tooling`: para repositórios de ferramentas, scripts, CLIs e conteúdo (como o próprio `claude-core`), sem telas nem banco. `dev-backend` (scripts e lógica), `dev-devops` (CI) e `dev-doc` (documentação e conteúdo em markdown), sem `designer`. Como esses repositórios não têm stack detectável, use `--profile tooling`.
 
 Todos incluem `product-owner`, `sdd`, `executor`, `reviewer` e `qa`, as seis regras gerais, as seis skills gerais (entre elas a `team-setup`, que faz da sessão a `orchestrator`) e a configuração base. Para uma configuração manual nova, crie `profiles/nome.json`.
 

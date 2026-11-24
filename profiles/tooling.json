@@ -1,0 +1,31 @@
+{
+  "agents": [
+    "product-owner",
+    "sdd",
+    "executor",
+    "dev-backend",
+    "dev-devops",
+    "dev-doc",
+    "reviewer",
+    "qa"
+  ],
+  "rules": [
+    "commit-standard",
+    "git-standard",
+    "code-standard",
+    "testing-standard",
+    "security-standard",
+    "review-standard"
+  ],
+  "skills": [
+    "team-setup",
+    "commit-message",
+    "create-pull-request",
+    "code-review",
+    "bug-investigation",
+    "documentation"
+  ],
+  "settings": [
+    "base"
+  ]
+}
