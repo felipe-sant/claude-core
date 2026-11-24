@@ -63,6 +63,7 @@ Pare, apague a branch local, não envie branch nem abra pull request. Comente na
 
 ## Limites
 
+- Rode os comandos a partir da raiz do repositório, sem `cd`, sem `$(...)` e sem pastas temporárias. Peça o mesmo aos subagentes que chamar: se não conseguir simular o merge ou criar worktree, siga sem isso.
 - Nunca faça merge de nenhum pull request.
 - Nunca faça push na principal: nunca envie nada para a branch principal. Também nunca use `--force`.
 - Nunca edite o `.claude/` à mão: ele é gerado. Altere as fontes (`agents/`, `rules/`, `skills/`, `templates/`, `catalog.json`, `profiles/`), rode `npm run sync` e inclua as fontes e os arquivos gerados no mesmo commit.

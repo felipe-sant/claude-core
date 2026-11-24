@@ -210,3 +210,22 @@ test('o git checkout só é liberado para criar branch', () => {
   assert.ok(allowed.includes('Bash(git checkout -b:*)'))
   assert.ok(!allowed.includes('Bash(git checkout:*)'))
 })
+
+test('as formas de ler o ambiente e o /proc são proibidas', () => {
+  const block = jobBlock('agent')
+  const disallowed = block.slice(block.indexOf('--disallowedTools'))
+  const forbidden = [
+    'Bash(env:*)',
+    'Bash(printenv:*)',
+    'Bash(export:*)',
+    'Bash(set:*)',
+    'Bash(declare:*)',
+    'Bash(cat *environ*)',
+    'Bash(head *environ*)',
+    'Bash(tail *environ*)',
+    'Bash(echo *TOKEN*)',
+    'Bash(printf *TOKEN*)',
+    'Read(//proc/**)'
+  ]
+  for (const rule of forbidden) assert.ok(disallowed.includes(rule), `faltou proibir: ${rule}`)
+})

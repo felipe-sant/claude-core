@@ -51,6 +51,9 @@ const guards = {
   'commit com vários -m e sem substituição': 'Passe a mensagem do commit em um ou mais `-m`, sem `$(...)` nem heredoc',
   'workflows e automações são sempre M': 'Mudar workflows, a pasta `.github`, automações, permissões ou segredos é sempre M',
   'apagar arquivo é M': 'Apagar arquivo também é M, porque você não pode apagar',
+  'comandos a partir da raiz, sem cd, sem substituição e sem pastas temporárias': 'Rode os comandos a partir da raiz do repositório, sem `cd`, sem `$(...)` e sem pastas temporárias',
+  'o mesmo vale para os subagentes': 'Peça o mesmo aos subagentes que chamar',
+  'subagente sem merge simulado segue sem isso': 'se não conseguir simular o merge ou criar worktree, siga sem isso',
   'padrão de commits e branches': 'commit-standard',
   'skill de pull request': 'create-pull-request'
 }
