@@ -77,6 +77,7 @@ Ter um agente que roda sozinho no próprio GitHub do repositório, lê as issues
 - Com várias issues abertas em sequência rápida, o GitHub mantém só uma execução rodando e uma esperando: a que espera é cancelada quando chega outra mais nova. Como a execução de evento trata só a issue do evento (RN-20), a issue da execução cancelada é pega pela próxima varredura diária ou pelo próximo disparo manual.
 - A fila das P anda no ritmo de um pull request por vez: uma P só é retomada na varredura diária ou no disparo manual depois que o pull request anterior do agente foi fechado ou recebeu merge.
 - A varredura diária e o disparo manual só funcionam a partir da branch principal: o GitHub não roda esses gatilhos de uma branch de trabalho. Por isso nenhuma tarefa desta especificação promete uma execução real de ponta a ponta antes do merge. A verificação possível antes disso é a suíte de testes e uma execução local, só de leitura, do script de seleção contra o repositório real.
+- A seleção lê só os últimos 100 comentários de cada issue. Numa issue com mais de 100 comentários depois da classificação, a marca do comentário de classificação pode ficar de fora da leitura e a issue ser classificada de novo; nesse caso a conferência final detecta o comentário de classificação duplicado e a execução falha de forma visível.
 - O primeiro teste real é a #62, depois de tudo instalado, e não faz parte desta tarefa.
 
 ## Fora do escopo
@@ -214,7 +215,7 @@ Arquivo versionado em português, passado à ação pelo conteúdo do arquivo, c
 - Pronto quando: todos os casos passam, o script não tem comentários e o gate passa.
 - Gate: `npm run lint`, `node --test tests/issue-agent-select.test.js` e `node bin/ai-sync.js --check` (sem typecheck nem formatador no projeto).
 - Modelo: padrao.
-- Status: pendente.
+- Status: feita. Commit 954d15e. Gate: lint passou e 24 testes da tarefa passando. Revisada e aprovada pelo Reviewer.
 
 ### T2 [P] Instruções versionadas do agente
 - O quê: o arquivo de instruções em português com todas as guardas do Desenho e o teste que confere cada uma.
@@ -267,7 +268,7 @@ Arquivo versionado em português, passado à ação pelo conteúdo do arquivo, c
 - Pronto quando: as três etiquetas aparecem no `gh label list` com as descrições acima.
 - Gate: `gh label list --repo felipe-sant/claude-kit --search "Size:"` mostra as três. Não há commit.
 - Modelo: economico.
-- Status: pendente.
+- Status: feita. Sem commit. As etiquetas `Size: P`, `Size: M` e `Size: G` foram criadas no GitHub e conferidas pelo Reviewer.
 
 ### T5 [P] Documentar o agente no README e no guia do Claude
 - O quê: uma seção no README que explica o agente para quem usa o repositório e uma única linha sobre a automação na tabela "Estrutura" do guia do Claude.
@@ -287,7 +288,7 @@ Arquivo versionado em português, passado à ação pelo conteúdo do arquivo, c
 - Pronto quando: o README cobre tudo de CA-18, o `.claude/CLAUDE.md` tem só a linha nova (CA-26), nada define regra nova e o gate passa.
 - Gate: `npm run lint` e `npm test`.
 - Modelo: economico.
-- Status: feita. Commit 2d750fd. Gate: `npm run lint` passou e `npm test` com 127 pass e 0 fail. Entraram a seção nova no README, uma linha na tabela "Estrutura" do README e uma única linha na tabela "Estrutura" do `.claude/CLAUDE.md` (CA-26).
+- Status: feita. Commit 2d750fd. Gate: `npm run lint` passou e `npm test` com 127 pass e 0 fail. Entraram a seção nova no README, uma linha na tabela "Estrutura" do README e uma única linha na tabela "Estrutura" do `.claude/CLAUDE.md` (CA-26). Ajuste de texto pedido pelo Reviewer no commit 1c51e5b, aprovado; suíte com 160 testes passando.
 
 ### T7 [P] Script do contexto filtrado da issue
 - O quê: script Node sem dependências que grava, para cada issue pedida, o arquivo de contexto com título, corpo, etiquetas e só os comentários de dono, membro ou colaborador.
@@ -305,7 +306,7 @@ Arquivo versionado em português, passado à ação pelo conteúdo do arquivo, c
 - Pronto quando: todos os casos passam, o script não tem comentários e o gate passa.
 - Gate: `npm run lint`, `node --test tests/issue-agent-context.test.js` e `node bin/ai-sync.js --check`.
 - Modelo: padrao.
-- Status: pendente.
+- Status: feita. Commit aaeda96. Gate: lint passou e 9 testes da tarefa passando. Revisada e aprovada pelo Reviewer.
 
 ### T6 Integração e conferência final
 - O quê: conferir que os scripts, as instruções e a automação usam exatamente o mesmo contrato e rodar o gate completo.
@@ -315,6 +316,7 @@ Arquivo versionado em português, passado à ação pelo conteúdo do arquivo, c
 - Reaproveita: os testes das tarefas anteriores.
 - Atende: CA-20 e o encaixe de todos os critérios.
 - Passos:
+  0. Antes desta tarefa, ajustes do Dev Ops na T1, sem mudar regra: tirar da fila a P que também tenha `Size: M` ou `Size: G` (RN-08), testar a normalização do autor do comentário e do pull request do agente e dar erro em português nas falhas da API.
   1. Conferir nomes de arquivos, saídas (`classify`, `pr_allowed`, `pr_issue`, `reason`), pasta e formato do contexto filtrado, marca do comentário, linha do pull request, segredo e etiquetas entre os arquivos e o README. O README da T5 foi escrito só a partir da especificação: conferir contra a entrega do Dev Ops o nome do workflow "Agente de issues", o arquivo `issue-agent.yml`, o segredo `CLAUDE_CODE_OAUTH_TOKEN` e o horário 09:00 UTC (06:00 em Brasília).
   2. Se a T3 registrou que S-07 não vale, aplicar a alternativa de S-07 na automação e nas instruções, com o teste antes.
   3. Atualizar a branch com a main por merge, se ela avançou.
