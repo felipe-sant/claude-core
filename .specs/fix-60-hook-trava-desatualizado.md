@@ -1,6 +1,6 @@
 # Hook de pre-commit grava o .claude desatualizado ou de outro agente no commit que escolhe os arquivos
 
-> Status: em-andamento
+> Status: resolvida
 > Tipo: bug
 > Tamanho: media
 > Branch: fix/60-hook-trava-desatualizado
@@ -112,7 +112,7 @@ Reverter os commits da tarefa (`git revert`) volta o hook ao comportamento anter
 - Gate de fase: `npm run lint`, `npm test`, `node bin/ai-sync.js --check` e o sync em pasta temporária (`T=$(mktemp -d) && node bin/ai-sync.js "$T" && ls -R "$T/.claude"; rm -rf "$T"`). O projeto não tem build, typecheck nem formatador; o lint e a suíte são o que o CI roda.
 - Fase 2 (sequencial): T3. Reaberta pela segunda revisão e concluída depois da correção `1e4e643`: `npm run lint` ok, `npm test` 126/126, `node bin/ai-sync.js --check` ok; aprovada pelo Kusakabe na terceira rodada.
 - Gate de fase: o mesmo da Fase 1, rodado depois do merge com a main e antes do reviewer.
-- Fase 3 (sequencial): T4, porque mexe no mesmo hook e no mesmo arquivo de teste da T3.
+- Fase 3 (sequencial): T4, porque mexe no mesmo hook e no mesmo arquivo de teste da T3. Concluída: `npm run lint` ok, `npm test` 127/127, `node bin/ai-sync.js --check` ok.
 - Gate de fase: o mesmo da Fase 1, antes do reviewer. Se a main avançou, atualizar a branch por merge antes, como na T3.
 
 ## Tarefas
@@ -193,7 +193,12 @@ Reverter os commits da tarefa (`git revert`) volta o hook ao comportamento anter
 - Pronto quando: os testes novos passam, os testes da T1 a T3 continuam passando e o gate passa.
 - Gate: `npm run lint`, `npm test`, `node bin/ai-sync.js --check` e o sync em pasta temporária (o projeto não tem typecheck nem formatador).
 - Modelo: padrao.
-- Status: pendente.
+- Status: feita. Commit `5b35cda`, feito pelo Todo (dev-devops). Os dois testes novos falharam antes da mudança (prova refeita pelo Kusakabe) e passam depois. Gate: `npm run lint` ok, `npm test` 127/127, `node bin/ai-sync.js --check` ok.
+
+## Revisão
+
+- Aprovada pelo Kusakabe (reviewer) na conferência final, cobrindo T1 a T4, sem achado que bloqueie.
+- Nota: o último ajuste, que confere nos testes de falha na pasta a orientação de rodar `npm run sync`, entra em um commit só de teste, como pede o item (b) da T4.
 
 ## Dúvidas
 
