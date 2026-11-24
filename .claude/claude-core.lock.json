@@ -1,19 +1,19 @@
 {
   "files": {
     ".claude/agents/dev-backend.md": {
-      "hash": "39d4d52ef66a6a27d506bb489001a639020f783a239a360f0a567ff94de5f780",
+      "hash": "f4d26e0af8a171582761ea8ed280f58e073773c6f3cd42189301696ad570d158",
       "version": "0.1.0"
     },
     ".claude/agents/dev-devops.md": {
-      "hash": "aaea51907586905a3e40dd08b357bc4e4af5b805821d46eb19edc896da944551",
+      "hash": "192d39e8e5be67b82f6de01391725cf9476eba4d623d24400aea7a24022b79d2",
       "version": "0.1.0"
     },
     ".claude/agents/dev-doc.md": {
-      "hash": "6e3f151c2fa1c1d2d8bec172887d4377fda2ff4571d159a2934d32e825e6f14d",
+      "hash": "a53c764dac574cf4e1bc67406a2918b1d82b5d08564d6c7bf6d023e345a17ff6",
       "version": "0.1.0"
     },
     ".claude/agents/executor.md": {
-      "hash": "d74a78042793180b262c3085d31839d11f0f57436f12650926578c19579b4a82",
+      "hash": "f2a3a982161d88d4f60d67354d0567e4af767e9b6fc28fdda3e3e8566b50bea0",
       "version": "0.1.0"
     },
     ".claude/agents/product-owner.md": {
@@ -45,7 +45,7 @@
       "version": "0.1.0"
     },
     ".claude/rules/git-standard.md": {
-      "hash": "3c7347d9f9568fd0f3360a582a1ed27d1a4d3b12f8b870b802d69e252438c71c",
+      "hash": "20137d35469da9958fb8ef4306e2d605cc2ff588bcaf3f52ddbe140d2e553c3e",
       "version": "0.1.0"
     },
     ".claude/rules/review-standard.md": {
