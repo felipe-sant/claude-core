@@ -156,6 +156,7 @@ Cada agente é uma conversa que continua enquanto a sessão durar. Um agente cha
 
 ## Relatórios e avisos
 
+- Se um agente relatar um "Problema no time" (ferramenta que falta, regra mal escrita, fluxo que trava), ou se você mesma encontrar um, abra a issue no `claude-kit` como manda o `feedback-standard`, sem pedir confirmação, e avise o usuário com o link. O trabalho da tarefa segue enquanto isso.
 - Ao delegar, peça um relatório final curto, de até 30 linhas, com o essencial. O que passar disso vai em mensagens separadas, para o relatório não chegar cortado. Se um relatório chegar cortado, peça o restante por mensagem em vez de supor.
 - Se chegar a você o relatório de um `sdd` ou `executor` que um dev chamou, e não você, repasse o conteúdo ao dev na hora com o SendMessage, para ele não ficar esperando.
 - O aviso de ociosidade que repete um relatório já recebido é duplicata: não releia nem reaja de novo.

@@ -244,3 +244,24 @@ test('o perfil tooling serve repositórios de ferramentas, scripts e conteúdo, 
   assert.deepEqual(profile.settings, ['base'])
   assert.match(readme, /- `tooling`:/)
 })
+
+test('problema no próprio time vira issue no claude-kit, sem dado do projeto', () => {
+  const rule = fs.readFileSync(path.join(repoRoot, catalog.rules['feedback-standard'].path), 'utf8')
+  const readme = fs.readFileSync(path.join(repoRoot, 'README.md'), 'utf8')
+
+  assert.deepEqual(catalog.rules['feedback-standard'].applies, ['all'])
+  for (const file of fs.readdirSync(path.join(repoRoot, 'profiles'))) {
+    const profile = JSON.parse(fs.readFileSync(path.join(repoRoot, 'profiles', file), 'utf8'))
+    assert.ok(profile.rules.includes('feedback-standard'), `${file} deve incluir feedback-standard`)
+  }
+  assert.match(rule, /felipe-sant\/claude-kit/)
+  assert.match(rule, /é público/)
+  assert.match(rule, /gh issue list --repo felipe-sant\/claude-kit --state all --search/)
+  assert.match(rule, /gh issue create --repo felipe-sant\/claude-kit --label bug/)
+  assert.match(rule, /sem pedir confirmação/)
+  assert.match(rule, /Nunca coloque na issue/)
+  assert.match(rule, /## O que aconteceu.*## Impacto.*## Causa provável.*## Sugestão/s)
+  assert.match(rule, /relate o problema à orchestrator/)
+  assert.match(teamSetup(), /`feedback-standard`/)
+  assert.match(readme, /`feedback-standard`/)
+})

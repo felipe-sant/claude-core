@@ -9,7 +9,7 @@ afterEach(h.cleanup)
 
 const script = path.join(h.repoRoot, 'bin', 'ai-sync.js')
 const catalog = JSON.parse(fs.readFileSync(path.join(h.repoRoot, 'catalog.json'), 'utf8'))
-const general = ['code-standard', 'testing-standard', 'security-standard', 'review-standard', 'commit-standard', 'git-standard']
+const general = ['code-standard', 'testing-standard', 'security-standard', 'review-standard', 'commit-standard', 'git-standard', 'feedback-standard']
 const stackRules = {
   react: 'react-standard',
   nestjs: 'nestjs-standard',
