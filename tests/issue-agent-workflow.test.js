@@ -70,9 +70,9 @@ test('o segredo é CLAUDE_CODE_OAUTH_TOKEN, passado pela entrada da ação', () 
   assert.match(jobBlock('agent'), /claude_code_oauth_token: \$\{\{ secrets\.CLAUDE_CODE_OAUTH_TOKEN \}\}/)
 })
 
-test('a ação do Claude está fixada em v1 e nunca em main', () => {
+test('a ação do Claude está fixada pelo SHA do commit e nunca em tag móvel ou main', () => {
   const text = workflow()
-  assert.match(text, /uses: anthropics\/claude-code-action@v1\n/)
+  assert.match(text, /uses: anthropics\/claude-code-action@[0-9a-f]{40}\n/)
   assert.doesNotMatch(text, /@main/)
 })
 
