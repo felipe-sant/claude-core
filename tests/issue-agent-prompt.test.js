@@ -34,6 +34,14 @@ const guards = {
   'sem prioridade': 'Nunca defina prioridade',
   'sem comentários em código': 'Nunca escreva comentários em código nem em YAML',
   'sem segredos': 'Nunca mostre segredos',
+  'sessão única sem ninguém para responder': 'Você roda numa sessão única, sem ninguém para responder',
+  'usa os agentes do repositório como subagentes': 'sdd, executor e reviewer como subagentes',
+  'não roda o team-setup': 'Não rode o `team-setup`',
+  'não monta time nem pergunta nomes': 'não monte time, não pergunte nomes',
+  'não espera aprovação': 'não espere aprovação de ninguém',
+  'decisão do dono vira M': 'Se a issue precisar de decisão do dono, troque o tamanho para M',
+  'não abre issue de problema no time': 'Não abra issue de "Problema no time" pela `feedback-standard`',
+  'registra o problema no comentário ou no PR': 'registre-o no comentário da issue ou na descrição do pull request',
   'padrão de commits e branches': 'commit-standard',
   'skill de pull request': 'create-pull-request'
 }
