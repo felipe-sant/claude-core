@@ -62,6 +62,7 @@ Hipótese: o caso relatado originalmente na issue (lock com o registro antigo) �
 - RN-07: A mensagem de recusa cita também o caso de outro agente com fonte alterada na pasta: esperar o dono commitar ou trabalhar em uma worktree isolada. Fonte: usuário, resposta à dúvida sobre a mensagem.
 - RN-08: No commit sem caminhos, a conferência roda antes de o hook adicionar os gerados. Se recusar, o stage fica exatamente como estava e nada é adicionado. Fonte: usuário, resposta à dúvida sobre o commit sem caminhos.
 - RN-09: Se o sync falhar durante o commit, o hook recusa o commit com uma mensagem em português que diz que o sync falhou e o que conferir. Fonte: usuário, decisão após a revisão.
+- RN-10: Quando a falha do sync não está na pasta de trabalho, mas no que está preparado para commit ou no último commit, a mensagem manda conferir o que está preparado ou o último commit, e não só rodar o sync para ver o erro. Fonte: usuário, a partir de sugestão da terceira revisão.
 
 ## Critérios de aceite
 
@@ -82,6 +83,8 @@ Hipótese: o caso relatado originalmente na issue (lock com o registro antigo) �
 - CA-15: QUANDO o teste da recusa do commit sem caminhos roda ENTÃO ele DEVE comparar o stage antes e depois também pela lista completa dos arquivos preparados, com a versão de cada um, além da lista de alterações. (RN-08, CA-12)
 - CA-16: QUANDO o sync falha durante o commit, com ou sem caminhos ENTÃO o sistema DEVE recusar o commit com uma mensagem em português que diz que o sync falhou e o que conferir, sem commitar nada, sem alterar o stage e sem deixar pastas temporárias. (RN-01, RN-08, RN-09)
 - CA-17: QUANDO a branch vai para o pull request ENTÃO ela DEVE estar atualizada com a main por merge (sem reescrever o histórico), com o lint e a suíte passando depois do merge. (decisão do usuário, após a revisão)
+- CA-18: QUANDO o último commit tem o catálogo inválido (commitado sem passar pelo hook), a pasta de trabalho está válida e alguém faz um commit que escolhe só a especificação ENTÃO o sistema DEVE recusar o commit com a mensagem em português, sem commitar nada e com o stage intacto. (RN-05, RN-09, RN-10)
+- CA-19: QUANDO o sync falha por causa do que está preparado para commit ou do último commit, e não da pasta de trabalho ENTÃO a mensagem DEVE mandar conferir o que está preparado ou o último commit, e não apenas rodar o sync na pasta para ver o erro. (RN-10)
 
 ## Critérios de sucesso
 
@@ -107,8 +110,10 @@ Reverter os commits da tarefa (`git revert`) volta o hook ao comportamento anter
 
 - Fase 1 (paralelo): T1 [P] e T2 [P]. Reaberta pela revisão (achados em T1 e T2) e concluída depois das correções `06bd27f` e `5dc30b3`.
 - Gate de fase: `npm run lint`, `npm test`, `node bin/ai-sync.js --check` e o sync em pasta temporária (`T=$(mktemp -d) && node bin/ai-sync.js "$T" && ls -R "$T/.claude"; rm -rf "$T"`). O projeto não tem build, typecheck nem formatador; o lint e a suíte são o que o CI roda.
-- Fase 2 (sequencial): T3, porque mexe no hook e no mesmo arquivo de teste da T1, e o merge com a main precisa vir por último. Reaberta pela segunda revisão (achados na T3). Gate rodado depois do merge, antes da reabertura: `npm run lint` ok, `npm test` 124/124, `node bin/ai-sync.js --check` ok e sync em pasta temporária ok.
+- Fase 2 (sequencial): T3. Reaberta pela segunda revisão e concluída depois da correção `1e4e643`: `npm run lint` ok, `npm test` 126/126, `node bin/ai-sync.js --check` ok; aprovada pelo Kusakabe na terceira rodada.
 - Gate de fase: o mesmo da Fase 1, rodado depois do merge com a main e antes do reviewer.
+- Fase 3 (sequencial): T4, porque mexe no mesmo hook e no mesmo arquivo de teste da T3.
+- Gate de fase: o mesmo da Fase 1, antes do reviewer. Se a main avançou, atualizar a branch por merge antes, como na T3.
 
 ## Tarefas
 
@@ -172,7 +177,23 @@ Reverter os commits da tarefa (`git revert`) volta o hook ao comportamento anter
 - Pronto quando: os testes novos passam, nenhuma pasta temporária sobra, o merge com a main está feito e o gate passa depois do merge.
 - Gate: `npm run lint`, `npm test`, `node bin/ai-sync.js --check` e o sync em pasta temporária (o projeto não tem typecheck nem formatador).
 - Modelo: padrao.
-- Status: em-andamento. Primeira entrega: Commit `7705a03`, feito pelo Todo (dev-devops). O teste das pastas temporárias usa `TMPDIR` próprio e `NODE_DISABLE_COMPILE_CACHE=1`; não foi provado que ele falha quando o script deixa sobra, e o reviewer vai conferir. Inclui a comparação por `git ls-files -s` e a mensagem de falha do sync, com o teste falhando antes. Merge de `origin/main` no commit `5deb1de`, sem conflito. Gate depois do merge: `npm run lint` ok, `npm test` 124/124, `node bin/ai-sync.js --check` ok, sync em pasta temporária ok. Achados da segunda revisão (Kusakabe, bloqueiam): CA-16, a falha do sync só no stage mostra a pilha de erro crua em vez da mensagem em português, e o teste não cobre o commit sem caminhos; CA-14, falta conferir a pasta temporária também depois de um commit aceito; CA-15, o teste precisa comparar as duas saídas (`git diff --cached --name-status` e `git ls-files -s`). O Todo está corrigindo dentro da T3. Nota: a pasta `node-compile-cache` que aparece na pasta temporária do teste é cache do Node e do npm, esperada, e não conta como sobra do hook.
+- Status: feita. Primeira entrega: Commit `7705a03`, feito pelo Todo (dev-devops). O teste das pastas temporárias usa `TMPDIR` próprio e `NODE_DISABLE_COMPILE_CACHE=1`; não foi provado que ele falha quando o script deixa sobra, e o reviewer vai conferir. Inclui a comparação por `git ls-files -s` e a mensagem de falha do sync, com o teste falhando antes. Merge de `origin/main` no commit `5deb1de`, sem conflito. Gate depois do merge: `npm run lint` ok, `npm test` 124/124, `node bin/ai-sync.js --check` ok, sync em pasta temporária ok. Achados da segunda revisão (Kusakabe, bloqueiam): CA-16, a falha do sync só no stage mostra a pilha de erro crua em vez da mensagem em português, e o teste não cobre o commit sem caminhos; CA-14, falta conferir a pasta temporária também depois de um commit aceito; CA-15, o teste precisa comparar as duas saídas (`git diff --cached --name-status` e `git ls-files -s`). Correção no commit `1e4e643`; o teste novo da falha do sync só no stage, no commit sem caminhos, falhou antes e passa depois. Gate: `npm run lint` ok, `npm test` 126/126, `node bin/ai-sync.js --check` ok. Revisão: aprovada pelo Kusakabe na terceira rodada. Nota: a pasta `node-compile-cache` que aparece na pasta temporária do teste é cache do Node e do npm, esperada, e não conta como sobra do hook.
+
+### T4 Cobre o último commit com catálogo inválido e orienta melhor a mensagem de falha do sync
+- O quê: registrar e cobrir com teste a recusa do commit por caminho só da especificação quando o HEAD tem um `catalog.json` inválido e a pasta está válida, e fazer a mensagem de falha do sync mandar conferir o que está preparado ou o último commit quando a falha não está na pasta.
+- Onde: `.githooks/pre-commit` e o script de validação da T1; `tests/self-sync.test.js`.
+- Dev: Todo (dev-devops).
+- Depende de: T3.
+- Reaproveita: o repositório temporário, o `TMPDIR` próprio e as comparações do stage (`git diff --cached --name-status` e `git ls-files -s`) dos testes da T3; o caso (i) da T1 (HEAD fora de sincronia criado com `--no-verify`).
+- Atende: RN-05, RN-09, RN-10; CA-13, CA-16, CA-18, CA-19.
+- Desenho:
+  - (a) teste: commit com `catalog.json` inválido feito com `--no-verify`, depois `catalog.json` válido de novo na pasta (sem preparar), e commit por caminho só da especificação. Confere a recusa, a mensagem em português (sem pilha de erro crua), o HEAD inalterado, as duas saídas do stage iguais antes e depois e a pasta temporária vazia. (CA-18)
+  - (b) a mensagem de falha do sync distingue onde está a falha: se o sync da pasta funciona e o do stage ou do último commit falha, manda conferir o que está preparado ou o último commit; se a falha está na pasta, mantém a orientação de rodar `npm run sync` para ver o erro. O texto exato é do dev e é conferido na revisão. O teste confere o trecho da orientação nova no caso (a) e o da orientação antiga no caso de falha na pasta que a T3 já cobre. (CA-19)
+- Teste (escrito primeiro, deve falhar antes da mudança): deve falhar primeiro o teste de (b), pela mensagem sem a orientação de conferir o que está preparado ou o último commit. Se o teste de (a) já passar na primeira execução, registrar no relato que o caso já era atendido, sem alterar o teste para forçar a falha.
+- Pronto quando: os testes novos passam, os testes da T1 a T3 continuam passando e o gate passa.
+- Gate: `npm run lint`, `npm test`, `node bin/ai-sync.js --check` e o sync em pasta temporária (o projeto não tem typecheck nem formatador).
+- Modelo: padrao.
+- Status: pendente.
 
 ## Dúvidas
 
