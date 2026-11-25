@@ -38,6 +38,8 @@ Para cada número de `classify`:
 
 ## Limites
 
+- Rode os comandos a partir da raiz do repositório, sem `cd` e sem `$(...)`.
+- No texto do comentário, não use crase nem cifrão, porque esses comandos são negados: use aspas ou negrito em vez de crase.
 - Nunca defina prioridade, responsável nem outra etiqueta além do tamanho.
 - Nunca escreva comentários em código nem em YAML.
 - Nunca mostre segredos nem o conteúdo de variáveis de ambiente.

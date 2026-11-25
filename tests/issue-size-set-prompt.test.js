@@ -21,6 +21,8 @@ const guards = {
   'apagar arquivo é M': 'Apagar arquivo também é M, porque você não pode apagar',
   'você só define o tamanho': 'Você só define o tamanho',
   'sem branch, commit nem pull request': 'Nunca crie branch, commit nem pull request, nunca altere arquivos e nunca chame outros agentes',
+  'comandos a partir da raiz, sem cd e sem substituição': 'Rode os comandos a partir da raiz do repositório, sem `cd` e sem `$(...)`',
+  'sem crase nem cifrão nos textos': 'No texto do comentário, não use crase nem cifrão, porque esses comandos são negados',
   'sem prioridade': 'Nunca defina prioridade',
   'sem comentários em código': 'Nunca escreva comentários em código nem em YAML',
   'sem segredos': 'Nunca mostre segredos',
