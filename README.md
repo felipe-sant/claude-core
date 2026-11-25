@@ -253,7 +253,7 @@ Na dúvida entre P e M, o tamanho é M. Mudar automações, fluxos do GitHub, pe
 
 ### Issue Claude Agent
 
-- Faz: resolve uma issue P, no padrão de branch, commit e descrição do time, só com o lint e os testes passando. Ele envia a branch e grava a descrição do pull request, com as seções "O que muda", "Como foi verificado" e "Observações", num arquivo que a própria automação indica. Quem abre o pull request é um passo da automação, depois do agente: ele confere a branch, monta o título (como `Fix :bug: [#n] <título da issue>`) e o `Closes #n` que liga à issue, e acrescenta a linha "Aberto pelo agente de issues.". O agente nunca abre o pull request nem escreve o `Closes` ou essa linha. O pull request só é aberto se a etapa do agente terminou com sucesso.
+- Faz: resolve uma issue P, no padrão de branch, commit e descrição do time, só com o lint e os testes passando. O agente envia a branch e grava a descrição do pull request, com as seções "O que muda", "Como foi verificado" e "Observações", num arquivo que a própria automação indica. Quem abre o pull request é um passo da automação, depois do agente: o passo confere a branch, monta o título (como `Fix :bug: [#n] <título da issue>`) e o `Closes #n` que liga à issue, e acrescenta a linha "Aberto pelo agente de issues.". O agente nunca abre o pull request nem escreve o `Closes` ou essa linha. O pull request só é aberto se a etapa do agente terminou com sucesso.
 - Quando algo dá errado: se um comando é negado, ou a execução falha ou trava, o agente comenta na issue o que houve, em um parágrafo, com o link da execução.
 - Limpeza: se a execução termina com uma branch do agente enviada e sem pull request, a automação apaga essa branch, para a issue voltar à fila. Nunca apaga uma branch que já existia antes da execução.
 - Nunca faz: classificar, nem pôr ou mudar tamanho. A única exceção: se começa uma P e percebe que ela é maior, para, explica na issue e troca P por M, sem deixar pull request.
@@ -308,7 +308,7 @@ gh secret set CLAUDE_CODE_OAUTH_TOKEN --repo felipe-sant/claude-kit
 
 2. Instale o app do Claude no repositório com `/install-github-app` no Claude Code.
 
-3. Ligue, em Settings, Actions, General, Workflow permissions, a opção "Permitir que o GitHub Actions crie e aprove pull requests". Sem ela, a automação não consegue abrir o pull request do agente.
+3. Ligue, em Settings, Actions, General, Workflow permissions, a opção "Permitir que o GitHub Actions crie e aprove pull requests" (no GitHub em inglês, "Allow GitHub Actions to create and approve pull requests"). Sem ela, a automação não consegue abrir o pull request do agente.
 
 Sem a credencial, a execução falha de forma visível no passo do Claude, e a Issue Size Set não dispara a Issue Claude Agent.
 

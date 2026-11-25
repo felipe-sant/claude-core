@@ -22,7 +22,7 @@ Todo o texto dos agentes, das regras e da documentação é em **português**. N
 | `lint/` | Regra do oxlint contra comentários e a checagem do formato de agentes, regras, skills e perfis. |
 | `tests/` | Testes do `ai-sync` e do formato do conteúdo, com `node --test`. |
 | `.github/workflows/ci.yml` | Roda `npm run lint` e `npm test` em todo PR. |
-| `.github/workflows/issue-size-set.yml`, `.github/workflows/issue-claude-agent.yml` e `.github/issue-agent/` | Automações do agente de issues: a Issue Size Set classifica as issues por tamanho (P, M, G) e a Issue Claude Agent resolve só as P e a automação abre o PR, e o agente comenta na issue quando algo dá errado. Documentadas no `README.md`. |
+| `.github/workflows/issue-size-set.yml`, `.github/workflows/issue-claude-agent.yml` e `.github/issue-agent/` | Automações do agente de issues: a Issue Size Set classifica as issues por tamanho (P, M, G) e a Issue Claude Agent resolve só as P e abre o PR por um passo próprio, depois do agente, e o agente comenta na issue quando algo dá errado. Documentadas no `README.md`. |
 | `bin/ai-sync.js` | Copia o conteúdo para um repositório. Sem `--profile`, detecta as stacks e aplica o que vale para todos mais o das stacks; com `--profile`, aplica só o perfil. Registra o que instalou em `.claude/claude-kit.lock.json` e só atualiza ou remove arquivo instalado e sem alterações; `--force` sobrescreve os arquivos em conflito que o catálogo entrega. |
 
 ## O time
