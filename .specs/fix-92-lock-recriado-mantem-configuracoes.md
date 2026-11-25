@@ -1,6 +1,6 @@
 # Registro de instalação recriado perde as configurações já aplicadas
 
-> Status: em-revisao
+> Status: aprovada
 > Tipo: bug
 > Tamanho: media
 > Branch: fix/92-lock-recriado-mantem-configuracoes
