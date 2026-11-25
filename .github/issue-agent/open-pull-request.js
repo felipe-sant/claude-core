@@ -1,11 +1,14 @@
 const fs = require('node:fs')
 const path = require('node:path')
 const { request } = require('./select-issues')
+const { fetchWithRetry } = require('./fetch-with-retry')
 
 const API_URL = 'https://api.github.com'
 const PAGE_SIZE = 100
 const PULL_REQUEST_LINE = 'Aberto pelo agente de issues.'
 const DESCRIPTION_FILE = 'pull-request-body.md'
+const FORBIDDEN_STATUS = 403
+const PERMISSION_HINT = 'Ligue a opção "Allow GitHub Actions to create and approve pull requests" em Settings > Actions > General > Workflow permissions.'
 const SIZE_SMALL = 'Size: P'
 const SECTIONS = ['O que muda', 'Como foi verificado', 'Observações']
 const CLOSING_PATTERN = /\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\b:?\s*(?:https?:\/\/\S+\/issues\/\d+|(?:[\w.-]+\/[\w.-]+)?#\d+)/i
@@ -63,6 +66,33 @@ function checkSize(labels) {
 
 class Refusal extends Error {}
 
+async function readApiMessage(response) {
+  try {
+    const payload = await response.json()
+    return typeof payload.message === 'string' ? payload.message : ''
+  } catch {
+    return ''
+  }
+}
+
+async function createPullRequest(token, url, payload) {
+  let response
+  try {
+    response = await fetchWithRetry(url, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+      headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' }
+    })
+  } catch {
+    throw new Error(`Não foi possível falar com a API do GitHub em ${url}.`)
+  }
+  if (response.ok) return response.json()
+  const apiMessage = await readApiMessage(response)
+  const detail = apiMessage ? ` Mensagem da API: ${apiMessage}` : ''
+  const hint = response.status === FORBIDDEN_STATUS ? ` ${PERMISSION_HINT}` : ''
+  throw new Error(`A API do GitHub respondeu ${response.status} em ${url}.${detail}${hint}`)
+}
+
 async function fetchAllPages(token, url) {
   const items = []
   for (let page = 1; ; page += 1) {
@@ -116,14 +146,11 @@ async function main() {
     return
   }
 
-  const created = await request(token, `${API_URL}/repos/${repository}/pulls`, {
-    method: 'POST',
-    body: JSON.stringify({
-      title: buildTitle(branch, issueNumber, issue.title),
-      head: branch,
-      base,
-      body: buildBody(description, issueNumber)
-    })
+  const created = await createPullRequest(token, `${API_URL}/repos/${repository}/pulls`, {
+    title: buildTitle(branch, issueNumber, issue.title),
+    head: branch,
+    base,
+    body: buildBody(description, issueNumber)
   })
   console.log(`Pull request aberto: ${created.html_url}`)
 }
@@ -135,4 +162,4 @@ if (require.main === module) {
   })
 }
 
-module.exports = { findIssueBranch, validateDescription, buildBody, buildTitle, checkSize, DESCRIPTION_FILE, PULL_REQUEST_LINE }
+module.exports = { createPullRequest, findIssueBranch, validateDescription, buildBody, buildTitle, checkSize, DESCRIPTION_FILE, PULL_REQUEST_LINE }

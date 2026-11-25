@@ -116,3 +116,53 @@ test('recusa vínculo que fecha issue por URL completa ou por repositório', () 
 test('aceita GH-n depois de palavra de fechamento, que o GitHub não usa para fechar issue', () => {
   assert.equal(validateDescription(`${validDescription}\nresolves GH-3`), '')
 })
+
+const { createPullRequest } = require(scriptPath)
+
+const originalFetch = globalThis.fetch
+
+async function failWith(status, payload) {
+  globalThis.fetch = async () => ({ ok: false, status, json: async () => payload })
+  try {
+    await createPullRequest('token-secreto', 'https://api.github.com/repos/o/r/pulls', { title: 'x' })
+    return null
+  } catch (error) {
+    return error.message
+  } finally {
+    globalThis.fetch = originalFetch
+  }
+}
+
+test('no 403 mostra o status, a mensagem da API e a dica da opção do repositório', async () => {
+  const message = await failWith(403, { message: 'GitHub Actions is not permitted to create or approve pull requests.' })
+  assert.match(message, /403/)
+  assert.match(message, /GitHub Actions is not permitted to create or approve pull requests\./)
+  assert.match(message, /Allow GitHub Actions to create and approve pull requests/)
+  assert.match(message, /Settings > Actions > General > Workflow permissions/)
+  assert.doesNotMatch(message, /token-secreto/)
+})
+
+test('em outro status mostra o status e a mensagem da API sem a dica', async () => {
+  const message = await failWith(422, { message: 'Validation Failed' })
+  assert.match(message, /422/)
+  assert.match(message, /Validation Failed/)
+  assert.doesNotMatch(message, /Allow GitHub Actions/)
+})
+
+test('quando a resposta de erro não é JSON mantém o status', async () => {
+  globalThis.fetch = async () => ({ ok: false, status: 500, json: async () => { throw new SyntaxError('x') } })
+  try {
+    await assert.rejects(createPullRequest('t', 'https://api.github.com/x', {}), /500/)
+  } finally {
+    globalThis.fetch = originalFetch
+  }
+})
+
+test('devolve a resposta quando a API cria o pull request', async () => {
+  globalThis.fetch = async () => ({ ok: true, status: 201, json: async () => ({ html_url: 'https://github.com/o/r/pull/1' }) })
+  try {
+    assert.deepEqual(await createPullRequest('t', 'https://api.github.com/x', {}), { html_url: 'https://github.com/o/r/pull/1' })
+  } finally {
+    globalThis.fetch = originalFetch
+  }
+})
