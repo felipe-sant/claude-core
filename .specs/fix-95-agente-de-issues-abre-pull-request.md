@@ -41,7 +41,7 @@ Reprodução local relatada na issue: o mesmo comando é permitido quando nenhum
 - Issue #95, com o relato das duas execuções e o link da execução que a classificou.
 - Leitura das instruções do agente: o passo 6 manda montar a descrição num único texto entre aspas, sem arquivo.
 - Leitura da automação: a leitura de arquivo pelo comando de pull request está bloqueada, e a conferência final não verifica branch sem pull request nem execução sem rastro na issue.
-- Achado ao preparar esta especificação: a opção do repositório que permite à automação do GitHub criar pull request está desligada. Ver a dúvida D-1.
+- Achado ao preparar esta especificação: a opção do repositório que permite à automação do GitHub criar pull request está desligada. Ligá-la é pré-requisito, feito pelo Felipe (ver RN-09 e a decisão D-1).
 
 ### Ferramenta própria da ação para criar pull request (RN-04)
 
@@ -68,10 +68,14 @@ Verificado no código da ação no commit fixado pela automação:
 - RN-06: A limpeza da branch enviada sem pull request é da automação, não do agente. Fonte: usuário.
 - RN-07: A conferência final reprova em dois casos: branch do agente enviada sem pull request aberto, e execução que termina sem pull request e sem comentário. Fonte: usuário.
 - RN-08: As instruções deixam claro que o guia do Claude da pasta de configuração é o único arquivo dessa pasta editado à mão. Fonte: usuário.
+- RN-09: O passo de abertura usa o token padrão do GitHub Actions. Pré-requisito: o Felipe liga a opção do repositório "Permitir que o GitHub Actions crie e aprove pull requests"; esta tarefa não altera a configuração do repositório. O CI desses pull requests é disparado à mão. Fonte: usuário (D-1).
+- RN-10: O título do pull request é montado pela automação com o tipo e o ícone tirados do tipo da branch, pela tabela do padrão de commits, o número da issue e o título da issue, como em "Fix :bug: [#95] <título da issue>". Fonte: usuário (D-2).
+- RN-11: O pull request só é aberto se a etapa do agente terminou com sucesso. Se não terminou, a automação apaga a branch enviada e a conferência final reprova. Fonte: usuário (D-3).
+- RN-12: O agente perde a permissão de abrir pull request; só a automação abre. Fonte: usuário (D-4).
 
 ## Critérios de aceite
 
-- CA-01: QUANDO o agente envia a branch da issue e grava a descrição com as três seções no arquivo indicado ENTÃO o sistema DEVE abrir, pela automação, um único pull request dessa branch, com o título montado por ela e a descrição com as três seções na ordem, o vínculo que fecha a issue da execução e a linha "Aberto pelo agente de issues.". (RN-01, RN-03)
+- CA-01: QUANDO o agente envia a branch da issue e grava a descrição com as três seções no arquivo indicado ENTÃO o sistema DEVE abrir, pela automação, um único pull request dessa branch, com o título no formato "<Tipo> <ícone> [#n] <título da issue>" e a descrição com as três seções na ordem, o vínculo que fecha a issue da execução e a linha "Aberto pelo agente de issues.". (RN-01, RN-03, RN-10)
 - CA-02: QUANDO o texto gravado pelo agente traz um vínculo que fecha qualquer issue ENTÃO o sistema NÃO DEVE abrir o pull request, porque só a automação monta o vínculo. (RN-01)
 - CA-03: QUANDO o arquivo da descrição não existe, está vazio ou não tem as três seções na ordem ENTÃO o sistema NÃO DEVE abrir o pull request e DEVE terminar a execução com erro visível. (RN-03, RN-07)
 - CA-04: QUANDO não há branch da issue da execução enviada pelo agente, ou há mais de uma ENTÃO o sistema NÃO DEVE abrir pull request. (RN-01)
@@ -86,6 +90,9 @@ Verificado no código da ação no commit fixado pela automação:
 - CA-13: QUANDO a issue P é maior do que parecia e o agente troca o tamanho para M com comentário, sem enviar branch ENTÃO o sistema DEVE terminar a execução sem pull request e sem reprovar, como hoje. (o que já funcionava)
 - CA-14: QUANDO a execução termina ENTÃO o sistema DEVE manter as conferências que já existem: a branch principal não muda, há no máximo um pull request do agente aberto, as etiquetas que não são de tamanho não mudam e não há comentário novo com a marca de classificação. (o que já funcionava)
 - CA-15: QUANDO a documentação do agente de issues é lida ENTÃO o sistema DEVE descrever nela que o pull request é aberto pela automação, o comentário do agente quando algo dá errado, a limpeza da branch sem pull request e os dois novos motivos de reprovação da conferência. (RN-01, RN-05, RN-06, RN-07)
+- CA-17: QUANDO a etapa do agente termina com falha (por exemplo, limite de turnos), mesmo com branch e descrição válidas ENTÃO o sistema NÃO DEVE abrir o pull request, DEVE apagar a branch enviada e DEVE reprovar a execução na conferência final. (RN-06, RN-07, RN-11)
+- CA-18: QUANDO a lista de ferramentas do agente é conferida ENTÃO o sistema NÃO DEVE permitir que o agente abra pull request. (RN-12)
+- CA-19: QUANDO a seção de instalação do agente de issues é lida ENTÃO o sistema DEVE trazer, como pré-requisito, ligar a opção do repositório que permite ao GitHub Actions criar pull request, e dizer que o CI desses pull requests é disparado à mão. (RN-09)
 - CA-16: QUANDO a tarefa termina ENTÃO o sistema DEVE passar no lint, na suíte de testes e na checagem do catálogo. (o que já funcionava)
 
 ## Fora do escopo
@@ -94,6 +101,8 @@ Verificado no código da ação no commit fixado pela automação:
 - Investigar as duas execuções em outra issue que terminaram sem efeito: causa não confirmada e fora do pedido.
 - Mudar a Issue Size Set, o tamanho das issues ou a seleção da fila.
 - Adotar a ferramenta própria da ação para criar pull request (RN-04): só registrada.
+- Ligar a opção do repositório que permite ao GitHub Actions criar pull request: pré-requisito feito pelo Felipe, fora do código (RN-09).
+- Disparar o CI automaticamente nos pull requests do agente: o CI é disparado à mão (RN-09). Ver a observação sobre o disparo pelo próprio workflow.
 
 ## Plano de execução
 
@@ -111,7 +120,9 @@ Verificado no código da ação no commit fixado pela automação:
 - O script lê o arquivo do disco; o texto nunca entra no `run:` nem é interpolado no shell. Título e corpo vão para a API do GitHub como dados.
 - Branch da issue: nome no padrão `^<tipo>/<pr_issue>-`, com `<tipo>` em minúsculas da tabela do `commit-standard`, o mesmo padrão de branch própria da seleção. Só conta branch que não existia na "Foto de antes".
 - Corpo final: o texto do agente com `Closes #<pr_issue>` ao fim da seção "O que muda" e a linha `Aberto pelo agente de issues.` ao fim do texto.
-- Título: ver a dúvida D-2. Proposta: `<Tipo> <ícone> [#<pr_issue>] <título da issue>`, com tipo e ícone tirados do tipo da branch pela tabela do `commit-standard`.
+- Título (RN-10): `<Tipo> <ícone> [#<pr_issue>] <título da issue>`, com tipo e ícone tirados do tipo da branch pela tabela do `commit-standard` (por exemplo, `fix` vira `Fix :bug:`).
+- Token do passo de abertura: o `GITHUB_TOKEN` (`secrets.GITHUB_TOKEN`), com as permissões que o trabalho já tem (RN-09).
+- O passo de abertura roda só quando a etapa do agente terminou com sucesso (`steps.claude.outcome == 'success'`, sem `always()`) (RN-11).
 
 ## Tarefas
 
@@ -121,7 +132,7 @@ Verificado no código da ação no commit fixado pela automação:
 - Dev: dev-devops.
 - Depende de: nada.
 - Reaproveita: `fetch-with-retry.js`; o padrão de branch própria e a linha fixa de `select-issues.js` (copiar o padrão no script novo ou exportar de lá; se exportar, só a T1 toca nesse arquivo); o molde de funções puras exportadas e testadas de `issue-context.js` e `select-issues.js`; `tests/helpers.js`.
-- Atende: RN-01, RN-03; CA-01, CA-02, CA-03, CA-04, CA-05, CA-06.
+- Atende: RN-01, RN-03, RN-10; CA-01, CA-02, CA-03, CA-04, CA-05, CA-06.
 - Desenho: funções puras exportadas, testadas sem rede: achar a branch (zero, uma ou mais de uma; ignora outra issue, prefixo de número, como `9` contra `95`, e branch que já existia); validar o texto (existe, não vazio, três seções `## O que muda`, `## Como foi verificado` e `## Observações` na ordem; recusa qualquer palavra de fechamento de issue, como closes, fixes ou resolves seguida de `#`, sem diferenciar maiúsculas); montar o corpo e o título do contrato; recusar quando a issue não está com `Size: P`. O `main` faz as chamadas: lista as branches, lê a issue, lê o arquivo, confere que a branch está à frente da principal e cria o pull request com `head` igual à branch e `base` igual à principal.
 - Teste (primeiro, deve falhar antes do script existir): começar por "monta o corpo com o vínculo ao fim de O que muda e a linha fixa ao fim". Depois, um teste por caso acima, incluindo os limites (arquivo vazio, seções fora de ordem, duas branches da issue, branch `fix/950-...` quando a issue é 95).
 - Pronto quando: os testes passam e o gate passa.
@@ -158,15 +169,15 @@ Verificado no código da ação no commit fixado pela automação:
 - Dev: dev-devops.
 - Depende de: nada (usa o contrato).
 - Reaproveita: o passo "Foto de antes", o passo "Conferência final", `issue-workflow-helpers.js`.
-- Atende: RN-01, RN-02, RN-06, RN-07; CA-04, CA-05, CA-07, CA-08, CA-09, CA-12, CA-13, CA-14.
+- Atende: RN-01, RN-02, RN-06, RN-07, RN-09, RN-11, RN-12; CA-04, CA-05, CA-07, CA-08, CA-09, CA-12, CA-13, CA-14, CA-17, CA-18.
 - Desenho:
   - "Foto de antes" grava também as branches da issue que já existem e a contagem de comentários do `claude[bot]` na issue sem a marca de classificação.
   - "Montagem das instruções" acrescenta a linha do arquivo da descrição (contrato).
-  - Passo novo "Abertura do pull request", logo depois da ação, com o `node` do contrato e `CONTEXT_DIR` definido a partir de `runner.temp`. Quando ele roda depende da D-3. Token conforme a D-1.
+  - Passo novo "Abertura do pull request", logo depois da ação, com o `node` do contrato e `CONTEXT_DIR` definido a partir de `runner.temp`. Roda só com a etapa do agente concluída com sucesso (RN-11), com `GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}` (RN-09).
   - "Conferência final" (sempre) reprova também quando há branch nova da issue sem pull request aberto com essa branch como origem, e quando não há pull request do agente para a issue e a contagem de comentários do agente não aumentou.
   - Passo novo "Limpeza" (sempre), depois da conferência: apaga as branches novas da issue sem pull request aberto, nunca uma que existia na foto de antes.
-  - A lista de ferramentas liberadas perde `Bash(gh pr create:*)`, conforme a D-4. As proibições não mudam (RN-02).
-- Testes que mudam de propósito, porque a regra mudou (registrar no commit): a contagem de definições de `CONTEXT_DIR` a partir de `runner.temp` passa de 2 para 3 na Issue Claude Agent, nos dois arquivos de teste (no `issue-automations.test.js`, a contagem passa a ser por automação, mantendo 2 na Issue Size Set); a lista de ferramentas liberadas deixa de exigir `Bash(gh pr create:*)` e passa a proibir que ele esteja lá, se a D-4 confirmar.
+  - A lista de ferramentas liberadas perde `Bash(gh pr create:*)` (RN-12). As proibições não mudam (RN-02).
+- Testes que mudam de propósito, porque a regra mudou (registrar no commit): a contagem de definições de `CONTEXT_DIR` a partir de `runner.temp` passa de 2 para 3 na Issue Claude Agent, nos dois arquivos de teste (no `issue-automations.test.js`, a contagem passa a ser por automação, mantendo 2 na Issue Size Set); a lista de ferramentas liberadas deixa de exigir `Bash(gh pr create:*)` e passa a conferir que ele não está lá (RN-12).
 - Teste (primeiro, deve falhar antes da mudança): começar pelo passo de abertura existir depois da ação, chamar o script com os argumentos entre aspas e não interpolar texto; depois, a conferência citar os dois novos casos, a limpeza rodar sempre e depois da conferência, e a foto de antes gravar branches e comentários.
 - Pronto quando: os testes passam e o gate passa.
 - Gate: `npm run lint` e `npm test`. O actionlint roda no CI; rode-o também na máquina, se estiver instalado.
@@ -176,11 +187,11 @@ Verificado no código da ação no commit fixado pela automação:
 
 ### T4 [P] Documentação do agente de issues
 - O quê: o README e o guia do Claude passam a descrever a abertura do pull request pela automação, o comentário do agente quando algo dá errado, a limpeza da branch sem pull request e os novos motivos de reprovação da conferência.
-- Onde: `README.md` (seção "Agente de issues": "Issue Claude Agent", "O que as duas tratam e o que nunca fazem" e, conforme a D-1, "Instalação") e `.claude/CLAUDE.md` (linha das automações na tabela de estrutura). O `.claude/CLAUDE.md` é o único arquivo de `.claude/` editado à mão; não editar o resto da pasta.
+- Onde: `README.md` (seção "Agente de issues": "Issue Claude Agent", "O que as duas tratam e o que nunca fazem" e "Instalação", com o pré-requisito de ligar a opção "Permitir que o GitHub Actions crie e aprove pull requests" e o aviso de que o CI desses pull requests é disparado à mão) e `.claude/CLAUDE.md` (linha das automações na tabela de estrutura). O `.claude/CLAUDE.md` é o único arquivo de `.claude/` editado à mão; não editar o resto da pasta.
 - Dev: dev-doc.
-- Depende de: nada (o comportamento está fixado nesta especificação; a parte de instalação espera a resposta da D-1, que vem antes da aprovação).
+- Depende de: nada (o comportamento está fixado nesta especificação).
 - Reaproveita: o texto atual das seções.
-- Atende: CA-15.
+- Atende: RN-09; CA-15, CA-19.
 - Pronto quando: os textos descrevem o comportamento novo em linguagem simples e o gate passa.
 - Teste: nenhum (só texto).
 - Gate: `npm run lint` e `npm test`.
@@ -201,15 +212,17 @@ Verificado no código da ação no commit fixado pela automação:
 - Regra obrigatória: nunca escrever comentários no código.
 - Status: pendente.
 
+## Observações
+
+- Disparo do CI pelo próprio workflow (avaliado, não vira tarefa): hoje o CI só tem o gatilho de pull request, sem disparo manual, então nem o workflow nem o dono conseguem dispará-lo pela tela de Actions. Pull request aberto com o token padrão não dispara o CI. O GitHub abre exceção para o disparo manual feito com o token padrão: se o CI ganhasse o gatilho de disparo manual, o workflow do agente poderia dispará-lo na branch do pull request, com a permissão de escrita em Actions. Esse disparo roda no último commit da branch e aparece no commit, mas não como execução de pull request; se houver regra de proteção exigindo as checagens do pull request, é preciso conferir se ela é atendida. Até lá, o jeito de rodar o CI à mão é o dono fechar e reabrir o pull request ou enviar um commit nele.
+
+## Decisões resolvidas
+
+- D-1 (usuário): ligar a opção do repositório "Permitir que o GitHub Actions crie e aprove pull requests" e usar o token padrão no passo de abertura. O CI desses pull requests é disparado à mão. A configuração do repositório não é alterada por esta tarefa: é pré-requisito que o Felipe liga, registrado na documentação de instalação. Virou a RN-09.
+- D-2 (usuário): título `<Tipo> <ícone> [#n] <título da issue>`, como `Fix :bug: [#95] <título da issue>`, com tipo e ícone tirados do tipo da branch pela tabela do padrão de commits. Virou a RN-10.
+- D-3 (usuário): o pull request só abre se a etapa do agente terminou com sucesso; senão a limpeza apaga a branch e a conferência reprova. Virou a RN-11.
+- D-4 (usuário): o agente perde a permissão de abrir pull request. Virou a RN-12.
+
 ## Dúvidas
-
-### Do usuário (bloqueiam a aprovação)
-
-- D-1: A ação revoga o token do app do Claude ao terminar, então o passo da automação só tem o token padrão do GitHub Actions. Duas consequências: (a) a opção do repositório "Permitir que o GitHub Actions crie e aprove pull requests" está desligada hoje, e sem ela o passo não consegue abrir o pull request; (b) pull request aberto com o token padrão não dispara o CI, então o lint e os testes não rodam sozinhos no pull request do agente, e o autor passa a ser o bot do GitHub Actions (a seleção e a conferência continuam achando o pull request pela linha fixa). Qual caminho seguir: ligar a opção e aceitar o CI sem disparo automático (o dono dispara à mão), criar um segredo novo com um token próprio usado só nesse passo, ou rever a RN-04 e usar a ferramenta própria da ação?
-- D-2: De onde vem o título do pull request? Proposta: tipo e ícone pelo tipo da branch, o número da issue e o título da issue (`Fix :bug: [#95] <título da issue>`).
-- D-3: O passo de abertura roda quando a etapa do agente termina com falha (por exemplo, limite de turnos) mas deixou branch e descrição válidas? Proposta: só abre se a etapa do agente terminou com sucesso; caso contrário, a limpeza apaga a branch e a conferência reprova.
-- D-4: Como o agente não abre mais o pull request, a permissão de abrir pull request sai da lista do agente? Proposta: sim, para não haver dois caminhos de abertura.
-
-### Do product-owner
 
 Nenhuma.
