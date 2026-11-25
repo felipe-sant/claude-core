@@ -132,6 +132,11 @@ test('a linha fixa do pull request é a mesma na seleção, no script e na autom
   assert.ok(claudeAgent.includes(`PULL_REQUEST_LINE: ${line}`))
 })
 
+test('o limite de pull requests do agente é o mesmo na seleção e na automação', () => {
+  const limit = script.match(/MAX_AGENT_PULLS = (\d+)/)[1]
+  assert.ok(claudeAgent.includes(`MAX_AGENT_PULLS: ${limit}\n`))
+})
+
 test('as instruções citam o rótulo que a automação escreve para o arquivo da descrição', () => {
   const label = 'Arquivo da descrição do pull request'
   assert.ok(agentPrompt.includes(label))
