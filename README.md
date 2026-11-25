@@ -275,7 +275,7 @@ O campo `issue` existe só na Issue Claude Agent e é opcional. Vazio, ela pega 
 
 ### Limite de pull requests abertos
 
-O agente só trata uma nova issue quando há menos de 5 pull requests dele abertos. Pull requests abertos por outras pessoas não entram na conta. Com 5 abertos, a execução termina com sucesso, sem chamar o Claude e sem abrir pull request, e o resumo diz quantos pull requests do agente estão abertos e que o limite é 5. O limite vale também para o disparo à mão com o número de uma issue. Quando um pull request é fechado ou mergeado, a próxima execução volta a tratar a fila.
+O agente só trata uma nova issue quando há menos de 5 pull requests dele abertos. Só contam os pull requests do agente (da conta do Claude ou com a linha "Aberto pelo agente de issues."); os de outras pessoas não entram na conta. Com 5 ou mais abertos, a execução termina com sucesso, sem chamar o Claude e sem abrir pull request, e o resumo diz quantos pull requests do agente estão abertos e que o limite é 5. O limite vale também para o disparo à mão com o número de uma issue. Quando um pull request é fechado ou mergeado, a próxima execução volta a tratar a fila.
 
 ### Dependência entre issues
 
