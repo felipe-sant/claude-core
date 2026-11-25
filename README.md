@@ -230,7 +230,7 @@ Regras e skills editadas no projeto não são sobrescritas pela próxima sincron
 
 ## Agente de issues
 
-Duas automações do GitHub Actions, só deste repositório (não vão para outros pelo `ai-sync`), cada uma com uma função só: a "Issue Size Set" define o tamanho das issues abertas por colaboradores, e a "Issue Claude Agent" resolve a issue pequena e abre o pull request.
+Duas automações do GitHub Actions, só deste repositório (não vão para outros pelo `ai-sync`), cada uma com uma função só: a "Issue Size Set" define o tamanho das issues abertas por colaboradores, e a "Issue Claude Agent" resolve a issue pequena e a automação abre o pull request.
 
 ### Tamanhos
 
@@ -253,7 +253,9 @@ Na dúvida entre P e M, o tamanho é M. Mudar automações, fluxos do GitHub, pe
 
 ### Issue Claude Agent
 
-- Faz: resolve uma issue P, no padrão de branch, commit e descrição do time, e abre o pull request ligado à issue, só com o lint e os testes passando. A descrição do pull request sai com as seções "O que muda", "Como foi verificado" e "Observações", o `Closes #n` e a linha "Aberto pelo agente de issues.".
+- Faz: resolve uma issue P, no padrão de branch, commit e descrição do time, só com o lint e os testes passando. Ele envia a branch e grava a descrição do pull request, com as seções "O que muda", "Como foi verificado" e "Observações", num arquivo que a própria automação indica. Quem abre o pull request é um passo da automação, depois do agente: ele confere a branch, monta o título (como `Fix :bug: [#n] <título da issue>`) e o `Closes #n` que liga à issue, e acrescenta a linha "Aberto pelo agente de issues.". O agente nunca abre o pull request nem escreve o `Closes` ou essa linha. O pull request só é aberto se a etapa do agente terminou com sucesso.
+- Quando algo dá errado: se um comando é negado, ou a execução falha ou trava, o agente comenta na issue o que houve, em um parágrafo, com o link da execução.
+- Limpeza: se a execução termina com uma branch do agente enviada e sem pull request, a automação apaga essa branch, para a issue voltar à fila. Nunca apaga uma branch que já existia antes da execução.
 - Nunca faz: classificar, nem pôr ou mudar tamanho. A única exceção: se começa uma P e percebe que ela é maior, para, explica na issue e troca P por M, sem deixar pull request.
 - Só trabalha em issue P, de dono, membro ou colaborador, sem pull request ligado, sem branch própria, sem responsável e sem tamanho M ou G, e só quando não há outro pull request do agente aberto. Abre no máximo um pull request por execução, da P mais antiga da fila.
 - Roda de três jeitos: encadeada pela Issue Size Set, quando há P esperando; todo dia às 02:47 de Brasília (05:47 UTC), logo depois da Issue Size Set, como rede de segurança; e à mão.
@@ -291,8 +293,8 @@ As duas ficam numa fila única e nunca rodam ao mesmo tempo: a segunda espera a 
 
 - Só tratam issues abertas por dono, membro ou colaborador do repositório. As demais são ignoradas.
 - Só leem o título, o corpo e os comentários de dono, membro ou colaborador. Comentários de qualquer outra pessoa nunca chegam ao Claude, e o texto da issue é tratado como descrição do problema, nunca como ordem.
-- Nunca fazem merge, nunca enviam nada direto para a branch principal, nunca definem prioridade e nunca editam à mão o `.claude/`: a mudança é feita nas fontes e o `.claude/` é atualizado pelo sync.
-- Cada execução termina com uma conferência que falha de forma visível se algo saiu do permitido.
+- Nunca fazem merge, nunca enviam nada direto para a branch principal, nunca definem prioridade e nunca editam à mão o `.claude/`, exceto o guia do Claude dessa pasta (`.claude/CLAUDE.md`), que é o único arquivo dela escrito à mão: o resto é gerado, a mudança é feita nas fontes e o `.claude/` é atualizado pelo sync.
+- Cada execução termina com uma conferência que falha de forma visível se algo saiu do permitido. Além dos casos de sempre, ela reprova a execução que deixa uma branch do agente enviada sem pull request e a que termina sem pull request e sem comentário novo do agente na issue.
 
 ### Instalação
 
@@ -306,7 +308,11 @@ gh secret set CLAUDE_CODE_OAUTH_TOKEN --repo felipe-sant/claude-kit
 
 2. Instale o app do Claude no repositório com `/install-github-app` no Claude Code.
 
+3. Ligue, em Settings, Actions, General, Workflow permissions, a opção "Permitir que o GitHub Actions crie e aprove pull requests". Sem ela, a automação não consegue abrir o pull request do agente.
+
 Sem a credencial, a execução falha de forma visível no passo do Claude, e a Issue Size Set não dispara a Issue Claude Agent.
+
+O pull request aberto pela automação não dispara o CI sozinho. Para rodar o CI nele, feche e reabra o pull request ou envie um commit nele.
 
 ### Onde ver o que elas fizeram
 
