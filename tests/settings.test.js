@@ -253,7 +253,9 @@ test('registro recriado acrescenta o que falta e registra junto com o que já er
 test('registro existente sem a configuração continua tratando-a como do usuário', () => {
   const target = h.makeTarget({ '.claude/settings.json': JSON.stringify(template) })
   h.run(core(), target)
-  fs.writeFileSync(path.join(target, LOCK), JSON.stringify({ files: {} }))
+  const { files } = JSON.parse(h.read(target, LOCK))
+  assert.ok(Object.keys(files).length > 0)
+  fs.writeFileSync(path.join(target, LOCK), JSON.stringify({ files }))
   h.run(core(), target)
 
   assert.deepEqual(appliedIn(target), [])
@@ -293,4 +295,16 @@ test('configuração apagada depois do registro recriado não volta e a segunda 
   const second = h.run(core(), target)
   assert.equal(h.snapshot(target), before)
   assert.match(second.output, /Tudo em dia, nada mudou/)
+})
+
+test('registro recriado não toca em arquivo do kit editado pelo usuário', () => {
+  const edited = '---\nname: orchestrator\ndescription: meu\nmodel: opus\n---\n'
+  const target = h.makeTarget({
+    '.claude/settings.json': JSON.stringify(template),
+    '.claude/agents/orchestrator.md': edited
+  })
+  h.run(core(), target)
+
+  assert.equal(h.read(target, '.claude/agents/orchestrator.md'), edited)
+  assert.deepEqual(appliedIn(target), ALL_LEAVES)
 })
