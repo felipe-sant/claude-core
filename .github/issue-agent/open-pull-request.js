@@ -8,7 +8,7 @@ const PULL_REQUEST_LINE = 'Aberto pelo agente de issues.'
 const DESCRIPTION_FILE = 'pull-request-body.md'
 const SIZE_SMALL = 'Size: P'
 const SECTIONS = ['O que muda', 'Como foi verificado', 'Observações']
-const CLOSING_PATTERN = /\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\b:?\s*(?:https?:\/\/\S+\/issues\/\d+|GH-\d+|(?:[\w.-]+\/[\w.-]+)?#\d+)/i
+const CLOSING_PATTERN = /\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\b:?\s*(?:https?:\/\/\S+\/issues\/\d+|(?:[\w.-]+\/[\w.-]+)?#\d+)/i
 const COMMIT_TYPES = {
   fix: 'Fix :bug:',
   feat: 'Feat :sparkles:',

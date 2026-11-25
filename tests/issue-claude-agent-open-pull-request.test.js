@@ -103,13 +103,16 @@ test('aceita só a issue Size: P', () => {
   assert.notEqual(checkSize(['bug']), '')
 })
 
-test('recusa vínculo que fecha issue por URL completa, por GH- ou por repositório', () => {
+test('recusa vínculo que fecha issue por URL completa ou por repositório', () => {
   for (const link of [
     'Closes https://github.com/felipe-sant/claude-kit/issues/12',
     'fixes HTTPS://GITHUB.COM/a/b/issues/3',
-    'resolves GH-3',
     'closes felipe-sant/claude-kit#12'
   ]) {
     assert.notEqual(validateDescription(`${validDescription}\n${link}`), '', link)
   }
+})
+
+test('aceita GH-n depois de palavra de fechamento, que o GitHub não usa para fechar issue', () => {
+  assert.equal(validateDescription(`${validDescription}\nresolves GH-3`), '')
 })
