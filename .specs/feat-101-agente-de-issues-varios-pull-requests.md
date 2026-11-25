@@ -19,12 +19,18 @@ Hoje o agente de issues só trabalha quando não há nenhum pull request dele ab
 - RN-03: Com 5 pull requests do agente abertos, a execução termina com sucesso, sem chamar o Claude, e o resumo da execução explica que o limite foi atingido. Fonte: usuário (issue #101).
 - RN-04: O limite vale também para o disparo à mão com o número de uma issue. Fonte: usuário (issue #101).
 - RN-05: Se o texto da issue disser "depende de #n" e a issue #n estiver aberta, a issue espera fora da fila. Quando a #n for fechada, ela volta para a fila. Fonte: usuário (issue #101).
+- RN-05a: Só o corpo da issue conta para a dependência; os comentários não contam. Fonte: usuário (respostas às dúvidas).
+- RN-05b: Valem as formas "depende de", "depende do" e "depende da", sem diferenciar maiúsculas de minúsculas, e várias issues na mesma frase (como "depende de #3 e #4"). A issue só entra na fila quando todas as issues citadas como dependência estiverem fechadas. Fonte: usuário (respostas às dúvidas).
+- RN-05c: São ignoradas a citação dentro de trecho de código (em bloco ou no meio da linha), a citação de issue de outro repositório e a citação da própria issue. Fonte: usuário (respostas às dúvidas).
+- RN-05d: Se o número citado for de um pull request aberto, e não de uma issue, ele não conta como dependência. Fonte: usuário (respostas às dúvidas).
+- RN-05e: No disparo à mão com o número de uma issue que espera dependência aberta, a execução recusa e mostra o motivo no resumo e no registro, como as outras recusas, listando as dependências que seguem abertas. Essa checagem vem depois da validação do número e do limite. Fonte: usuário (respostas às dúvidas).
+- RN-05f: Quando a dependência fecha, basta a issue voltar para a fila; o agente não é disparado na hora e a issue é pega na próxima execução. Fonte: usuário (respostas às dúvidas).
 - RN-06: O agente não tenta prever conflito entre issues; isso fica para a revisão do pull request. Fonte: usuário (issue #101).
 - RN-07: Pull request do agente fechado sem merge continua tirando a issue da fila. Fonte: usuário (issue #101), já vigente desde a issue #76.
 - RN-08: Continuam valendo: só trata issue pequena (P), só de dono, membro ou colaborador, sem responsável, sem pull request ligado e sem branch própria; o agente nunca faz merge; a branch enviada sem pull request é apagada pela automação; o agente nunca define prioridade. Fonte: usuário (issue #101).
 - RN-09: A documentação do agente de issues descreve o limite de 5, a espera por dependência e o que acontece quando o limite é atingido. Fonte: usuário (issue #101).
 - RN-10: Os testes cobrem: abaixo do limite, no limite, disparo à mão no limite, dependência de issue aberta e dependência de issue fechada. Fonte: usuário (issue #101).
-- RN-11: A classificação de tamanho, ao terminar, dispara o agente quando há uma issue pequena esperando e menos de 5 pull requests do agente abertos (antes: nenhum aberto). Fonte: consequência de RN-01, já que a classificação usa a mesma seleção do agente; confirmar em Dúvidas se preferir outro comportamento.
+- RN-11: A classificação de tamanho, ao terminar, dispara o agente quando há uma issue pequena esperando e menos de 5 pull requests do agente abertos (antes: nenhum aberto). Fonte: usuário (respostas às dúvidas), confirmada; o product-owner está acrescentando esse critério à issue #101.
 
 ## Critérios de aceite
 
@@ -49,6 +55,14 @@ Hoje o agente de issues só trabalha quando não há nenhum pull request dele ab
 - CA-19: QUANDO a classificação de tamanho termina com uma issue pequena esperando e menos de 5 pull requests do agente abertos ENTÃO o sistema DEVE disparar o agente; com 5 ou mais, não DEVE disparar. Cobre RN-11.
 - CA-20: QUANDO alguém lê a documentação do agente de issues ENTÃO ela DEVE explicar o limite de 5, a espera por dependência, a volta à fila quando a dependência fecha e o que acontece quando o limite é atingido, sem citar mais "um pull request do agente por vez". Cobre RN-09.
 - CA-21: QUANDO a suíte de testes roda ENTÃO ela DEVE ter testes para abaixo do limite, no limite, disparo à mão no limite, dependência de issue aberta e dependência de issue fechada. Cobre RN-10.
+- CA-22: QUANDO o corpo diz "depende de #3 e #4" e só a #3 está fechada ENTÃO o sistema DEVE deixar a issue fora da fila; quando as duas estiverem fechadas, DEVE tratá-la normalmente. Cobre RN-05b.
+- CA-23: QUANDO o corpo diz "Depende do #n" ou "DEPENDE DA #n" e a #n está aberta ENTÃO o sistema DEVE deixar a issue fora da fila, como em "depende de #n". Cobre RN-05b.
+- CA-24: QUANDO "depende de #n" aparece só dentro de trecho de código (em bloco ou no meio da linha) e a #n está aberta ENTÃO o sistema DEVE ignorar a citação e tratar a issue normalmente. Cobre RN-05c.
+- CA-25: QUANDO o corpo diz que depende de uma issue de outro repositório ou da própria issue ENTÃO o sistema DEVE ignorar a citação. Cobre RN-05c.
+- CA-26: QUANDO "depende de #n" aparece só num comentário da issue, e não no corpo, e a #n está aberta ENTÃO o sistema DEVE ignorar a citação. Cobre RN-05a.
+- CA-27: QUANDO o número citado em "depende de #n" é de um pull request aberto ENTÃO o sistema DEVE tratar a issue normalmente. Cobre RN-05d.
+- CA-28: QUANDO o disparo é à mão com o número de uma issue tratável cuja dependência está aberta e o limite não foi atingido ENTÃO o sistema DEVE recusar sem chamar o Claude, terminar com sucesso e mostrar o motivo no resumo e no registro, citando a dependência aberta; com várias abertas, DEVE listar todas as que seguem abertas e nenhuma das fechadas. Cobre RN-05b, RN-05e.
+- CA-29: QUANDO o disparo é à mão com o número de uma issue que espera dependência e o limite está atingido ENTÃO o sistema DEVE recusar pelo limite, como em CA-07. Cobre RN-04, RN-05e.
 
 ## Critérios de sucesso
 
@@ -65,7 +79,7 @@ Hoje o agente de issues só trabalha quando não há nenhum pull request dele ab
 - Definir prioridade entre issues.
 - Merge automático.
 - Prever ou resolver sozinho conflito entre pull requests do agente (RN-06).
-- Disparar o agente no momento em que a dependência fecha: a issue volta para a fila e é pega na próxima execução (ver Dúvidas).
+- Disparar o agente no momento em que a dependência fecha: a issue volta para a fila e é pega na próxima execução (RN-05f).
 
 ## Desenho
 
@@ -76,14 +90,15 @@ Hoje o agente de issues só trabalha quando não há nenhum pull request dele ab
   - Fila, limite atingido: `Já há <q> pull requests do agente abertos e o limite é <limite>: a fila das P espera.`
   - Disparo à mão, limite atingido: `Já há <q> pull requests do agente abertos e o limite é <limite>: nenhuma issue é tratada agora.`
   - Fila sem issue tratável (inclusive quando todas esperam dependência): `Nenhuma issue P na fila.` (sem mudança).
-  - Disparo à mão de issue que espera dependência, se o product-owner confirmar a recusa (Dúvidas): `A issue <número> depende da issue #<n>, ainda aberta.`
+  - Disparo à mão de issue que espera uma dependência aberta: `A issue <número> depende da issue #<n>, ainda aberta.`
+  - Disparo à mão de issue que espera várias dependências abertas, listando só as abertas, em ordem crescente: `A issue <número> depende das issues #<a>, #<b>, ainda abertas.`
 
 ### Como as partes se encaixam
 
 - Seleção (script `.github/issue-agent/select-issues.js`, modo `agent`):
   - Hoje `selectAgent` para com qualquer pull request do agente aberto (`openPulls.some(isAgentPull)`), nos dois caminhos (fila e número informado). Passa a contar `openPulls.filter(isAgentPull).length` e a parar só com contagem maior ou igual a `MAX_AGENT_PULLS`. A ordem das checagens no disparo à mão não muda: número inválido, depois limite, depois os motivos de recusa da issue.
-  - A dependência é uma condição a mais em `isQueuedSmall` (fila) e, se confirmada, em `refusalReason` (disparo à mão). Uma função pura extrai do corpo da issue os números citados como dependência; a issue espera quando algum desses números está entre as issues abertas já buscadas.
-  - O estado da #n sai da lista de issues abertas que a seleção já busca, sem chamada nova à API: se a #n não está na lista, conta como fechada ou inexistente e não bloqueia. Essa lista não traz pull requests, então uma "#n" que é um pull request aberto não bloqueia (ver Dúvidas). Citação de outro repositório (`dono/repo#n`) é ignorada. Referência à própria issue é ignorada.
+  - A dependência é uma condição a mais em `isQueuedSmall` (fila) e em `refusalReason` (disparo à mão), nesta ordem no disparo à mão: número inválido, limite, motivos de hoje e por último a dependência. Uma função pura recebe o corpo e o número da issue e devolve os números citados como dependência: tira antes os trechos de código (cercados por três crases e entre crases simples), reconhece "depende de", "depende do" e "depende da" sem diferenciar maiúsculas, aceita vários "#n" na mesma citação ("#3 e #4", "#3, #4"), ignora `dono/repo#n` e o próprio número. A issue espera quando qualquer desses números está entre as issues abertas já buscadas. Só o corpo é lido; os comentários nunca entram.
+  - O estado da #n sai da lista de issues abertas que a seleção já busca, sem chamada nova à API: se a #n não está na lista, conta como fechada ou inexistente e não bloqueia. Essa lista não traz pull requests, então uma "#n" que é um pull request aberto não bloqueia (RN-05d). Citação de outro repositório (`dono/repo#n`) é ignorada. Referência à própria issue é ignorada.
   - A consulta GraphQL `ISSUES_QUERY` não traz o corpo hoje: passa a trazer `body`, e `normalizeIssue` passa a devolver `body` (texto vazio quando nulo). O modo `size-set` usa a mesma consulta, sem mudança de comportamento.
 - Encadeamento da Issue Size Set: o trabalho `chain` já chama a seleção no modo `agent`, então passa a seguir o limite sem mudança no YAML (RN-11). A conferência final da Issue Size Set compara a contagem de pull requests do agente antes e depois e continua igual.
 - Conferência final da Issue Claude Agent (vinda da #95): hoje `[ "$open_agent_pulls" -le 1 ]` garante ao mesmo tempo "no máximo 1 aberto" e "no máximo 1 novo". Passa a ter duas checagens:
@@ -112,8 +127,8 @@ Sem typecheck: o projeto é JavaScript sem TypeScript. Sem formatador: só o oxl
 
 - Fase 1 (paralelo): T1 [P] (Dev Ops), T3 [P] (Dev Ops), T5 [P] (Dev Doc).
   - Gate de fase: `npm run lint`, `npm test` e `node bin/ai-sync.js --check`, uma vez ao fim da fase.
-- Fase 2 (paralelo): T2 [P] (Dev Ops, depende de T1 e das respostas das Dúvidas do product-owner sobre dependência), T4 [P] (Dev Ops, depende de T1 e T3).
-  - Gate de fase: `npm run lint`, `npm test` e `node bin/ai-sync.js --check`, antes do reviewer. Se T2 mudar o texto de recusa do disparo à mão, o Dev Doc confere o README contra o texto final.
+- Fase 2 (paralelo): T2 [P] (Dev Ops, depende de T1), T4 [P] (Dev Ops, depende de T1 e T3).
+  - Gate de fase: `npm run lint`, `npm test` e `node bin/ai-sync.js --check`, antes do reviewer. O Dev Doc confere o README contra o comportamento final de T2.
 
 ## Tarefas
 
@@ -136,13 +151,13 @@ Regra para devs e executores em todas as tarefas: nunca escreva comentários no 
 ### T2 [P] Issue que depende de outra aberta espera fora da fila
 
 - O quê: a seleção lê o corpo das issues e deixa fora da fila a issue que diz "depende de #n" enquanto a #n estiver aberta.
-- Onde: `.github/issue-agent/select-issues.js` (`ISSUES_QUERY` com `body`, `normalizeIssue`, função pura de extração das dependências, `isQueuedSmall` e, se confirmado nas Dúvidas, `refusalReason`), `tests/issue-claude-agent-select.test.js` e `tests/issue-agent-select.test.js`.
+- Onde: `.github/issue-agent/select-issues.js` (`ISSUES_QUERY` com `body`, `normalizeIssue`, função pura de extração das dependências, `isQueuedSmall` e `refusalReason`), `tests/issue-claude-agent-select.test.js` e `tests/issue-agent-select.test.js`.
 - Dev: Dev Ops.
-- Depende de: T1 (mesmo arquivo) e das respostas do product-owner às Dúvidas 1 a 4.
+- Depende de: T1 (mesmo arquivo).
 - Reaproveita: a lista de issues abertas já buscada, `byOldest`, `isQueuedSmall`, `refusalReason`, o padrão de busca de branch própria (`hasOwnBranch`).
-- Atende: RN-02, RN-05, RN-10; CA-10, CA-11, CA-12, CA-13, CA-21.
+- Atende: RN-02, RN-05, RN-05a a RN-05f, RN-10; CA-10 a CA-13, CA-21 a CA-29.
 - Pronto quando: os testes de dependência passam; o teste de `normalizeIssue` confere o `body` (e texto vazio quando a API devolve nulo); a seleção no modo `size-set` não muda; o gate passa.
-- Teste: unitário. Primeiro o que deve falhar: "P mais antiga que depende de uma issue aberta fica fora da fila e a seguinte é escolhida". Depois: dependência de issue fechada (fora da lista de abertas) não bloqueia; única P esperando dependência dá "Nenhuma issue P na fila."; citação de "#n" sem "depende de" não bloqueia; citação de outro repositório é ignorada; referência à própria issue é ignorada; os formatos e o disparo à mão conforme as respostas das Dúvidas.
+- Teste: unitário. Primeiro o que deve falhar: "P mais antiga que depende de uma issue aberta fica fora da fila e a seguinte é escolhida". Depois: dependência de issue fechada (fora da lista de abertas) não bloqueia; única P esperando dependência dá "Nenhuma issue P na fila."; citação de "#n" sem "depende de" não bloqueia; citação de outro repositório é ignorada; referência à própria issue é ignorada; "depende de #3 e #4" com só uma fechada bloqueia e com as duas fechadas libera; "Depende do" e "DEPENDE DA" bloqueiam; citação só dentro de trecho de código (bloco e no meio da linha) é ignorada; citação só em comentário é ignorada; "#n" de pull request aberto não bloqueia; disparo à mão de issue com dependência aberta recusa com o texto do Desenho (uma e várias abertas, só as abertas listadas); disparo à mão com dependência aberta e limite atingido recusa pelo limite.
 - Gate: `node --test tests/issue-claude-agent-select.test.js tests/issue-agent-select.test.js`, `npm run lint` e `node bin/ai-sync.js --check`.
 - Modelo: padrao.
 - Status: pendente.
@@ -180,26 +195,26 @@ Regra para devs e executores em todas as tarefas: nunca escreva comentários no 
 - O quê: a seção do agente de issues no README passa a descrever o limite de 5, a espera por dependência e o que acontece no limite.
 - Onde: `README.md`, seção "Agente de issues": o item da Issue Size Set que dispara o agente ("nenhum pull request do agente aberto" vira "menos de 5"), o item "Só trabalha em issue P..." ("só quando não há outro pull request do agente aberto"), o parágrafo do campo `issue` do disparo à mão (o motivo "já há um pull request do agente aberto" vira o do limite) e "Fila única e limites" ("Só há um pull request do agente aberto por vez"). O parágrafo "Pull request fechado sem merge" continua valendo (RN-07). Conferir o `.claude/CLAUDE.md` e o `CLAUDE.md` da raiz: nenhum cita o limite hoje, sem mudança esperada; se precisar, só o `.claude/CLAUDE.md` é editado à mão no `.claude/`.
 - Dev: Dev Doc.
-- Depende de: nada para o limite; a parte da dependência segue as respostas das Dúvidas 1 a 5 e é conferida contra o texto final de T2 no gate da Fase 2.
+- Depende de: nada. A parte da dependência segue RN-05 a RN-05f e é conferida contra o comportamento final de T2 no gate da Fase 2.
 - Reaproveita: o texto atual da seção e os textos do resumo fixados no Desenho.
-- Atende: RN-05, RN-07, RN-09, RN-11; CA-20.
-- Pronto quando: nenhuma frase da seção diz que só pode haver um pull request do agente aberto; o limite, a dependência, a volta à fila e o resumo no limite estão descritos em linguagem simples; o gate passa.
+- Atende: RN-05, RN-05a a RN-05f, RN-07, RN-09, RN-11; CA-20.
+- Pronto quando: nenhuma frase da seção diz que só pode haver um pull request do agente aberto; o limite, a dependência (formas aceitas, só o corpo, o que é ignorado, todas precisam estar fechadas, recusa no disparo à mão), a volta à fila sem disparo na hora e o resumo no limite estão descritos em linguagem simples; o gate passa.
 - Teste: nenhum (texto, sem comportamento).
 - Gate: `npm run lint`, `node --test tests/team.test.js` e `node bin/ai-sync.js --check`.
 - Modelo: economico.
 - Status: pendente.
 
+## Decisões
+
+Respostas do usuário às dúvidas da primeira versão, já refletidas nas regras e nos critérios:
+
+1. Só o corpo da issue conta para "depende de #n", sem comentários (RN-05a).
+2. Valem "depende de", "depende do" e "depende da", sem diferenciar maiúsculas, e várias issues na mesma frase; todas precisam estar fechadas para a issue entrar na fila. Citação em trecho de código é ignorada, assim como outro repositório e a própria issue (RN-05b, RN-05c).
+3. Disparo à mão de issue que espera dependência aberta é recusado com o motivo, depois das checagens do número e do limite (RN-05e).
+4. Pull request aberto citado como "#n" não conta como dependência (RN-05d).
+5. Basta a issue voltar para a fila quando a dependência fecha, sem disparar o agente na hora (RN-05f).
+6. A classificação de tamanho dispara o agente sempre que houver menos de 5 pull requests do agente abertos (RN-11).
+
 ## Dúvidas
-
-Do product-owner (regra de negócio):
-
-1. Só o corpo da issue conta para "depende de #n", ou os comentários de dono, membro ou colaborador também? Sugestão técnica: só o corpo, que a seleção já pode buscar sem custo extra.
-2. Quais formas contam como dependência: só "depende de #n", ou também "depende do #n", "depende da #n", "Depende de" com maiúscula, várias issues na mesma frase ("depende de #12 e #13") e citação dentro de bloco de código?
-3. No disparo à mão com o número de uma issue que espera dependência aberta: recusar com o motivo (texto proposto no Desenho) ou tratar mesmo assim, já que a pessoa escolheu a issue?
-4. Se a "#n" for um pull request aberto, e não uma issue, a issue deve esperar? Hoje a proposta só olha issues abertas, então pull request não bloquearia.
-5. Quando a #n fecha, a issue volta para a fila e é pega na próxima execução (varredura diária, próximo encadeamento ou disparo à mão); fechar uma issue não dispara o agente. Isso basta?
-6. A classificação de tamanho passa a disparar o agente com menos de 5 pull requests do agente abertos (RN-11), em vez de só com nenhum. Confirma?
-
-Do usuário:
 
 Nenhuma.
