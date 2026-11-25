@@ -161,7 +161,7 @@ Verificado no código da ação no commit fixado pela automação:
 - Gate: `npm run lint` e `npm test`.
 - Modelo: padrao.
 - Regra obrigatória: nunca escrever comentários no código.
-- Status: feita (commit 5440364; 10 testes falharam antes; as proibições antigas que ficaram obsoletas foram removidas de propósito; gate de fase: npm run lint passou, npm test passou com 388 testes, ai-sync --check e sync em pasta temporária ok; actionlint não instalado localmente, roda no CI; correção da revisão no commit 50f801e: o prompt deixou de mandar o agente abrir o pull request antes das checagens e a frase duplicada saiu, com lint passando e 392 testes passando).
+- Status: feita (commit 5440364; 10 testes falharam antes; as proibições antigas que ficaram obsoletas foram removidas de propósito; gate de fase: npm run lint passou, npm test passou com 388 testes, ai-sync --check e sync em pasta temporária ok; actionlint não instalado localmente, roda no CI; correção da revisão no commit 50f801e: o prompt deixou de mandar o agente abrir o pull request antes das checagens e a frase duplicada saiu, com lint passando e 392 testes passando; nova correção no commit dc1cb4c: a orientação de comentar na issue virou uma frase só, com lint passando e 395 testes passando).
 
 ### T3 [P] Automação: abertura do pull request, conferência e limpeza
 - O quê: a automação ganha o passo que abre o pull request, a conferência dos dois novos casos e a limpeza da branch sem pull request.
@@ -183,7 +183,7 @@ Verificado no código da ação no commit fixado pela automação:
 - Gate: `npm run lint` e `npm test`. O actionlint roda no CI; rode-o também na máquina, se estiver instalado.
 - Modelo: padrao.
 - Regra obrigatória: nunca escrever comentários no código nem no YAML.
-- Status: feita (commit eba51a5; 9 testes falharam antes; CONTEXT_DIR passou de 2 para 3 e gh pr create ficou proibido ao agente; gate de fase: npm run lint passou, npm test passou com 388 testes, ai-sync --check e sync em pasta temporária ok; actionlint não instalado localmente, roda no CI; correção da revisão no commit 114912c: a foto de antes agora falha se a API do GitHub falhar, com lint passando e 392 testes passando).
+- Status: feita (commit eba51a5; 9 testes falharam antes; CONTEXT_DIR passou de 2 para 3 e gh pr create ficou proibido ao agente; gate de fase: npm run lint passou, npm test passou com 388 testes, ai-sync --check e sync em pasta temporária ok; actionlint não instalado localmente, roda no CI; correção da revisão no commit 114912c: a foto de antes agora falha se a API do GitHub falhar, com lint passando e 392 testes passando; nova correção no commit d7da79a: na conferência final e na limpeza, a resposta do GitHub vai para um arquivo antes de ser filtrada e uma falha da API derruba o passo, com lint passando e 395 testes passando).
 
 ### T4 [P] Documentação do agente de issues
 - O quê: o README e o guia do Claude passam a descrever a abertura do pull request pela automação, o comentário do agente quando algo dá errado, a limpeza da branch sem pull request e os novos motivos de reprovação da conferência.
