@@ -1,6 +1,6 @@
 # Dividir o agente de issues em duas automações: definir tamanho e resolver issue pequena
 
-> Status: em-andamento
+> Status: implementada
 > Tipo: funcionalidade
 > Tamanho: grande
 > Branch: feat/76-dividir-agente-de-issues
@@ -255,6 +255,7 @@ Decisão recomendada: o trabalho `chain` da Issue Size Set dispara a Issue Claud
 - A varredura diária, a rede de segurança e o disparo manual só funcionam a partir da branch principal. Antes do merge, só a suíte, o actionlint e uma execução local, só de leitura, do script de seleção nos dois modos.
 - Os limites da #64 continuam: comentários lidos só até os 100 últimos na seleção; risco aceito de o agente rodar testes ou hooks que ele mesmo editou; `CLAUDE_CODE_SUBPROCESS_ENV_SCRUB` não usado; `git rm`, `rm`, worktree e `git fetch` negados.
 - As duas execuções antigas presas (45400454973 e 45403825175) pertencem à automação removida e ficam como estão.
+- A confirmar no QA depois do merge, por não haver como testar antes: a fila ao vivo (CA-16 e CA-28) e a falha visível sem a credencial (CA-21).
 
 ## Plano de execução
 
@@ -265,7 +266,7 @@ O projeto não tem build, typecheck nem formatador; o CI roda `npm run lint`, `n
 - Gate de fase (fim das Fases 1 e 2): `npm run lint`, `npm test`, `node bin/ai-sync.js --check`, o actionlint em todos os workflows e o sync em pasta temporária (`T=$(mktemp -d) && node bin/ai-sync.js "$T" && ls -R "$T/.claude"; rm -rf "$T"`).
 - Fase 3 (sequencial): T8 (remove a antiga, depende de T1 a T6). Concluída.
 - Gate de fase: o mesmo.
-- Fase 4 (sequencial): T9 (integração e conferência final), depois o Reviewer. Em andamento.
+- Fase 4 (sequencial): T9 (integração e conferência final), depois o Reviewer. Concluída.
 - Gate de fase: o mesmo, depois de atualizar a branch com a main por merge, se ela avançou.
 
 Actionlint local: use o binário já baixado em `/tmp/claude-1000/-home-felipe-pessoal-claude-kit/f1dddffb-cf30-4060-ab9d-b4bc4543a2cf/scratchpad/al2/actionlint` (versão 1.7.12, conferida) ou baixe a mesma versão do `github.com/rhysd/actionlint` para uma pasta temporária fora do repositório. Rode da raiz da worktree: `<caminho>/actionlint -color`.
@@ -426,7 +427,7 @@ Actionlint local: use o binário já baixado em `/tmp/claude-1000/-home-felipe-p
 - Pronto quando: não há divergência e o gate de fase passa.
 - Gate: o gate de fase.
 - Modelo: economico.
-- Status: em-andamento.
+- Status: feita. O README foi conferido contra a entrega, e a divergência do texto "fila vazia" foi corrigida no bb9538d. O 7f71eb5 ajustou o filtro do `$PR_ISSUE`, e há mais um ajuste em andamento, sugerido pelo Reviewer. Gate de fase: `npm run lint`, `npm test` com 318 testes passando, `node bin/ai-sync.js --check`, o actionlint e o sync em pasta temporária passaram. O Reviewer conferiu o encaixe de CA-01 a CA-28 e aprovou a entrega inteira, sem achado que bloqueia em aberto. A branch está 0 commits atrás da main, sem conflito.
 
 ## Decididas pelo usuário
 
