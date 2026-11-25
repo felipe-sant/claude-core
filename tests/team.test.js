@@ -175,6 +175,13 @@ test('os relatórios são curtos e a orchestrator repassa resultado preso e igno
   for (const name of devs) assert.match(body(name), /relatório final tem no máximo 30 linhas/, name)
 })
 
+test('o sdd sempre devolve o relatório e os devs conferem a especificação quando ele não chega', () => {
+  assert.match(body('sdd'), /A última ação é sempre devolver esse relatório a quem o chamou/)
+  for (const name of devs) {
+    assert.match(body(name), /Se o `sdd` encerrar sem devolver o relatório, confira o arquivo da especificação/, name)
+  }
+})
+
 test('o README documenta a permissão de commit, a coautoria por repositório e o .env', () => {
   const readme = fs.readFileSync(path.join(repoRoot, 'README.md'), 'utf8')
 

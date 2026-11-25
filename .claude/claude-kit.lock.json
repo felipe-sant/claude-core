@@ -1,15 +1,15 @@
 {
   "files": {
     ".claude/agents/dev-backend.md": {
-      "hash": "ea6bc7670e8caa81d32639c2dcbf9b7f7f20e3259840385247ec432645f5cd6d",
+      "hash": "c52cc24790dc5c7981b5628a5abda6f82eaae341f6b18fd06b1b9a8ecfc8d811",
       "version": "0.1.0"
     },
     ".claude/agents/dev-devops.md": {
-      "hash": "8b215af27960d5c80fde7a90e1d0156321a8a83df8c6b27d8d3863faa2ee8f9b",
+      "hash": "095fd32dbf704d4c965186278cef2b1b4389b3c72675fb1c395c7798ae130427",
       "version": "0.1.0"
     },
     ".claude/agents/dev-doc.md": {
-      "hash": "a8d9c5b38e634db43614f1a84265fa993be09e7b916f9f7b5be5d55d3315fb6c",
+      "hash": "5dea9ab308291b1010f2ff1cbd4456be0d94d4d843175633f17cde9562df0d71",
       "version": "0.1.0"
     },
     ".claude/agents/executor.md": {
@@ -29,7 +29,7 @@
       "version": "0.1.0"
     },
     ".claude/agents/sdd.md": {
-      "hash": "d5b3837913f429f490a342a7ed2e5aee7743f19661867c901d366c00b68d3d11",
+      "hash": "92f18065728537d30e7f134f09159ff487925059a18574ebd3156b9836aac1b9",
       "version": "0.1.0"
     },
     ".claude/rules/code-standard.md": {

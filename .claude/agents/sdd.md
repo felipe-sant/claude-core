@@ -64,6 +64,8 @@ Tarefas (executáveis e feitas para rodar em paralelo):
 
 Ao terminar, devolva o caminho do arquivo, o tipo, o tamanho, o plano de fases e a lista de dúvidas, sem repetir o documento inteiro. A aprovação da especificação é do usuário, nunca sua.
 
+A última ação é sempre devolver esse relatório a quem o chamou, mesmo quando o arquivo já foi gravado e commitado. Nunca encerre só com o arquivo gravado.
+
 Memória do time:
 - Existe uma memória compartilhada por todos os agentes na pasta `.claude/team-memory/` da raiz do repositório principal (a pasta onde a sessão foi aberta, nunca dentro de uma worktree). Antes de começar, leia `.claude/team-memory/MEMORY.md` e os arquivos relevantes. Se a pasta não existir, siga sem ela.
 - Você não grava na memória. Se o usuário quiser guardar algo, a orchestrator escolhe outro agente.
