@@ -178,6 +178,7 @@ jobs:
           agent_comments=$(awk '{total += $1} END {print total + 0}' "$CHECK_DIR/agent-comments-pages")
           echo "Issue $PR_ISSUE: pull requests do agente=$pulls_for_issue, comentários do agente=$agent_comments"
           if [ "$pulls_for_issue" -eq 0 ] && [ "$agent_comments" -le "$(cat "$CHECK_DIR/agent-comments")" ]; then
+            gh issue comment "$PR_ISSUE" --body "O agente de issues terminou esta execução sem abrir pull request e sem explicar o motivo, então nada foi feito nesta issue. Veja o que aconteceu: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" || echo "::warning::Não foi possível comentar na issue $PR_ISSUE."
             fail "A execução terminou sem pull request e sem comentário na issue $PR_ISSUE."
           fi
           [ "$AGENT_OUTCOME" = "success" ] || fail "A etapa do agente terminou sem sucesso: $AGENT_OUTCOME."

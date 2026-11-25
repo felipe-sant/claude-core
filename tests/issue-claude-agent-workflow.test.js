@@ -285,3 +285,15 @@ test('só a saída redigida é publicada como artefato, por 7 dias, e a saída c
   assert.doesNotMatch(step, /path:.*steps\.claude\.outputs\.execution_file/)
   assert.doesNotMatch(text, /show_full_output/)
 })
+
+test('a execução sem pull request e sem comentário do agente ganha um comentário da automação com o link da execução, sem a marca de classificação', () => {
+  const step = stepOf(job('agent'), 'Conferência final')
+  const condition = step.indexOf('if [ "$pulls_for_issue" -eq 0 ] && [ "$agent_comments"')
+  const comment = step.indexOf('gh issue comment "$PR_ISSUE" --body')
+  const failure = step.indexOf('fail "A execução terminou sem pull request e sem comentário')
+  assert.ok(condition !== -1 && condition < comment && comment < failure)
+  const line = step.slice(comment, step.indexOf('\n', comment))
+  assert.match(line, /\$GITHUB_SERVER_URL\/\$GITHUB_REPOSITORY\/actions\/runs\/\$GITHUB_RUN_ID/)
+  assert.doesNotMatch(line, /\$CLASSIFICATION_MARK|Tamanho definido pelo agente de issues/)
+  assert.doesNotMatch(line, /`|\$\{\{/)
+})
