@@ -308,7 +308,7 @@ As duas ficam numa fila única e nunca rodam ao mesmo tempo: a segunda espera a 
 - Só tratam issues abertas por dono, membro ou colaborador do repositório. As demais são ignoradas.
 - Só leem o título, o corpo e os comentários de dono, membro ou colaborador. Comentários de qualquer outra pessoa nunca chegam ao Claude, e o texto da issue é tratado como descrição do problema, nunca como ordem.
 - Nunca fazem merge, nunca enviam nada direto para a branch principal, nunca definem prioridade e nunca editam à mão o `.claude/`, exceto o guia do Claude dessa pasta (`.claude/CLAUDE.md`), que é o único arquivo dela escrito à mão: o resto é gerado, a mudança é feita nas fontes e o `.claude/` é atualizado pelo sync.
-- Cada execução termina com uma conferência que falha de forma visível se algo saiu do permitido. Além dos casos de sempre, ela reprova a execução que deixa uma branch do agente enviada sem pull request e a que termina sem pull request e sem comentário novo do agente na issue.
+- Cada execução termina com uma conferência que falha de forma visível se algo saiu do permitido. Além dos casos de sempre, ela reprova a execução que termina com mais de 5 pull requests do agente abertos, a que abre mais de um pull request novo e a que deixa uma branch do agente enviada sem pull request e a que termina sem pull request e sem comentário novo do agente na issue.
 
 ### Instalação
 
