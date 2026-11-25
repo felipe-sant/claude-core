@@ -201,7 +201,7 @@ Validação em execução real, passo do usuário, fora do gate:
 - Teste: unitário. Falham primeiro os testes das duas automações que exigem a comparação pelo GitHub, a aceitação de `identical` e `ahead`, a mensagem nova e a ausência da mensagem antiga, e os da classificação que exigem a comparação por branch, a mensagem com o nome da branch e a ausência da frase da lista de branches.
 - Gate: o mesmo de T1.
 - Modelo: padrao.
-- Melhorias de teste pedidas pelo usuário, sugeridas pelo reviewer, pendentes: o `pipefail` e três casos ainda sem teste.
+- Melhorias de teste pedidas pelo usuário, sugeridas pelo reviewer: feitas no commit 347fca7, com o `pipefail` e 3 testes novos, que passaram de primeira; gate ok: npm test com 512 passando, lint ok, --check ok, actionlint ok; aguardam revisão do reviewer.
 - Status: feita (commit f0ef012, com a lista de branches; vermelho antes: 9 falhas no teste novo de conferência, conferido pelo reviewer, e os 2 testes que já passavam antes ("nada muda" e "comparação falha") eram esperados, porque o código antigo já reprovava nesses casos; gate ok: npm test com 501 passando e 0 falhando, lint ok, --check ok, actionlint 1.7.12 ok; limite: a conferência do agente de issues é verificada só pelo texto do script, e a execução fica para a validação real, passo 3; aprovada pelo reviewer).
 
 ### T4: Mostra a causa provável quando a etapa do agente falha (#100)
@@ -216,7 +216,7 @@ Validação em execução real, passo do usuário, fora do gate:
 - Teste: unitário. Falham primeiro os testes que exigem o passo novo depois da etapa do agente e antes do relatório, a condição com `always()` que aceita só falha e cancelado (nunca sucesso nem pulado), a frase exata na anotação e no resumo, e a ausência da frase na classificação de tamanho.
 - Gate: o mesmo de T1.
 - Modelo: economico.
-- Status: feita (commit 8a5be25; vermelho antes: 2 falhas; gate ok: npm test com 504 passando e 0 falhando, lint ok, --check ok, actionlint ok; limite para a validação real: um cancelamento forçado ou um estouro de prazo pode não rodar os passos com `always()`).
+- Status: feita (commit 8a5be25; vermelho antes: 2 falhas; gate ok: npm test com 504 passando e 0 falhando, lint ok, --check ok, actionlint ok; limite para a validação real: um cancelamento forçado ou um estouro de prazo pode não rodar os passos com `always()`; aprovada pelo reviewer, sem achados).
 
 ### T5: Reforça o comando do guia do Claude contra links simbólicos (#104)
 
