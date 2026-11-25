@@ -471,9 +471,16 @@ test('não manda abrir sessão nova quando só regras mudam', () => {
 const OLD_LOCK = '.claude/claude-core.lock.json'
 const NEW_LOCK = '.claude/claude-kit.lock.json'
 
+function moveLockToOldName(target) {
+  const installed = [NEW_LOCK, OLD_LOCK].find((rel) => h.exists(target, rel))
+  const content = h.read(target, installed)
+  fs.rmSync(path.join(target, installed))
+  fs.writeFileSync(path.join(target, OLD_LOCK), content)
+}
+
 function withOldLock(core, target) {
   h.run(core, target)
-  fs.renameSync(path.join(target, NEW_LOCK), path.join(target, OLD_LOCK))
+  moveLockToOldName(target)
 }
 
 test('primeira execução grava só o registro com o nome novo', () => {
@@ -495,7 +502,7 @@ test('registro antigo é migrado para o novo com tudo o que estava registrado', 
   const target = h.makeTarget()
   h.run(core, target, '--profile', 'minimal')
   const before = JSON.parse(h.read(target, NEW_LOCK))
-  fs.renameSync(path.join(target, NEW_LOCK), path.join(target, OLD_LOCK))
+  moveLockToOldName(target)
 
   const result = h.run(core, target, '--profile', 'minimal')
 
@@ -522,14 +529,18 @@ test('com os dois registros, usa só o novo e remove o antigo', () => {
   const core = basicCore()
   const target = h.makeTarget()
   h.run(core, target)
-  fs.writeFileSync(path.join(target, OLD_LOCK), JSON.stringify({ files: { '.claude/agents/fantasma.md': { hash: 'x', version: '0' } } }))
-  const before = h.read(target, NEW_LOCK)
+  const withoutQa = JSON.parse(h.read(target, NEW_LOCK))
+  delete withoutQa.files['.claude/agents/qa.md']
+  fs.writeFileSync(path.join(target, OLD_LOCK), JSON.stringify(withoutQa))
+  const edited = `${agent('qa')}minha edição\n`
+  fs.writeFileSync(path.join(target, '.claude/agents/qa.md'), edited)
 
-  h.run(core, target)
+  const result = h.run(core, target)
 
   assert.ok(!h.exists(target, OLD_LOCK))
-  assert.equal(h.read(target, NEW_LOCK), before)
-  assert.ok(!h.read(target, NEW_LOCK).includes('fantasma'))
+  assert.equal(h.read(target, '.claude/agents/qa.md'), edited)
+  assert.match(result.output, /você editou este arquivo/)
+  assert.doesNotMatch(result.output, /já existe um arquivo seu/)
 })
 
 test('registro antigo inválido para com erro e não copia nem grava nada', () => {
