@@ -144,6 +144,14 @@ test('o padrão de git explica como isolar uma falha de teste sem tocar nos arqu
   assert.match(text, /avise o dono do arquivo e espere ele commitar/)
 })
 
+test('o sdd manda ordenar as tarefas que mudam fontes do conteúdo sincronizado, sem marcá-las como paralelas', () => {
+  const text = body('sdd')
+
+  assert.match(text, /mesmo arquivo gerado/)
+  assert.match(text, /Não as marque com `\[P\]` entre si/)
+  assert.match(text, /ordem fixa de commit/)
+})
+
 test('o padrão de git explica como commitar ao tirar um arquivo do controle de versão mantendo-o na pasta', () => {
   const text = fs.readFileSync(path.join(h.repoRoot, catalog.rules['git-standard'].path), 'utf8')
 
