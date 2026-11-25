@@ -16,6 +16,15 @@ function teamSetup() {
 
 const devs = ['dev-frontend', 'dev-backend', 'dev-mobile', 'dev-devops', 'dev-database', 'dev-fullstack']
 
+test('a orchestrator fecha cada tarefa concluída com a skill closed-in-context, sem delegar e sem avisar se faltar', () => {
+  const text = teamSetup()
+  assert.match(text, /`closed-in-context`/)
+  assert.match(text, /você mesma a roda/)
+  assert.match(text, /nunca delegue o fechamento/i)
+  assert.match(text, /um fechamento por tarefa/i)
+  assert.match(text, /sem avisar/)
+})
+
 test('o gate de cada tarefa inclui o typecheck e o de fase roda uma vez ao fim da fase', () => {
   for (const name of devs) {
     const text = body(name)
