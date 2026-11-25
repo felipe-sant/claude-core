@@ -227,3 +227,10 @@ test('a foto das branches grava a saída da API antes de filtrar, para a falha d
   assert.match(step, /--jq '\.\[\]\.name' > "\$CHECK_DIR\/all-branches"/)
   assert.match(step, /grep -E "\^\[a-z\]\+\/\$PR_ISSUE-" "\$CHECK_DIR\/all-branches" > "\$CHECK_DIR\/branches-\$PR_ISSUE" \|\| true/)
 })
+
+test('nenhuma chamada gh api é encadeada com pipe, para a falha da API derrubar o passo', () => {
+  const piped = job('agent')
+    .split('\n')
+    .filter((line) => /gh api/.test(line) && /--jq ('[^']*'|"(?:[^"\\]|\\.)*")\s*\|/.test(line))
+  assert.deepEqual(piped, [])
+})
