@@ -71,22 +71,22 @@ Verificado no código da ação no commit fixado pela automação:
 
 ## Critérios de aceite
 
-- CA-01: QUANDO o agente envia a branch da issue e grava a descrição com as três seções no arquivo indicado ENTÃO a automação DEVE abrir um único pull request dessa branch, com o título montado por ela e a descrição com as três seções na ordem, o vínculo que fecha a issue da execução e a linha "Aberto pelo agente de issues.". (RN-01, RN-03)
-- CA-02: QUANDO o texto gravado pelo agente traz um vínculo que fecha qualquer issue ENTÃO a automação NÃO DEVE abrir o pull request, porque só ela monta o vínculo. (RN-01)
-- CA-03: QUANDO o arquivo da descrição não existe, está vazio ou não tem as três seções na ordem ENTÃO a automação NÃO DEVE abrir o pull request e a execução DEVE terminar com erro visível. (RN-03, RN-07)
-- CA-04: QUANDO não há branch da issue da execução enviada pelo agente, ou há mais de uma ENTÃO a automação NÃO DEVE abrir pull request. (RN-01)
-- CA-05: QUANDO há uma branch com o número de outra issue, ou uma branch da issue que já existia antes da execução ENTÃO a automação NÃO DEVE abrir pull request dela nem apagá-la. (RN-01, RN-06)
-- CA-06: QUANDO a issue deixou de ser `Size: P` durante a execução ENTÃO a automação NÃO DEVE abrir pull request. (RN-01)
-- CA-07: QUANDO a execução termina com uma branch do agente para a issue enviada e sem pull request aberto dela ENTÃO a conferência final DEVE reprovar e a automação DEVE apagar essa branch, deixando a issue livre para voltar à fila. (RN-06, RN-07)
-- CA-08: QUANDO a execução termina sem pull request do agente para a issue e sem comentário novo do agente na issue ENTÃO a conferência final DEVE reprovar. (RN-07)
-- CA-09: QUANDO a execução termina sem pull request, mas com comentário novo do agente na issue (por exemplo, a troca de P por M ou o aviso de um comando negado) e sem branch enviada ENTÃO a conferência final NÃO DEVE reprovar por esses dois motivos. (RN-05, RN-07)
-- CA-10: QUANDO as instruções do agente são lidas ENTÃO elas DEVEM mandar gravar a descrição no arquivo indicado, não abrir o pull request por conta própria, não escrever o vínculo nem a linha fixa, e comentar na issue em um parágrafo, sem linha começando com cerquilha, quando um comando for negado ou a execução falhar ou travar. (RN-01, RN-03, RN-05)
-- CA-11: QUANDO as instruções do agente são lidas ENTÃO elas DEVEM dizer que o guia do Claude da pasta de configuração é o único arquivo dessa pasta editado à mão, e que o resto da pasta continua gerado. (RN-08)
-- CA-12: QUANDO a automação é conferida ENTÃO a leitura de arquivo pelo agente DEVE continuar bloqueada, com a mesma lista de proibições nas duas automações. (RN-02)
-- CA-13: QUANDO a issue P é maior do que parecia e o agente troca o tamanho para M com comentário, sem enviar branch ENTÃO a execução DEVE continuar terminando sem pull request e sem reprovar, como hoje. (o que já funcionava)
-- CA-14: QUANDO a execução termina ENTÃO as conferências que já existem DEVEM continuar valendo: a branch principal não muda, há no máximo um pull request do agente aberto, as etiquetas que não são de tamanho não mudam e não há comentário novo com a marca de classificação. (o que já funcionava)
-- CA-15: QUANDO a documentação do agente de issues é lida ENTÃO ela DEVE descrever que o pull request é aberto pela automação, o comentário do agente quando algo dá errado, a limpeza da branch sem pull request e os dois novos motivos de reprovação da conferência. (RN-01, RN-05, RN-06, RN-07)
-- CA-16: QUANDO a tarefa termina ENTÃO o lint, a suíte de testes e a checagem do catálogo DEVEM passar. (o que já funcionava)
+- CA-01: QUANDO o agente envia a branch da issue e grava a descrição com as três seções no arquivo indicado ENTÃO o sistema DEVE abrir, pela automação, um único pull request dessa branch, com o título montado por ela e a descrição com as três seções na ordem, o vínculo que fecha a issue da execução e a linha "Aberto pelo agente de issues.". (RN-01, RN-03)
+- CA-02: QUANDO o texto gravado pelo agente traz um vínculo que fecha qualquer issue ENTÃO o sistema NÃO DEVE abrir o pull request, porque só a automação monta o vínculo. (RN-01)
+- CA-03: QUANDO o arquivo da descrição não existe, está vazio ou não tem as três seções na ordem ENTÃO o sistema NÃO DEVE abrir o pull request e DEVE terminar a execução com erro visível. (RN-03, RN-07)
+- CA-04: QUANDO não há branch da issue da execução enviada pelo agente, ou há mais de uma ENTÃO o sistema NÃO DEVE abrir pull request. (RN-01)
+- CA-05: QUANDO há uma branch com o número de outra issue, ou uma branch da issue que já existia antes da execução ENTÃO o sistema NÃO DEVE abrir pull request dela nem apagá-la. (RN-01, RN-06)
+- CA-06: QUANDO a issue deixou de ser `Size: P` durante a execução ENTÃO o sistema NÃO DEVE abrir pull request. (RN-01)
+- CA-07: QUANDO a execução termina com uma branch do agente para a issue enviada e sem pull request aberto dela ENTÃO o sistema DEVE reprovar a execução na conferência final e apagar essa branch, deixando a issue livre para voltar à fila. (RN-06, RN-07)
+- CA-08: QUANDO a execução termina sem pull request do agente para a issue e sem comentário novo do agente na issue ENTÃO o sistema DEVE reprovar a execução na conferência final. (RN-07)
+- CA-09: QUANDO a execução termina sem pull request, mas com comentário novo do agente na issue (por exemplo, a troca de P por M ou o aviso de um comando negado) e sem branch enviada ENTÃO o sistema NÃO DEVE reprovar a execução por esses dois motivos. (RN-05, RN-07)
+- CA-10: QUANDO as instruções do agente são lidas ENTÃO o sistema DEVE instruir o agente a gravar a descrição no arquivo indicado, não abrir o pull request por conta própria, não escrever o vínculo nem a linha fixa, e comentar na issue em um parágrafo, sem linha começando com cerquilha, quando um comando for negado ou a execução falhar ou travar. (RN-01, RN-03, RN-05)
+- CA-11: QUANDO as instruções do agente são lidas ENTÃO o sistema DEVE deixar claro nelas que o guia do Claude da pasta de configuração é o único arquivo dessa pasta editado à mão, e que o resto da pasta continua gerado. (RN-08)
+- CA-12: QUANDO a automação é conferida ENTÃO o sistema DEVE manter a leitura de arquivo bloqueada para o agente, com a mesma lista de proibições nas duas automações. (RN-02)
+- CA-13: QUANDO a issue P é maior do que parecia e o agente troca o tamanho para M com comentário, sem enviar branch ENTÃO o sistema DEVE terminar a execução sem pull request e sem reprovar, como hoje. (o que já funcionava)
+- CA-14: QUANDO a execução termina ENTÃO o sistema DEVE manter as conferências que já existem: a branch principal não muda, há no máximo um pull request do agente aberto, as etiquetas que não são de tamanho não mudam e não há comentário novo com a marca de classificação. (o que já funcionava)
+- CA-15: QUANDO a documentação do agente de issues é lida ENTÃO o sistema DEVE descrever nela que o pull request é aberto pela automação, o comentário do agente quando algo dá errado, a limpeza da branch sem pull request e os dois novos motivos de reprovação da conferência. (RN-01, RN-05, RN-06, RN-07)
+- CA-16: QUANDO a tarefa termina ENTÃO o sistema DEVE passar no lint, na suíte de testes e na checagem do catálogo. (o que já funcionava)
 
 ## Fora do escopo
 
@@ -143,8 +143,9 @@ Verificado no código da ação no commit fixado pela automação:
   - Seção nova sobre o que fazer quando algo dá errado: se um comando for negado, ou a execução falhar ou travar, comentar na issue o que houve e o link da execução, em um único parágrafo, sem linha começando com cerquilha, sem crase e sem cifrão.
   - Seção "Limites": o guia do Claude da pasta `.claude/` (`.claude/CLAUDE.md`) é o único arquivo dela editado à mão; o resto continua gerado e só muda pelas fontes e pelo sync.
   - Continua: "Nos textos de `--body` e `-m`, não use crase nem cifrão", agora para comentários e commits.
-- Testes que mudam de propósito, porque a regra mudou (registrar no commit): as guardas "texto longo direto em --body" (passa a valer só para comentários), "quebras de linha dentro do próprio texto" e "sem arquivo, sem crase, sem cifrão e sem heredoc" saem; "liga a issue com Closes" e "linha fixa do pull request" passam a conferir que o agente não os escreve; "skill de pull request" só fica se o texto ainda citar a skill para o formato da descrição. O teste das três seções na ordem continua.
-- Teste (primeiro, deve falhar antes da mudança): guardas novas para o arquivo da descrição, para não abrir o pull request, para o comentário em um parágrafo sem cerquilha nos três casos (negado, falha, trava) e para a exceção do guia do Claude.
+  - Seção "Limites": a proibição de pastas temporárias continua valendo para comandos. A única exceção é gravar o arquivo da descrição com a ferramenta de escrita, no caminho que vem em "Valores desta execução"; a frase atual ganha essa exceção logo depois, sem perder o texto que a guarda confere.
+- Testes que mudam de propósito, porque a regra mudou (registrar no commit): as guardas "texto longo direto em --body" (passa a valer só para comentários), "quebras de linha dentro do próprio texto" e "sem arquivo, sem crase, sem cifrão e sem heredoc" saem; "liga a issue com Closes" e "linha fixa do pull request" passam a conferir que o agente não os escreve; "skill de pull request" só fica se o texto ainda citar a skill para o formato da descrição. O teste das três seções na ordem continua. A guarda "comandos a partir da raiz, sem cd, sem substituição e sem pastas temporárias" continua igual, e ganha uma guarda nova para a exceção do arquivo da descrição.
+- Teste (primeiro, deve falhar antes da mudança): guardas novas para o arquivo da descrição, para não abrir o pull request, para o comentário em um parágrafo sem cerquilha nos três casos (negado, falha, trava) para a exceção do guia do Claude e para a exceção do arquivo da descrição na proibição de pastas temporárias.
 - Pronto quando: os testes passam e o gate passa.
 - Gate: `npm run lint` e `npm test`.
 - Modelo: padrao.
