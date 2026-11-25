@@ -14,8 +14,6 @@ const guards = {
   'pasta de contexto só com Read e Glob': 'Leia a pasta de contexto só com Read e Glob, nunca com ls ou cat',
   'sem comandos compostos': 'Não use comandos compostos com `&&`, `;` ou `|`',
   'no máximo um pull request por execução': 'No máximo um pull request por execução',
-  'liga a issue com Closes': 'Closes #<número>',
-  'linha fixa do pull request': 'Aberto pelo agente de issues.',
   'lint e testes antes do pull request': 'npm run lint',
   'testes antes do pull request': 'npm test',
   'checagem do catálogo antes do pull request': 'node bin/ai-sync.js --check',
@@ -43,14 +41,22 @@ const guards = {
   'registra o problema no comentário ou no PR': 'registre-o no comentário da issue ou na descrição do pull request',
   'branch criada com git switch': 'Crie a branch com `git switch -c <tipo>/<número>-<descrição-curta> origin/main`',
   'nunca usar git checkout': 'nunca use `git checkout`',
-  'texto longo direto em --body': 'Passe o texto dos comentários e do pull request direto em `--body`, sem arquivo',
   'commit com vários -m e sem substituição': 'Passe a mensagem do commit em um ou mais `-m`, sem `$(...)` nem heredoc',
   'comandos a partir da raiz, sem cd, sem substituição e sem pastas temporárias': 'Rode os comandos a partir da raiz do repositório, sem `cd`, sem `$(...)` e sem pastas temporárias',
   'o mesmo vale para os subagentes': 'Peça o mesmo aos subagentes que chamar',
   'subagente sem merge simulado segue sem isso': 'se não conseguir simular o merge ou criar worktree, siga sem isso',
   'sem crase nem cifrão nos textos de --body e -m': 'Nos textos de `--body` e `-m`, não use crase nem cifrão',
   'padrão de commits e branches': 'commit-standard',
-  'skill de pull request': 'create-pull-request'
+  'skill de pull request': 'create-pull-request',
+  'arquivo da descrição vem nos valores da execução': 'Arquivo da descrição do pull request',
+  'grava a descrição com a ferramenta de escrita': 'Grave a descrição do pull request com a ferramenta de escrita',
+  'nunca abre o pull request': 'Nunca abra o pull request: a automação o abre depois',
+  'não escreve o vínculo nem a linha fixa': 'Não escreva o vínculo `Closes` nem a linha fixa do agente, que a automação acrescenta',
+  'comentário de um parágrafo sem cerquilha': 'Comente na issue o que houve, com o link da execução, em um único parágrafo, sem linha começando com cerquilha, sem crase e sem cifrão',
+  'comenta quando um comando é negado': 'um comando for negado',
+  'comenta quando a execução falha ou trava': 'a execução falhar ou travar',
+  'guia do Claude é o único editado à mão': 'O `.claude/CLAUDE.md` é o único arquivo do `.claude/` editado à mão',
+  'exceção da pasta temporária para o arquivo da descrição': 'A única exceção é gravar o arquivo da descrição do pull request com a ferramenta de escrita, no caminho que vem em "Valores desta execução"'
 }
 
 for (const [name, phrase] of Object.entries(guards)) {
@@ -74,14 +80,6 @@ test('as instruções pedem as três seções do pull request na ordem', () => {
   assert.ok(positions[0] < positions[1] && positions[1] < positions[2], 'seções fora de ordem')
 })
 
-test('as instruções explicam as quebras de linha dentro do próprio texto do --body', () => {
-  assert.match(prompt(), /quebras de linha dentro do próprio texto/)
-})
-
-test('as instruções citam heredoc entre o que não usar no corpo do pull request', () => {
-  assert.match(prompt(), /sem arquivo, sem crase, sem cifrão e sem heredoc/)
-})
-
 test('as instruções pedem em Como foi verificado o que não foi testado', () => {
   assert.match(prompt(), /o que não foi testado/)
 })
@@ -92,4 +90,12 @@ test('as instruções proíbem caminhos de arquivo e código na descrição do p
 
 test('as instruções não ensinam a escrever código com aspas ou negrito', () => {
   assert.doesNotMatch(prompt(), /aspas ou negrito em vez de crase/)
+})
+
+test('as instruções não mandam abrir o pull request nem usar arquivo no gh', () => {
+  assert.doesNotMatch(prompt(), /gh pr create|--body-file/)
+})
+
+test('as instruções não mandam escrever o vínculo na descrição', () => {
+  assert.doesNotMatch(prompt(), /a linha `Closes #<número>`/)
 })
