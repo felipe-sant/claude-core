@@ -1,6 +1,6 @@
 # Dividir o agente de issues em duas automações: definir tamanho e resolver issue pequena
 
-> Status: aprovada
+> Status: em-andamento
 > Tipo: funcionalidade
 > Tamanho: grande
 > Branch: feat/76-dividir-agente-de-issues
@@ -392,7 +392,7 @@ Actionlint local: use o binário já baixado em `/tmp/claude-1000/-home-felipe-p
 - Pronto quando: o README cobre o CA-08, o `.claude/CLAUDE.md` tem só a linha atualizada, nenhuma regra nova foi criada e o gate passa.
 - Gate: `npm run lint` e `npm test`.
 - Modelo: economico.
-- Status: pendente.
+- Status: feita. Commit 4ca9425. Gate: `npm run lint` passou e `npm test` com 257 pass e 0 fail. Só o README e o `.claude/CLAUDE.md` entraram no commit.
 
 ### T8 Remover a automação antiga
 - O quê: apagar a automação e o prompt antigos com os testes deles, e acrescentar o teste que confere o conjunto das duas.
@@ -419,7 +419,7 @@ Actionlint local: use o binário já baixado em `/tmp/claude-1000/-home-felipe-p
 - Reaproveita: os testes das tarefas anteriores.
 - Atende: CA-25 e o encaixe de todos os critérios.
 - Passos:
-  1. Conferir nomes das automações e dos arquivos, modos e saídas do script, entrada `issue`, `REQUESTED_ISSUE`, grupo, horários, marca, linha fixa e textos dos motivos entre os arquivos e o README.
+  1. Conferir nomes das automações e dos arquivos, modos e saídas do script, entrada `issue`, `REQUESTED_ISSUE`, grupo, horários, marca, linha fixa e textos dos motivos entre os arquivos e o README. O README da T7 foi escrito só a partir da especificação: conferir contra a entrega do Dev Ops os nomes `issue-size-set.yml` e `issue-claude-agent.yml`, o campo `issue`, os horários 02:28 e 02:47 de Brasília (05:28 e 05:47 UTC) e o texto "fila vazia" no resumo.
   2. Conferir com `git grep -n "issue-agent.yml\|prompt.md\|Agente de issues"` que nada fora de `.specs/` cita a automação antiga.
   3. Atualizar a branch com a main por merge, se ela avançou, e rodar o gate de fase.
 - Teste: nenhum novo, a menos que apareça divergência.
