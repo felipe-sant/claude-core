@@ -196,7 +196,7 @@ Verificado no código da ação no commit fixado pela automação:
 - Teste: nenhum (só texto).
 - Gate: `npm run lint` e `npm test`.
 - Modelo: economico.
-- Status: feita (commit 109839b; gate: npm run lint passou e npm test passou com 357 testes e 0 falhas).
+- Status: feita (commit 109839b; gate: npm run lint passou e npm test passou com 357 testes e 0 falhas; ajustes da revisão no commit 0c5e84d, com lint passando e npm test com 378 testes e 0 falhas).
 
 ### T5 Coerência entre o script, a automação e as instruções
 - O quê: um teste confere que o nome do arquivo da descrição, o nome do script e a linha fixa são os mesmos no script, na automação e nas instruções.
