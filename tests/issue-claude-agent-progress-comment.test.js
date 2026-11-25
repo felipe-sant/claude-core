@@ -80,3 +80,19 @@ test('o comando barrado muito longo é cortado em 200 caracteres com reticência
 test('o comando barrado curto não ganha reticências', () => {
   assert.ok(buildEndMessage({ ...base, denied: ['Bash: ls'] }).includes('`Bash: ls`'))
 })
+
+test('quando o agente comentou na issue o comentário de acompanhamento é apagado', () => {
+  const { shouldDeleteProgress } = require(scriptPath)
+  assert.equal(shouldDeleteProgress({ ...base, agentCommented: true }), true)
+})
+
+test('quando o agente não comentou o comentário de acompanhamento é editado', () => {
+  const { shouldDeleteProgress } = require(scriptPath)
+  assert.equal(shouldDeleteProgress(base), false)
+  assert.equal(shouldDeleteProgress({ ...base, pullRequestUrl: 'https://github.com/o/r/pull/3' }), false)
+})
+
+test('com pull request aberto o comentário é editado mesmo que o agente tenha comentado', () => {
+  const { shouldDeleteProgress } = require(scriptPath)
+  assert.equal(shouldDeleteProgress({ ...base, agentCommented: true, pullRequestUrl: 'https://github.com/o/r/pull/3' }), false)
+})

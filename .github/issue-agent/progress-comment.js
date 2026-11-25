@@ -1,6 +1,7 @@
 const fs = require('node:fs')
 const path = require('node:path')
 const { request } = require('./select-issues')
+const { fetchWithRetry } = require('./fetch-with-retry')
 
 const API_URL = 'https://api.github.com'
 const COMMENT_ID_FILE = 'progress-comment-id'
@@ -47,6 +48,18 @@ function buildEndMessage(state) {
   return `${describeOutcome(state)} Execução: ${state.runUrl}`
 }
 
+function shouldDeleteProgress(state) {
+  return state.agentCommented && !state.pullRequestUrl
+}
+
+async function deleteComment(url) {
+  const response = await fetchWithRetry(url, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${process.env.GITHUB_TOKEN}`, Accept: 'application/vnd.github+json' }
+  })
+  if (!response.ok) throw new Error(`A API do GitHub respondeu ${response.status} em ${url}.`)
+}
+
 function readFileOr(file, fallback) {
   return fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : fallback
 }
@@ -91,7 +104,9 @@ async function end() {
     agentCommented: readFileOr(path.join(process.env.CHECK_DIR, AGENT_COMMENTED_FILE), '').trim() === 'yes',
     ...readReportData(process.env.REPORT_DIR)
   }
-  await request(process.env.GITHUB_TOKEN, `${commentsUrl()}/comments/${fs.readFileSync(idFile, 'utf8').trim()}`, {
+  const commentUrl = `${commentsUrl()}/comments/${fs.readFileSync(idFile, 'utf8').trim()}`
+  if (shouldDeleteProgress(state)) return deleteComment(commentUrl)
+  await request(process.env.GITHUB_TOKEN, commentUrl, {
     method: 'PATCH',
     body: JSON.stringify({ body: buildEndMessage(state) })
   })
@@ -110,4 +125,4 @@ if (require.main === module) {
   })
 }
 
-module.exports = { buildStartMessage, buildEndMessage, readReportData, COMMENT_ID_FILE, AGENT_COMMENTED_FILE }
+module.exports = { shouldDeleteProgress, buildStartMessage, buildEndMessage, readReportData, COMMENT_ID_FILE, AGENT_COMMENTED_FILE }
