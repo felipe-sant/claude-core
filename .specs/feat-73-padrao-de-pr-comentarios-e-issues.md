@@ -1,6 +1,6 @@
 # Definir o padrão de escrita de PRs, comentários e issues e corrigir o PR do agente de issues
 
-> Status: aprovada
+> Status: em-andamento
 > Tipo: funcionalidade
 > Tamanho: media
 > Branch: feat/73-padrao-de-pr-comentarios-e-issues
@@ -176,7 +176,7 @@ Sobre o `.claude/` gerado: o hook de pre-commit regenera o `.claude/` e recusa o
 - Pronto quando: os testes novos passam, todas as guardas de hoje continuam passando sem afrouxar, nada fora dos dois arquivos mudou e o gate passa.
 - Gate: `npm run lint`, `npm test` e `node bin/ai-sync.js --check`.
 - Modelo: padrao.
-- Status: pendente.
+- Status: feita. Commit a068275. Gate: `npm run lint` passou, `node bin/ai-sync.js --check` passou e os 3 testes novos do prompt passam. Pendência conhecida: o `npm test` teve 8 falhas, todas em testes que esperam a T1, ainda em andamento; não são falhas da T5.
 
 ## Dúvidas
 
