@@ -119,7 +119,7 @@ A decisão de quem pode ser tratado e de quais comentários são lidos nunca dep
   - testes: `tests/issue-agent-select.test.js`, `tests/issue-agent-context.test.js`, `tests/issue-agent-workflow.test.js` e `tests/issue-agent-prompt.test.js` (um arquivo por tarefa, para as tarefas paralelas nunca editarem o mesmo arquivo). O `npm test` já os encontra pelo padrão `tests/**/*.test.js`, e o oxlint do `npm run lint` já alcança JS em pastas que começam com ponto (alcança hoje o `.githooks/check-sync.js`).
 - Segredo: `CLAUDE_CODE_OAUTH_TOKEN`, passado à ação pela entrada `claude_code_oauth_token`. O Felipe gera com `claude setup-token` no terminal dele e guarda em Settings, Secrets and variables, Actions, New repository secret, com esse nome (ou `gh secret set CLAUDE_CODE_OAUTH_TOKEN --repo felipe-sant/claude-kit`). O app do Claude é instalado por ele (por exemplo, com `/install-github-app` no Claude Code ou pela página do app no GitHub).
 - Etiquetas: `Size: P`, `Size: M`, `Size: G`, exatamente com esses nomes.
-- Gatilhos: `issues` com `types: [opened, reopened]`; `schedule` com `cron: "0 9 * * *"` (09:00 UTC, 06:00 em Brasília); `workflow_dispatch` sem entradas.
+- Gatilhos: `issues` com `types: [opened, reopened]`; `schedule` com `cron: "28 5 * * *"` (05:28 UTC, 02:28 em Brasília); `workflow_dispatch` sem entradas.
 - Concorrência: `concurrency` com grupo fixo `issue-agent` e `cancel-in-progress: false` (CA-07).
 - Ação do Claude: `anthropics/claude-code-action`, fixada pelo SHA `eb56b6666facdbd501035f4a0269d8caee2e7a8b` (decisão do usuário, no lugar da tag `v1` conferida em 2026-11-24), nunca em `main`. O checkout do trabalho do agente não grava a credencial no git. Entradas usadas: `claude_code_oauth_token`, `prompt`, `claude_args` (com `--permission-mode dontAsk`). Não passa `github_token`: a ação usa o token do app do Claude obtido por OIDC, o que exige `id-token: write`. Isso faz o pull request ser aberto pelo app e não pelo token padrão da automação, condição para o CI do repositório rodar no pull request do agente (um pull request aberto com o token padrão não dispara outras automações). `show_full_output` fica desligado (o repositório é público e essa saída pode expor segredos); o relatório da execução fica ligado com `display_report` (PR #69).
 - Permissões: no topo da automação, nenhuma (`permissions: {}`). Trabalho de seleção: `contents: read`, `issues: read`, `pull-requests: read`. Trabalho do agente: `contents: write`, `issues: write`, `pull-requests: write`, `id-token: write`. Nenhuma outra.
@@ -190,7 +190,7 @@ Arquivo versionado em português, passado à ação pelo conteúdo do arquivo, c
 - S-01: o modo de automação da ação (entrada `prompt`) funciona com evento de issue, agenda e disparo manual. Conferir na documentação da versão fixada durante a T3. Conferida em 2026-11-24: a ação ficou fixada em `@v1`. Depois, por decisão do usuário (62eee03), a ação passou a ser fixada pelo SHA `eb56b6666facdbd501035f4a0269d8caee2e7a8b`.
 - S-02: o app do Claude abre o pull request com o autor `claude[bot]`; a linha fixa no corpo é a segunda garantia caso o autor seja outro.
 - S-03: "pull request ligado" é o que referencia a issue para fechá-la (palavra de fechamento ou ligação manual). Menções soltas em outro pull request não contam.
-- S-04: limite de 100 turnos por execução (até 10 classificações mais um pull request) e horário da varredura às 09:00 UTC; ajustáveis sem mudar regra.
+- S-04: limite de 100 turnos por execução (até 10 classificações mais um pull request) e horário da varredura às 05:28 UTC, fora do minuto zero; ajustáveis sem mudar regra.
 - S-05: o `gh` já vem instalado no runner do GitHub e é autenticado pela própria ação.
 - S-06: o agente lê o título, o corpo e só os comentários de dono, membro ou colaborador, entregues pelo arquivo de contexto filtrado. Garantido pelo script e pelas ferramentas permitidas, não só pelas instruções.
 - S-07: a ação do Claude consegue ler arquivos na pasta temporária do runner, fora do checkout. Conferir durante a T3. Se não conseguir, o conteúdo dos arquivos de contexto entra no `prompt` pela entrada da ação (montado em um passo que lê os arquivos, nunca interpolado em comando de shell), e a T2 troca a guarda de leitura para "use só o contexto que veio no prompt". Resultado da T3: segue sem confirmação antes do merge, mitigada com `--add-dir` na pasta do contexto. A alternativa entra só se o primeiro teste real, com a #62, mostrar que não funciona.
@@ -287,7 +287,7 @@ Arquivo versionado em português, passado à ação pelo conteúdo do arquivo, c
 - Passos:
   1. Escrever o que o agente faz e o que nunca faz (merge, principal, prioridade, `.claude/` à mão).
   2. Explicar cada tamanho e a regra "na dúvida entre P e M, M", e que só P vira pull request.
-  3. Dizer quando roda (issue aberta ou reaberta, tratando só essa issue; todo dia às 06:00 de Brasília; disparo manual em Actions, "Agente de issues", Run workflow, ou `gh workflow run issue-agent.yml`), que só trata issues de colaboradores e só lê comentários de colaboradores, o limite de 10 classificações por execução, o limite de um pull request por vez e a fila das P (retomadas na varredura ou no disparo manual quando não há pull request do agente aberto).
+  3. Dizer quando roda (issue aberta ou reaberta, tratando só essa issue; todo dia às 02:28 de Brasília; disparo manual em Actions, "Agente de issues", Run workflow, ou `gh workflow run issue-agent.yml`), que só trata issues de colaboradores e só lê comentários de colaboradores, o limite de 10 classificações por execução, o limite de um pull request por vez e a fila das P (retomadas na varredura ou no disparo manual quando não há pull request do agente aberto).
   4. Explicar a credencial: gerar com `claude setup-token`, guardar como segredo `CLAUDE_CODE_OAUTH_TOKEN` (pela tela de segredos ou `gh secret set CLAUDE_CODE_OAUTH_TOKEN --repo felipe-sant/claude-kit`) e instalar o app do Claude; tudo feito pelo dono do repositório.
   5. Dizer onde ver o que o agente fez (o comentário na issue com o link da execução e o registro em Actions).
   6. Acrescentar a linha na tabela "Estrutura" do `.claude/CLAUDE.md` e conferir com `git diff -- .claude/CLAUDE.md` que só ela mudou; rodar o gate.
@@ -363,6 +363,7 @@ Todas pedidas ou aprovadas pelo usuário.
   - comandos rodados da raiz, sem `cd` e sem `$(...)`;
   - textos sem crase nem cifrão.
 - `CLAUDE_CODE_SUBPROCESS_ENV_SCRUB` não é usado (ver Limite conhecido).
+- Branch `fix/64-horario-da-varredura`, decisão do usuário em 2026-11-25: a varredura diária passa para as 02:28 de Brasília (`cron: "28 5 * * *"`, 05:28 UTC), no lugar das 06:00 de Brasília (`0 9 * * *`). O cron em hora cheia nunca disparou, porque o GitHub atrasa ou descarta o agendamento no minuto zero.
 
 ## Dúvidas
 
