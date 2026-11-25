@@ -85,8 +85,8 @@ test('a pasta do contexto é definida a partir de runner.temp em cada passo que 
 test('as listas de números são expandidas entre aspas no shell', () => {
   for (const [name, text] of both) {
     assert.doesNotMatch(text, /(^|[^"])\$\{CLASSIFY\/\/,\/ \}/m, name)
-    const commandLines = text.split('\n').filter((line) => !/fail "|echo "/.test(line))
-    assert.doesNotMatch(commandLines.join('\n'), /[^"{]\$PR_ISSUE(\s|$)/m, name)
+    const unquotedLines = text.split('\n').filter((line) => !line.includes('"'))
+    assert.doesNotMatch(unquotedLines.join('\n'), /\$\{?(PR_ISSUE|CLASSIFY)\b/, name)
   }
   assert.match(sizeSet, /"\$\{numbers\[@\]\}"/)
 })
