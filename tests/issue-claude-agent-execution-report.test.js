@@ -140,3 +140,17 @@ test('a execução grava o arquivo de dados do relatório ao lado da saída filt
   fs.rmSync(outputDir, { recursive: true })
   fs.rmSync(dir, { recursive: true })
 })
+
+test('reconhece as mensagens reais de limite de uso do Claude', () => {
+  const { buildReportData } = require(scriptPath)
+  const messages = [
+    "You've hit your 5-hour limit · resets 9:10pm (America/Sao_Paulo)",
+    "You've hit your weekly limit · resets Mon 9:00am",
+    'Claude AI usage limit reached|1700000000',
+    'You have reached your 3-hour limit'
+  ]
+  for (const result of messages) {
+    assert.equal(buildReportData([{ type: 'result', is_error: true, result }]).limitReached, true, result)
+  }
+  assert.equal(buildReportData([{ type: 'result', is_error: true, result: 'Erro qualquer de rede' }]).limitReached, false)
+})

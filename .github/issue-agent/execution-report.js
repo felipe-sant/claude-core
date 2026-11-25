@@ -6,7 +6,7 @@ const MIN_SECRET_LENGTH = 8
 const SECRET_ENV_NAMES = ['CLAUDE_CODE_OAUTH_TOKEN', 'GITHUB_TOKEN', 'ACTION_TOKEN']
 const OUTPUT_NAME = 'claude-execution-output.json'
 const DATA_NAME = 'report-data.json'
-const LIMIT_PATTERN = /usage limit|limit reached|rate limit|limite de uso/i
+const LIMIT_PATTERN = /usage limit|limit reached|rate limit|limite de uso|hit your .*limit|\d+-hour limit|weekly limit/i
 const TOKEN_PATTERNS = [
   /gh[pousr]_[A-Za-z0-9]{20,}/g,
   /github_pat_[A-Za-z0-9_]{20,}/g,
