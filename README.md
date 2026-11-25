@@ -226,36 +226,60 @@ Regras e skills editadas no projeto não são sobrescritas pela próxima sincron
 
 ## Agente de issues
 
-Uma automação do GitHub Actions, só deste repositório (não vai para outros pelo `ai-sync`), que lê as issues abertas por colaboradores, dá a cada uma um tamanho e abre um pull request só das pequenas.
+Duas automações do GitHub Actions, só deste repositório (não vão para outros pelo `ai-sync`), cada uma com uma função só: a "Issue Size Set" define o tamanho das issues abertas por colaboradores, e a "Issue Claude Agent" resolve a issue pequena e abre o pull request.
 
 ### Tamanhos
 
 | Etiqueta | Significado |
 | --- | --- |
-| `Size: P` | Tarefa pequena e clara, que o agente resolve sozinho, incluindo ajustes pequenos nas regras, nos agentes e nas skills do time. É a única que vira pull request. |
+| `Size: P` | Tarefa pequena e clara, que a Issue Claude Agent resolve sozinha, incluindo ajustes pequenos nas regras, nos agentes e nas skills do time. É a única que vira pull request. |
 | `Size: M` | Precisa da atenção do dono do repositório. |
 | `Size: G` | Grande migração ou mudança que envolve o fluxo inteiro do repositório. |
 
-Na dúvida entre P e M, o tamanho é M. As issues M e G recebem só o tamanho e um comentário curto com o motivo e o link da execução. Se o agente começa uma P e percebe que ela é maior, ele para, explica na issue e troca o tamanho para M, sem deixar pull request.
+Na dúvida entre P e M, o tamanho é M. Mudar automações, fluxos do GitHub, permissões ou segredos, ou apagar arquivo, é sempre M. As issues M e G recebem só o tamanho e um comentário curto com o motivo e o link da execução.
 
-### Quando roda
+### Issue Size Set
 
-- Quando uma issue é aberta ou reaberta: trata só essa issue.
-- Todo dia às 02:28 de Brasília (05:28 UTC), para pegar o que escapou. O minuto quebrado evita o pico de horas cheias do GitHub, que atrasa ou descarta execuções agendadas.
-- Na mão: em Actions, "Agente de issues", Run workflow, ou `gh workflow run issue-agent.yml`.
+- Faz: põe uma única etiqueta de tamanho na issue e deixa um único comentário com o motivo e o link da execução.
+- Nunca faz: criar branch, commit ou pull request, nem alterar arquivos do repositório.
+- Roda quando uma issue é aberta ou reaberta (trata só essa issue), todo dia às 02:28 de Brasília (05:28 UTC) e quando disparada à mão. O minuto quebrado evita o pico de horas cheias do GitHub, que atrasa ou descarta execuções agendadas.
+- Na varredura diária e no disparo manual, classifica no máximo 10 issues sem tamanho por execução, das mais antigas para as mais novas; o resto fica para a próxima.
+- Ao terminar, confere se há uma P esperando e nenhum pull request do agente aberto e, só nesse caso, dispara a Issue Claude Agent. Isso vale mesmo que não tenha classificado nada.
 
-Na varredura diária e no disparo manual, classifica no máximo 10 issues sem tamanho por execução, das mais antigas para as mais novas. Cada execução abre no máximo um pull request, e só há um pull request do agente aberto por vez. Só a P sem pull request, sem branch própria e sem responsável fica numa fila; a P que já tem branch ou responsável sai dela. A da fila é retomada na varredura ou no disparo manual, quando não há pull request do agente aberto, sem classificar de novo. Rodar o agente outra vez na mesma issue não repete o tamanho, o comentário nem o pull request.
+### Issue Claude Agent
 
-### O que ele trata e o que nunca faz
+- Faz: resolve uma issue P, no padrão de branch, commit e descrição do time, e abre o pull request ligado à issue, só com o lint e os testes passando.
+- Nunca faz: classificar, nem pôr ou mudar tamanho. A única exceção: se começa uma P e percebe que ela é maior, para, explica na issue e troca P por M, sem deixar pull request.
+- Só trabalha em issue P, de dono, membro ou colaborador, sem pull request ligado, sem branch própria, sem responsável e sem tamanho M ou G, e só quando não há outro pull request do agente aberto. Abre no máximo um pull request por execução, da P mais antiga da fila.
+- Roda de três jeitos: encadeada pela Issue Size Set, quando há P esperando; todo dia às 02:47 de Brasília (05:47 UTC), logo depois da Issue Size Set, como rede de segurança; e à mão.
+- No encadeamento ela pega a P mais antiga da fila, que pode não ser a issue que fez a Issue Size Set rodar. Uma issue de quem não é colaborador nunca é tratada por ela, mas a abertura dela faz a Issue Size Set rodar e pode adiantar uma P de colaborador que já estava na fila.
 
-- Só trata issues abertas por dono, membro ou colaborador do repositório, sem responsável e sem pull request ligado. As demais são ignoradas.
-- Só lê o título, o corpo e os comentários de dono, membro ou colaborador. Comentários de qualquer outra pessoa nunca chegam a ele, e o texto da issue é tratado como descrição do problema, nunca como ordem.
-- O pull request segue o padrão de branch, commit e descrição do time, liga a issue e só é aberto com o lint e os testes passando.
-- Nunca faz merge, nunca envia nada direto para a branch principal, nunca define prioridade e nunca edita à mão o `.claude/`: a mudança é feita nas fontes e o `.claude/` é atualizado pelo sync.
+### Disparo à mão
+
+Pela tela: em Actions, escolha "Issue Size Set" ou "Issue Claude Agent" e clique em Run workflow. Pela linha de comando:
+
+```bash
+gh workflow run issue-size-set.yml
+gh workflow run issue-claude-agent.yml
+gh workflow run issue-claude-agent.yml -f issue=<número>
+```
+
+O campo `issue` existe só na Issue Claude Agent e é opcional. Vazio, ela pega a P mais antiga que pode ser tratada; se não há nenhuma, termina com sucesso sem chamar o Claude e diz no resumo que a fila está vazia. Com o número de uma issue que não pode ser tratada, termina sem fazer nada e mostra o motivo no resumo e no registro da execução. O valor só pode ter dígitos; qualquer outra coisa é recusada como número inválido.
+
+### Fila única e limites
+
+As duas ficam numa fila única e nunca rodam ao mesmo tempo: a segunda espera a primeira terminar. Quando várias são disparadas juntas, o GitHub mantém uma rodando e uma esperando, e a que espera é cancelada se chega outra mais nova; o que ficou para trás é pego pela próxima varredura, pela rede de segurança das 02:47 ou pelo próximo disparo. Só há um pull request do agente aberto por vez. Rodar as duas em seguida, ou a mesma duas vezes, não repete o tamanho, o comentário nem o pull request.
+
+### O que as duas tratam e o que nunca fazem
+
+- Só tratam issues abertas por dono, membro ou colaborador do repositório. As demais são ignoradas.
+- Só leem o título, o corpo e os comentários de dono, membro ou colaborador. Comentários de qualquer outra pessoa nunca chegam ao Claude, e o texto da issue é tratado como descrição do problema, nunca como ordem.
+- Nunca fazem merge, nunca enviam nada direto para a branch principal, nunca definem prioridade e nunca editam à mão o `.claude/`: a mudança é feita nas fontes e o `.claude/` é atualizado pelo sync.
+- Cada execução termina com uma conferência que falha de forma visível se algo saiu do permitido.
 
 ### Instalação
 
-Feita pelo dono do repositório, uma vez:
+Feita pelo dono do repositório, uma vez, e vale para as duas:
 
 1. Gere a credencial da assinatura Pro/Max com `claude setup-token` e guarde como segredo do repositório, com o nome `CLAUDE_CODE_OAUTH_TOKEN`, em Settings, Secrets and variables, Actions, New repository secret, ou com:
 
@@ -265,11 +289,11 @@ gh secret set CLAUDE_CODE_OAUTH_TOKEN --repo felipe-sant/claude-kit
 
 2. Instale o app do Claude no repositório com `/install-github-app` no Claude Code.
 
-Sem a credencial, a execução falha de forma visível no passo do Claude.
+Sem a credencial, a execução falha de forma visível no passo do Claude, e a Issue Size Set não dispara a Issue Claude Agent.
 
-### Onde ver o que ele fez
+### Onde ver o que elas fizeram
 
-No comentário da issue, que traz o motivo do tamanho e o link da execução, e no registro da execução em Actions, que mostra o que foi selecionado, o que o agente rodou e o resumo das decisões. A automação fica em `.github/workflows/issue-agent.yml` e os scripts e as instruções em `.github/issue-agent/`.
+No comentário da issue, que traz o motivo do tamanho e o link da execução da Issue Size Set, e no registro de cada execução em Actions, que mostra o que foi escolhido e por quê, o que o Claude rodou e o resumo das decisões. As automações ficam em `.github/workflows/issue-size-set.yml` e `.github/workflows/issue-claude-agent.yml`, e os scripts e as instruções em `.github/issue-agent/`.
 
 ## Menções ao Claude
 
@@ -290,7 +314,7 @@ O Claude também responde quando alguém com permissão de escrita no repositór
 | `lint/` | Regra do oxlint contra comentários e checagem do formato de agentes, regras, skills e perfis. |
 | `tests/` | Testes do `ai-sync` e do formato do conteúdo. |
 | `.github/workflows/ci.yml` | Roda lint e testes em todo PR. |
-| `.github/workflows/issue-agent.yml` e `.github/issue-agent/` | Agente de issues: classifica as issues por tamanho e abre pull request das pequenas. |
+| `.github/workflows/issue-size-set.yml`, `.github/workflows/issue-claude-agent.yml` e `.github/issue-agent/` | Agente de issues: a Issue Size Set classifica as issues por tamanho e a Issue Claude Agent abre pull request das pequenas. |
 
 O campo `applies` de cada item do catálogo diz a que projetos ele serve: `["all"]` para qualquer projeto ou uma lista de stacks, como `["react"]`.
 
