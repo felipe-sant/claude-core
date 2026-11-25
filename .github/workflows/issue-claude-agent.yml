@@ -99,7 +99,7 @@ jobs:
           {
             echo "text<<PROMPT_END"
             cat .github/issue-agent/agent-prompt.md
-            printf '\n## Valores desta execução\n\n- pr_issue: %s\n- Pasta do contexto filtrado: %s\n- Arquivo da descrição do pull request: %s\n- Link da execução: %s\n' "$PR_ISSUE" "$CONTEXT_DIR" "$CONTEXT_DIR/pull-request-body.md" "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            printf '\n## Valores desta execução\n\n- pr_issue: %s\n- Pasta do contexto filtrado: %s\n- Arquivo da descrição do pull request: %s\n- Arquivo do novo guia do Claude: %s\n- Link da execução: %s\n' "$PR_ISSUE" "$CONTEXT_DIR" "$CONTEXT_DIR/pull-request-body.md" "$CONTEXT_DIR/claude-guide.md" "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
             echo "PROMPT_END"
           } >> "$GITHUB_OUTPUT"
       - id: claude
@@ -112,7 +112,7 @@ jobs:
           claude_args: |
             --max-turns 100
             --add-dir ${{ runner.temp }}/issue-agent
-            --allowedTools "Read,Glob,Grep,Edit,Write,Agent,Skill,Bash(git add:*),Bash(git commit:*),Bash(git push:*),Bash(git switch:*),Bash(git checkout -b:*),Bash(git status:*),Bash(git diff:*),Bash(git log:*),Bash(git branch:*),Bash(git show:*),Bash(git rev-parse:*),Bash(npm ci),Bash(npm run lint),Bash(npm test),Bash(npm run sync),Bash(node bin/ai-sync.js:*),Bash(gh issue comment:*),Bash(gh issue edit * --add-label *),Bash(gh issue edit * --remove-label *),Bash(gh pr list:*)"
+            --allowedTools "Read,Glob,Grep,Edit,Write,Agent,Skill,Bash(git add:*),Bash(git commit:*),Bash(git push:*),Bash(git switch:*),Bash(git checkout -b:*),Bash(git status:*),Bash(git diff:*),Bash(git log:*),Bash(git branch:*),Bash(git show:*),Bash(git rev-parse:*),Bash(npm ci),Bash(npm run lint),Bash(npm test),Bash(npm run sync),Bash(node bin/ai-sync.js:*),Bash(node .github/issue-agent/apply-claude-guide.js),Bash(gh issue comment:*),Bash(gh issue edit * --add-label *),Bash(gh issue edit * --remove-label *),Bash(gh pr list:*)"
             --disallowedTools 'Bash(*$*),Bash(*`*),Bash(*environ*),Bash(*/proc/*),Bash(*--body-file*),Bash(*--file*),Bash(*--template*),Bash(* -F*),Bash(* -T *),Bash(env:*),Bash(printenv:*),Bash(export:*),Bash(set:*),Bash(declare:*),Bash(cat *environ*),Bash(head *environ*),Bash(tail *environ*),Bash(echo *TOKEN*),Bash(printf *TOKEN*),Read(//proc/**),Bash(gh issue edit *--title*),Bash(gh issue edit *--body*),Bash(gh issue edit *--add-assignee*),Bash(gh issue edit *--remove-assignee*),Bash(gh issue edit *--add-project*),Bash(gh issue edit *--remove-project*),Bash(gh issue edit *--milestone*),Bash(gh pr merge:*),Bash(gh issue view:*),Bash(gh api:*),Bash(git push --force:*),Bash(git push -f:*),Bash(git push --force-with-lease:*),Bash(git push origin main:*),Bash(git push origin HEAD:main:*)'
             --permission-mode dontAsk
       - name: Relatório da execução

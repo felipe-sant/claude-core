@@ -56,6 +56,10 @@ const guards = {
   'comenta quando um comando é negado': 'um comando for negado',
   'comenta quando a execução falha ou trava': 'a execução falhar ou travar',
   'guia do Claude é o único editado à mão': 'O `.claude/CLAUDE.md` é o único arquivo do `.claude/` editado à mão',
+  'guia do Claude novo vem nos valores da execução': 'no arquivo do novo guia do Claude indicado em "Valores desta execução"',
+  'guia do Claude alterado só pelo script': 'node .github/issue-agent/apply-claude-guide.js',
+  'guia do Claude: grava o texto completo com a ferramenta de escrita': 'Grave o texto completo do novo guia com a ferramenta de escrita no arquivo do novo guia do Claude',
+  'guia do Claude: a exceção do arquivo do novo guia': 'gravar o arquivo do novo guia do Claude',
   'exceção da pasta temporária para o arquivo da descrição': 'A única exceção é gravar o arquivo da descrição do pull request com a ferramenta de escrita, no caminho que vem em "Valores desta execução"'
 }
 

@@ -106,6 +106,20 @@ test('as ferramentas liberadas cobrem leitura, edição, subagentes, skills, npm
   assert.ok(!allowed.includes('gh pr create'), 'o agente não pode abrir pull request')
 })
 
+test('o agente ganha só a chamada exata do script que grava o guia do Claude', () => {
+  const allowed = allowedOf(job('agent'))
+  assert.ok(allowed.includes('Bash(node .github/issue-agent/apply-claude-guide.js)'))
+  assert.ok(!allowed.includes('Bash(node .github/issue-agent/apply-claude-guide.js:*)'))
+  assert.ok(!allowed.includes('Bash(node:*)'))
+  assert.doesNotMatch(allowed, /(?:Edit|Write)\(/)
+  assert.doesNotMatch(allowed, /\.claude\/(?!CLAUDE\.md)/)
+})
+
+test('a montagem das instruções informa o arquivo do novo guia do Claude', () => {
+  assert.match(job('agent'), /Arquivo do novo guia do Claude: %s/)
+  assert.match(job('agent'), /\$CONTEXT_DIR\/claude-guide\.md/)
+})
+
 test('a edição de issue só pode pôr e tirar etiquetas', () => {
   const block = job('agent')
   const allowed = allowedOf(block)
