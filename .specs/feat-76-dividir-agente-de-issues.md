@@ -34,11 +34,11 @@ Hoje uma única automação, "Agente de issues", classifica o tamanho das issues
 
 Os critérios CA-01 a CA-09 são os nove critérios numerados da issue #76, na mesma ordem. Os demais vêm das decisões do usuário na issue #76.
 
-- CA-01: QUANDO alguém lista as automações do repositório ENTÃO o sistema DEVE ter "Issue Size Set" e "Issue Claude Agent" e não ter mais "Agente de issues". Cobre RN-01.
+- CA-01: QUANDO alguém lista as automações do repositório ENTÃO o sistema DEVE ter "Issue Size Set" e "Issue Claude Agent", e "Agente de issues" DEVE não existir mais no repositório e não poder mais ser disparada; o histórico das execuções antigas pode continuar visível em Actions. Cobre RN-01.
 - CA-02: QUANDO a Issue Size Set roda, em qualquer situação ENTÃO o sistema DEVE só pôr a etiqueta de tamanho e o comentário de classificação, sem criar branch, commit nem pull request e sem alterar outras etiquetas. Cobre RN-02, RN-12.
 - CA-03: QUANDO a Issue Claude Agent roda, em qualquer situação ENTÃO o sistema DEVE não pôr nem mudar tamanho, a não ser trocar P por M ao perceber que a issue é maior; ela nunca deixa comentário de classificação. Cobre RN-05, RN-12.
 - CA-04: QUANDO a Issue Claude Agent escolhe uma issue ENTÃO a issue DEVE ter tamanho P, ter sido aberta por dono, membro ou colaborador e não ter pull request ligado, branch própria, responsável nem tamanho M ou G. Cobre RN-06, RN-11.
-- CA-05: QUANDO há um pull request do agente aberto e a Issue Claude Agent roda ENTÃO ela DEVE terminar com sucesso sem chamar o Claude e sem fazer nada novo; e QUANDO não há issue para classificar e a Issue Size Set roda ENTÃO ela DEVE terminar com sucesso sem chamar o Claude e sem fazer nada. Cobre RN-06, RN-13.
+- CA-05: QUANDO há um pull request do agente aberto e a Issue Claude Agent roda ENTÃO ela DEVE terminar com sucesso sem chamar o Claude e sem fazer nada novo; e QUANDO não há issue para classificar e a Issue Size Set roda ENTÃO ela DEVE terminar com sucesso sem chamar o Claude e sem pôr tamanho, comentar, criar branch ou abrir pull request; a única ação permitida é o encadeamento do CA-12, quando há P esperando (ver D-02). Cobre RN-06, RN-13.
 - CA-06: QUANDO a Issue Claude Agent é disparada à mão com o número de uma issue que não pode ser tratada ENTÃO ela DEVE terminar com sucesso, sem chamar o Claude e sem mexer em nada, e mostrar no resumo e no registro da execução o motivo, com um destes textos: número inválido; issue não encontrada entre as abertas; aberta por quem não é colaborador; com responsável; com pull request ligado; com tamanho M ou G; sem tamanho P; com branch própria; já há pull request do agente aberto. Cobre RN-08.
 - CA-07: QUANDO as duas rodam em seguida, ou uma delas roda duas vezes sobre a mesma issue ENTÃO o sistema DEVE terminar com um único tamanho, um único comentário de classificação e no máximo um pull request para ela. Cobre RN-13.
 - CA-08: QUANDO alguém lê o README ENTÃO ele DEVE explicar as duas automações, o que cada uma faz e nunca faz, quando cada uma roda (com os horários), como disparar cada uma à mão (pela tela e pela linha de comando), o campo opcional do número da issue, a fila única e o encadeamento. Cobre RN-14.
@@ -61,6 +61,7 @@ Os critérios CA-01 a CA-09 são os nove critérios numerados da issue #76, na m
 - CA-25: QUANDO o lint, os testes e a checagem das automações do repositório rodam ENTÃO eles DEVEM passar e cobrir: a escolha das issues de cada automação, cada motivo de issue que não pode ser tratada, o encadeamento, o formato das duas automações (gatilhos, horários, fila única, permissões, credencial, ferramentas liberadas e proibidas, ausência de comentários), as proteções das instruções de cada uma e a ausência da automação antiga, sem perder nenhuma proteção conferida hoje. Cobre RN-01 a RN-13.
 - CA-26: QUANDO alguém lê o guia do Claude do projeto ENTÃO a única mudança DEVE ser a linha da automação na tabela da estrutura do repositório, que passa a citar as duas automações. Cobre RN-14.
 - CA-27: QUANDO a issue tem tamanho M ou G ENTÃO nenhuma das duas DEVE mexer nela: a Issue Size Set não a classifica de novo e a Issue Claude Agent não a trata. Cobre RN-03, RN-15.
+- CA-28: QUANDO a Issue Claude Agent encadeada está esperando na fila e é substituída por uma execução mais nova da Issue Size Set ENTÃO a P esperando DEVE não se perder: a Issue Size Set que a substituiu dispara de novo a Issue Claude Agent ao terminar, se ainda houver P esperando e nenhum pull request do agente aberto, e, na pior hipótese, a rede de segurança das 02:47 a trata. Cobre RN-07, RN-09.
 
 ## O que muda em relação à #64
 
@@ -96,7 +97,7 @@ Caem:
 - O lint, a suíte, a checagem do catálogo e o actionlint passam, e o CI aprova o pull request desta tarefa.
 - Nenhuma proteção conferida pelos testes de hoje some: cada uma aparece em um teste novo (ver a tabela em "Desenho").
 - Roteiro do QA, depois do merge (o GitHub só roda a varredura diária e o disparo manual a partir da branch principal), com execuções reais:
-  1. Em Actions, aparecem "Issue Size Set" e "Issue Claude Agent", e não há como disparar "Agente de issues". As duas execuções antigas presas continuam listadas como estão.
+  1. Em Actions, aparecem "Issue Size Set" e "Issue Claude Agent", e não há como disparar "Agente de issues" (o histórico dela pode continuar visível). As duas execuções antigas presas continuam listadas como estão.
   2. Abrir uma issue pequena e clara, como colaborador: roda uma "Issue Size Set" que põe um tamanho e um comentário com o motivo e o link, sem branch nem pull request. Se ela saiu P e não há pull request do agente aberto, logo depois roda uma "Issue Claude Agent", que abre o pull request ligado à issue.
   3. Abrir uma issue que pede mudança nas automações: ela sai M, e a "Issue Claude Agent" não abre pull request para ela.
   4. Reabrir a issue do passo 2: nenhum tamanho, comentário ou pull request a mais.
@@ -105,6 +106,7 @@ Caem:
   7. Disparar as duas à mão quase juntas: a segunda fica esperando e só começa quando a primeira termina.
   8. No dia seguinte, conferir que a "Issue Size Set" rodou por volta das 02:28 e a "Issue Claude Agent" por volta das 02:47 de Brasília (o GitHub pode atrasar alguns minutos).
   9. Ler o README e conferir o que o CA-08 pede.
+  10. Opcional: disparar a "Issue Size Set" com uma P esperando e, enquanto ela roda, abrir outra issue como colaborador. Observar em Actions que a "Issue Claude Agent" encadeada que esperava é cancelada pela nova "Issue Size Set" e que esta, ao terminar, dispara de novo a "Issue Claude Agent" (CA-28).
 - O QA fecha ou apaga as issues e o pull request de teste ao fim, combinando antes com o Felipe.
 
 ## Fora do escopo
@@ -149,7 +151,7 @@ Arquivos:
 
 Comuns às duas:
 
-- Concorrência no topo, igual nas duas: `concurrency:` com `group: issue-automations` e `cancel-in-progress: false`. O nome novo deixa claro que o grupo serve às duas e não se mistura com o grupo `issue-agent` da automação removida, onde ficam as duas execuções antigas presas.
+- Concorrência no topo, igual nas duas: `concurrency:` com `group: issue-agent` e `cancel-in-progress: false`. É o mesmo grupo da automação removida: as duas execuções antigas presas estão ligadas ao commit antigo e, se uma delas começar algum dia, roda a automação antiga inteira; no mesmo grupo, ela fica na fila com as novas e nunca roda junto delas (RN-09). Um grupo novo deixaria essa execução antiga rodar ao mesmo tempo que as novas.
 - `permissions: {}` no topo.
 - Credencial: segredo `CLAUDE_CODE_OAUTH_TOKEN`, pela entrada `claude_code_oauth_token`. Sem `github_token` na ação.
 - Ação: `anthropics/claude-code-action@eb56b6666facdbd501035f4a0269d8caee2e7a8b`, com `display_report: true`, sem `show_full_output`, e `--permission-mode dontAsk` em `claude_args`.
@@ -238,7 +240,7 @@ Decisão recomendada: o trabalho `chain` da Issue Size Set dispara a Issue Claud
 
 - S-01: `gh workflow run` com o `GITHUB_TOKEN` cria a execução da Issue Claude Agent (documentado como exceção do GitHub). Confirmar no QA depois do merge.
 - S-02: a execução disparada pelo `chain` entra na fila do grupo e só começa depois que a Issue Size Set termina. Confirmar no QA.
-- S-03: o GitHub mantém uma execução rodando e uma esperando por grupo: a que espera é substituída pela mais nova, entre as duas automações. Coberto pela rede de segurança e pelo próximo encadeamento (ver Limite conhecido).
+- S-03: conferido pelo Dev Ops na documentação do GitHub Actions (uso de concorrência): num grupo há no máximo uma execução rodando e uma esperando, e uma nova execução que entra na espera cancela a que já esperava, mesmo com `cancel-in-progress: false`, entre as duas automações. A opção `queue: max` (até 100 esperando) resolveria, mas o actionlint 1.7.12, a última versão e a que o CI usa, recusa a chave ("unexpected key queue for concurrency section") e quebraria o Actionlint do CI; fica como alternativa futura, não adotada. Decisão técnica do Dev Ops, a confirmar pela orchestrator: aceitar a perda em vez de usar grupos diferentes, que deixariam as duas rodarem juntas (contra a RN-09), porque o encadeamento da Issue Size Set nova e a rede de segurança das 02:47 a recuperam (CA-28, ver Limite conhecido).
 - S-04: 60 turnos bastam para a Issue Size Set classificar até 10 issues; a Issue Claude Agent fica com 100. Ajustáveis sem mudar regra.
 - S-05: as suposições S-02, S-05, S-06 e S-07 da #64 continuam (autor `claude[bot]`, `gh` no runner, leitura só pelo contexto filtrado, leitura da pasta fora do checkout com `--add-dir`).
 - S-06: a ação do Claude funciona na Issue Size Set sem `contents: write` e sem `npm ci`. Confirmar na primeira execução real.
@@ -248,7 +250,8 @@ Decisão recomendada: o trabalho `chain` da Issue Size Set dispara a Issue Claud
 
 ### Limite conhecido
 
-- Com execuções em sequência rápida, a que espera na fila pode ser substituída por outra mais nova, de qualquer das duas automações (uma Issue Claude Agent encadeada pode ser substituída por uma Issue Size Set, e o contrário). A issue de uma Issue Size Set substituída é pega na próxima varredura ou no próximo disparo; a P de uma Issue Claude Agent substituída é pega no próximo encadeamento ou na rede de segurança das 02:47.
+- Com execuções em sequência rápida, a que espera na fila pode ser substituída por outra mais nova, de qualquer das duas automações (uma Issue Claude Agent encadeada pode ser substituída por uma Issue Size Set, e o contrário). Cenário típico: uma Issue Size Set está rodando, a Issue Claude Agent que ela encadeou espera, e uma nova issue é aberta; a Issue Size Set dessa issue entra na espera e cancela a Issue Claude Agent. A P não se perde: a Issue Size Set nova, ao terminar, encadeia de novo a Issue Claude Agent se ainda houver P esperando e nenhum pull request do agente aberto, e a rede de segurança das 02:47 cobre o resto (CA-28). A issue de uma Issue Size Set substituída é pega na varredura das 02:28 ou no próximo disparo.
+- A conferência final da Issue Size Set compara a lista inteira de branches do remoto antes e depois do Claude. Se alguém enviar uma branch durante a execução, ela falha de forma visível sem que o agente tenha feito nada errado; basta conferir o registro e disparar de novo.
 - A varredura diária, a rede de segurança e o disparo manual só funcionam a partir da branch principal. Antes do merge, só a suíte, o actionlint e uma execução local, só de leitura, do script de seleção nos dois modos.
 - Os limites da #64 continuam: comentários lidos só até os 100 últimos na seleção; risco aceito de o agente rodar testes ou hooks que ele mesmo editou; `CLAUDE_CODE_SUBPROCESS_ENV_SCRUB` não usado; `git rm`, `rm`, worktree e `git fetch` negados.
 - As duas execuções antigas presas (45400454973 e 45403825175) pertencem à automação removida e ficam como estão.
@@ -283,7 +286,7 @@ Actionlint local: use o binário já baixado em `/tmp/claude-1000/-home-felipe-p
   4. Rodar o script localmente nos dois modos, só leitura, contra o repositório real (`GITHUB_TOKEN=$(gh auth token)`), incluindo `REQUESTED_ISSUE=76` e `REQUESTED_ISSUE=abc`, e registrar no relato o que ele escolheria.
   5. Rodar o gate.
 - Teste: unitário; o primeiro a falhar é "número abc é recusado como inválido".
-- Pronto quando: todos os testes de hoje continuam (movidos, sem afrouxar), os novos passam, o script não tem comentários e o gate passa.
+- Pronto quando: os testes de hoje são só movidos, sem afrouxar, menos estes três, que mudam por desenho e o relato deve citar com o motivo: "pull request do agente aberto bloqueia pr_issue e mantém classify" vira dois testes, um por modo, porque a saída `pr_allowed` cai e cada modo tem as próprias saídas (RN-06, CA-05, CA-10); "evento com P na fila devolve só ela em pr_issue" vira "o modo size-set nunca devolve pr_issue" e "o modo agent ignora o evento issues" (mudança da RN-20 da #64, ver "O que muda"; CA-10, CA-12); "writeOutputs grava as quatro saídas" vira um teste por modo, com duas saídas cada (contrato do Desenho). Os novos passam, o script não tem comentários e o gate passa.
 - Gate: `npm run lint`, `node --test tests/issue-agent-select.test.js tests/issue-size-set-select.test.js tests/issue-claude-agent-select.test.js` e `node bin/ai-sync.js --check`.
 - Modelo: padrao.
 - Status: pendente.
@@ -344,9 +347,9 @@ Actionlint local: use o binário já baixado em `/tmp/claude-1000/-home-felipe-p
 - Dev: Dev Ops (dev-devops).
 - Depende de: T2.
 - Reaproveita: `.github/workflows/issue-agent.yml` (passos de contexto, prompt, ação e conferência) e `tests/issue-workflow-helpers.js`.
-- Atende: RN-02, RN-04, RN-07, RN-09 a RN-12; CA-02, CA-05, CA-09, CA-10, CA-12, CA-15, CA-16, CA-19, CA-21, CA-22, CA-25.
+- Atende: RN-02, RN-04, RN-07, RN-09 a RN-12; CA-02, CA-05, CA-09, CA-10, CA-12, CA-15, CA-16, CA-19, CA-21, CA-22, CA-25, CA-28.
 - Passos:
-  1. Escrever os testes do formato: os três gatilhos e o cron `28 5`; o grupo `issue-automations`; `permissions: {}`; as permissões exatas de `select`, `classify` e `chain` (sem `contents: write` em nenhum); `--allowedTools` exatamente o do contrato, sem `git`, `npm`, `Agent`, `Skill`, `Edit`, `Write`, `gh pr` nem `--remove-label`; `REQUIRED_DISALLOWED`; `dontAsk`; SHA fixo; sem `github_token`; `display_report`; `persist-credentials: false`; foto de antes e conferência com `if: always()`; o `if` do `chain` com `!cancelled()`; `gh workflow run issue-claude-agent.yml` só quando `pr_issue` não está vazio, sem número; sem comentários e sem interpolação de texto livre. Ver falhar.
+  1. Escrever os testes do formato: os três gatilhos e o cron `28 5`; o grupo `issue-agent`; `permissions: {}`; as permissões exatas de `select`, `classify` e `chain` (sem `contents: write` em nenhum); `--allowedTools` exatamente o do contrato, sem `git`, `npm`, `Agent`, `Skill`, `Edit`, `Write`, `gh pr` nem `--remove-label`; `REQUIRED_DISALLOWED`; `dontAsk`; SHA fixo; sem `github_token`; `display_report`; `persist-credentials: false`; foto de antes e conferência com `if: always()`; o `if` do `chain` com `!cancelled()`; `gh workflow run issue-claude-agent.yml` só quando `pr_issue` não está vazio, sem número; o trabalho `chain` não depende do resultado de execuções anteriores (sem `workflow_run`, artefato, cache nem saída de outra execução) e sempre reconsulta o GitHub com `select-issues.js agent` antes de disparar (CA-28); sem comentários e sem interpolação de texto livre. Ver falhar.
   2. Escrever a automação.
   3. Rodar o actionlint e o gate.
 - Teste: unitário de formato; o primeiro a falhar é o das permissões, por falta do arquivo.
@@ -363,7 +366,7 @@ Actionlint local: use o binário já baixado em `/tmp/claude-1000/-home-felipe-p
 - Reaproveita: `.github/workflows/issue-agent.yml` (trabalho do agente inteiro) e `tests/issue-workflow-helpers.js`.
 - Atende: RN-05 a RN-12; CA-03 a CA-06, CA-09, CA-13 a CA-17, CA-20, CA-21, CA-22, CA-24, CA-25.
 - Passos:
-  1. Escrever os testes do formato: `workflow_dispatch` com a entrada `issue` opcional do tipo texto e o cron `47 5`; sem gatilho `issues` e sem `workflow_call`; o grupo `issue-automations`; as permissões exatas; `inputs.issue` só em `env:` e nunca em `run:`; todas as guardas de hoje do trabalho do agente (ferramentas, subcomandos do `git`, `git checkout` só para criar branch, edição de issue só de etiqueta, `REQUIRED_DISALLOWED`, `dontAsk`, `fetch-depth: 0`, `persist-credentials: false`, link da execução, aspas nas listas, sem crase dentro de aspas simples); a conferência que exige `Size: P` ou `Size: M`, compara com a foto de antes e conta os comentários de classificação. Ver falhar.
+  1. Escrever os testes do formato: `workflow_dispatch` com a entrada `issue` opcional do tipo texto e o cron `47 5`; sem gatilho `issues` e sem `workflow_call`; o grupo `issue-agent`; as permissões exatas; `inputs.issue` só em `env:` e nunca em `run:`; todas as guardas de hoje do trabalho do agente (ferramentas, subcomandos do `git`, `git checkout` só para criar branch, edição de issue só de etiqueta, `REQUIRED_DISALLOWED`, `dontAsk`, `fetch-depth: 0`, `persist-credentials: false`, link da execução, aspas nas listas, sem crase dentro de aspas simples); a conferência que exige `Size: P` ou `Size: M`, compara com a foto de antes e conta os comentários de classificação. Ver falhar.
   2. Escrever a automação.
   3. Rodar o actionlint e o gate.
 - Teste: unitário de formato; o primeiro a falhar é o do campo `issue` só em `env:`, por falta do arquivo.
@@ -434,5 +437,5 @@ Do product-owner:
 Só o usuário responde:
 
 - D-01: quando a Issue Size Set é disparada por uma issue aberta ou reaberta e encadeia, a Issue Claude Agent pega a P mais antiga da fila, que pode não ser a issue do evento, ou só a issue do evento? Padrão provisório: a P mais antiga (o encadeamento chama sem número, como diz a decisão "se houver P na fila"). Na #64, o evento tratava só a própria issue (RN-20).
-- D-02: a Issue Size Set encadeia mesmo quando não classificou nada (por exemplo, uma P reaberta, ou uma issue aberta por quem não é colaborador), desde que haja P na fila? Padrão provisório: sim, porque a decisão diz "ao terminar, se houver P na fila", e é assim que a P reaberta continua sendo atendida. Efeito colateral: alguém de fora, ao abrir uma issue, pode provocar uma execução da Issue Claude Agent, que só trata P de colaborador. A alternativa é encadear só quando a classificação rodou e terminou com sucesso.
+- D-02: a Issue Size Set encadeia mesmo quando não classificou nada (por exemplo, uma P reaberta, ou uma issue aberta por quem não é colaborador), desde que haja P na fila? Padrão provisório: sim, porque a decisão diz "ao terminar, se houver P na fila", e é assim que a P reaberta continua sendo atendida. Efeito colateral: alguém de fora, ao abrir uma issue, pode provocar uma execução da Issue Claude Agent, que só trata P de colaborador. A alternativa é encadear só quando a classificação rodou e terminou com sucesso. Atenção: o padrão provisório se afasta da letra do critério 5 da issue ("o Size Set também termina sem fazer nada"), por isso o CA-05 traz a exceção do encadeamento; com a alternativa, a exceção sai, a P reaberta espera a rede de segurança das 02:47 e a recuperação do CA-28 só acontece quando a Issue Size Set nova classificou alguma issue.
 - D-03: o horário da rede de segurança, 02:47 de Brasília (`47 5 * * *`), está bom? Padrão provisório: sim.
