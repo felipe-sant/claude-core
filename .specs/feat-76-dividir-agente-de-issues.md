@@ -172,7 +172,7 @@ Issue Size Set:
 
 Issue Claude Agent:
 
-- Gatilhos: `workflow_dispatch` com a entrada `issue` (`description: Número da issue (vazio: a P mais antiga da fila)`, `required: false`, `type: string`); `schedule` com `cron: "47 5 * * *"` (02:47 de Brasília, 19 minutos depois da varredura, também fora do minuto zero). Sem gatilho `issues` nem `workflow_call`.
+- Gatilhos: `workflow_dispatch` com a entrada `issue` (`description: "Número da issue (vazio: a P mais antiga da fila)"`, entre aspas duplas porque os dois-pontos quebram o YAML, com o mesmo texto, `required: false`, `type: string`); `schedule` com `cron: "47 5 * * *"` (02:47 de Brasília, 19 minutos depois da varredura, também fora do minuto zero). Sem gatilho `issues` nem `workflow_call`.
 - Trabalho `select` (Seleção): `contents: read`, `issues: read`, `pull-requests: read`. Roda `node .github/issue-agent/select-issues.js agent` com `REQUESTED_ISSUE: ${{ inputs.issue }}` só em `env:`. Saídas: `pr_issue` e `reason`. Issue que não pode ser tratada: `pr_issue` vazio, motivo no registro e no resumo, e o trabalho termina com sucesso.
 - Trabalho `agent` (Agente): `needs: select`, `if: needs.select.outputs.pr_issue != ''`. Permissões: `contents: write`, `issues: write`, `pull-requests: write`, `id-token: write`. Passos como os do trabalho do agente de hoje (checkout com `fetch-depth: 0` e `persist-credentials: false`, Node 22 com cache, `npm ci`, foto de antes, contexto filtrado só de `pr_issue`, montagem do prompt com `agent-prompt.md` mais `pr_issue`, pasta do contexto e link da execução, ação do Claude, conferência final com `if: always()`).
 - Ferramentas da Issue Claude Agent: a lista `--allowedTools` de hoje (leitura, edição, `Agent`, `Skill`, os subcomandos de `git` liberados, `npm ci`, `npm run lint`, `npm test`, `npm run sync`, `node bin/ai-sync.js`, `gh issue comment`, `gh issue edit` só com `--add-label` e `--remove-label`, `gh pr create`, `gh pr list`), `--max-turns 100`. A edição de etiqueta continua genérica porque o padrão de permissão não fixa com segurança o nome da etiqueta; quem garante que só houve troca de P por M é a conferência final.
@@ -261,9 +261,9 @@ Decisão recomendada: o trabalho `chain` da Issue Size Set dispara a Issue Claud
 O projeto não tem build, typecheck nem formatador; o CI roda `npm run lint`, `npm test` e o actionlint.
 
 - Fase 1 (paralelo): T1 [P], T2 [P], T3 [P], T4 [P] (Dev Ops, delegáveis ao executor) e T7 [P] (Dev Doc). Cada uma edita arquivos diferentes e depende só do contrato acima. Concluída.
-- Fase 2 (paralelo, assim que a T2 terminar, sem esperar o resto da Fase 1): T5 [P] e T6 [P] (Dev Ops). Em andamento.
+- Fase 2 (paralelo, assim que a T2 terminar, sem esperar o resto da Fase 1): T5 [P] e T6 [P] (Dev Ops). Concluída, com a revisão em andamento. Gate: `npm run lint` passou, `npm test` com 389 testes passando e `node bin/ai-sync.js --check` passou.
 - Gate de fase (fim das Fases 1 e 2): `npm run lint`, `npm test`, `node bin/ai-sync.js --check`, o actionlint em todos os workflows e o sync em pasta temporária (`T=$(mktemp -d) && node bin/ai-sync.js "$T" && ls -R "$T/.claude"; rm -rf "$T"`).
-- Fase 3 (sequencial): T8 (remove a antiga, depende de T1 a T6).
+- Fase 3 (sequencial): T8 (remove a antiga, depende de T1 a T6). Em andamento.
 - Gate de fase: o mesmo.
 - Fase 4 (sequencial): T9 (integração e conferência final), depois o Reviewer.
 - Gate de fase: o mesmo, depois de atualizar a branch com a main por merge, se ela avançou.
@@ -322,7 +322,7 @@ Actionlint local: use o binário já baixado em `/tmp/claude-1000/-home-felipe-p
 - Pronto quando: cada guarda de hoje que vale para classificar está no teste novo e o gate passa.
 - Gate: `npm run lint`, `node --test tests/issue-size-set-prompt.test.js` e `node bin/ai-sync.js --check`.
 - Modelo: padrao.
-- Status: feita. Commit 0a6d66d. Antes falhou por falta do arquivo de instruções da Issue Size Set (ENOENT). Agora são 19 testes.
+- Status: feita. Commit 0a6d66d. Antes falhou por falta do arquivo de instruções da Issue Size Set (ENOENT). Agora são 19 testes. Correção do bloqueio do Reviewer no commit db3e002: guardas "rode da raiz, sem cd e sem $(...)" e "texto sem crase nem cifrão", com testes que falharam antes. A frase da guarda de crase e cifrão ficou "No texto do comentário, não use crase nem cifrão, porque esses comandos são negados".
 
 ### T4 [P] Instruções da Issue Claude Agent
 - O quê: o prompt da Issue Claude Agent com as guardas do contrato e o teste que confere cada uma.
@@ -339,7 +339,7 @@ Actionlint local: use o binário já baixado em `/tmp/claude-1000/-home-felipe-p
 - Pronto quando: cada guarda de hoje que vale para o pull request está no teste novo e o gate passa.
 - Gate: `npm run lint`, `node --test tests/issue-claude-agent-prompt.test.js` e `node bin/ai-sync.js --check`.
 - Modelo: padrao.
-- Status: feita. Commit d2af3e3. Antes falhou por falta do arquivo de instruções da Issue Claude Agent (ENOENT). Agora são 44 testes.
+- Status: feita. Commit d2af3e3. Antes falhou por falta do arquivo de instruções da Issue Claude Agent (ENOENT). Agora são 44 testes. Sugestão do Reviewer no commit 4bcfdef: usar o link pronto no comentário da troca de P por M e nunca ler variáveis de ambiente.
 
 ### T5 [P] Automação Issue Size Set
 - O quê: a automação Issue Size Set com seleção, classificação, encadeamento e conferência final do contrato.
@@ -356,7 +356,7 @@ Actionlint local: use o binário já baixado em `/tmp/claude-1000/-home-felipe-p
 - Pronto quando: os testes passam, o actionlint não aponta nada e o gate passa.
 - Gate: `npm run lint`, `node --test tests/issue-size-set-workflow.test.js`, `node bin/ai-sync.js --check` e o actionlint.
 - Modelo: padrao.
-- Status: em-andamento.
+- Status: feita. Commit 298f3e1, 18 testes. Antes, o arquivo de teste falhou ao carregar, por falta do arquivo da automação (ENOENT), e não teste a teste. Actionlint passou.
 
 ### T6 [P] Automação Issue Claude Agent
 - O quê: a automação Issue Claude Agent com o campo opcional, a seleção, o agente e a conferência final do contrato.
@@ -373,7 +373,7 @@ Actionlint local: use o binário já baixado em `/tmp/claude-1000/-home-felipe-p
 - Pronto quando: os testes passam, o actionlint não aponta nada e o gate passa.
 - Gate: `npm run lint`, `node --test tests/issue-claude-agent-workflow.test.js`, `node bin/ai-sync.js --check` e o actionlint.
 - Modelo: padrao.
-- Status: em-andamento.
+- Status: feita. Commit 780ac4f. Antes, o arquivo de teste falhou ao carregar, por falta do arquivo da automação (ENOENT), e não teste a teste.
 
 ### T7 [P] README e linha da estrutura no guia do Claude
 - O quê: trocar a seção "Agente de issues" do README por uma que explica as duas automações e atualizar a linha da tabela "Estrutura" do README e do guia do Claude.
@@ -409,7 +409,7 @@ Actionlint local: use o binário já baixado em `/tmp/claude-1000/-home-felipe-p
 - Pronto quando: nenhuma guarda de hoje ficou sem equivalente, a suíte passa e o gate passa.
 - Gate: `npm run lint`, `npm test`, `node bin/ai-sync.js --check` e o actionlint.
 - Modelo: padrao.
-- Status: pendente.
+- Status: em-andamento.
 
 ### T9 Integração e conferência final
 - O quê: conferir que scripts, prompts, automações e README usam o mesmo contrato e rodar o gate de fase.
