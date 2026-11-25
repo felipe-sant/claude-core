@@ -1,6 +1,6 @@
 # Registro de instalação recriado perde as configurações já aplicadas
 
-> Status: aprovada
+> Status: em-andamento
 > Tipo: bug
 > Tamanho: media
 > Branch: fix/92-lock-recriado-mantem-configuracoes
@@ -91,7 +91,7 @@ Hipótese: na junção do modelo com o arquivo existente, o ramo que encontra um
 - Gate: `node --test tests/settings.test.js`, `npm run lint` e `node bin/ai-sync.js --check` (sem typecheck nem formatador no projeto).
 - Pronto quando: o teste do CA-01 falhou antes e passa depois; todos os testes novos e os existentes passam; o gate passa; um commit atômico, por caminho, só com `bin/ai-sync.js` e `tests/settings.test.js`, por exemplo `Fix :bug: [#92] Registra as configurações iguais ao modelo quando o registro é recriado`.
 - Modelo: padrao.
-- Status: pendente.
+- Status: feita (commit 1ad2ecb; gate ok: 5 testes vermelhos antes, 23 passando no arquivo de testes das configurações, lint ok; gate de fase ok: npm run lint, npm test com 483 de 483, --check ok, ai-sync em pasta temporária sem erro).
 
 ### T2 [P] Documentar o registro recriado no README
 
@@ -105,7 +105,7 @@ Hipótese: na junção do modelo com o arquivo existente, o ramo que encontra um
 - Gate: `npm run lint` e `node --test tests/content.test.js tests/standards.test.js` (sem typecheck nem formatador no projeto).
 - Pronto quando: o README descreve o comportamento em linguagem simples, sem contradizer o restante da seção; o gate passa; um commit atômico, por caminho, só com `README.md`, por exemplo `Docs :bulb: [#92] Documenta o registro das configurações quando o registro é recriado`.
 - Modelo: economico.
-- Status: pendente.
+- Status: feita (commit 39bacd3; gate ok: lint e testes de conteúdo e padrões, 22 de 22; gate de fase ok: npm run lint, npm test com 483 de 483, --check ok, ai-sync em pasta temporária sem erro).
 
 ## Dúvidas
 
