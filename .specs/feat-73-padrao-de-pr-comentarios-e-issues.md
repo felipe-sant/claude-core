@@ -25,7 +25,9 @@ Regra nova de criação de issues, que vale para todos os projetos:
 - RN-04: o título da issue é uma frase em português simples, sem caminho de arquivo nem código. Fonte: product-owner.
 - RN-05: a issue de bug tem quatro seções, nesta ordem: "O que aconteceu", "Impacto", "Causa provável" e "Sugestão". Fonte: product-owner.
 - RN-06: a issue de funcionalidade tem três seções, nesta ordem: "O que se quer", "Por que" e "Critérios de aceite". Fonte: product-owner.
-- RN-07: as etiquetas postas por quem cria a issue são só "bug" ou "feature". Nunca se define prioridade. O tamanho continua sendo dado pelo agente de issues. Fonte: product-owner.
+- RN-07: a issue de bug leva a etiqueta "bug" e a de funcionalidade leva "enhancement". A regra manda usar as etiquetas que o projeto já tem e, se houver "bug" e "enhancement", usá-las. Nenhuma etiqueta nova é criada. Fonte: product-owner (D-01 e D-02).
+- RN-07a: quem cria a issue nunca define tamanho nem prioridade. O tamanho é definido pelo dono do projeto; neste repositório, por exemplo, quem define é o agente de issues, que não existe nos outros projetos. Fonte: product-owner (D-03).
+- RN-07b: a regra de issues vale para issues do GitHub em qualquer repositório que receba o time pela sincronização, e não trata de quadros de tarefas de outros projetos. Fonte: product-owner (D-02).
 - RN-08: o repositório do time é público, então a issue nunca leva dado sensível, dado de cliente nem caminho de arquivo. Isso já está no padrão de problemas do time: a regra nova aponta para ele, sem repetir. Fonte: product-owner.
 
 Agente de issues:
@@ -44,8 +46,8 @@ Geral:
 - CA-03: QUANDO alguém lê a regra de pull request e comentários ENTÃO ela DEVE pedir comentários em linguagem simples, objetivos, com uma ideia por comentário e falando do código e não da pessoa, e DEVE apontar para o padrão de revisão quanto à classificação "bloqueia" ou "sugestão", sem copiar o texto dele. Cobre RN-02, RN-03.
 - CA-04: QUANDO alguém lê a skill de abrir pull request e a skill de revisão ENTÃO as duas DEVEM mandar seguir a regra de pull request e comentários, e nenhuma delas DEVE repetir a lista de seções nem as orientações de escrita da regra. Cobre RN-11.
 - CA-05: QUANDO alguém lê o padrão de revisão ENTÃO a parte sobre como escrever os comentários DEVE apontar para a regra de pull request e comentários. Cobre RN-03, RN-11.
-- CA-06: QUANDO alguém sincroniza o time em um projeto qualquer, sem perfil ou com qualquer perfil ENTÃO o projeto DEVE receber a regra de issues junto com as demais regras gerais. Cobre RN-04 a RN-08.
-- CA-07: QUANDO alguém lê a regra de issues ENTÃO ela DEVE trazer o título como frase simples sem caminho nem código, as quatro seções da issue de bug na ordem certa, as três seções da issue de funcionalidade na ordem certa, as etiquetas só "bug" ou "feature", a proibição de definir prioridade, o tamanho dado pelo agente de issues e o apontamento para o padrão de problemas do time quanto ao que nunca vai na issue, sem repetir a lista. Cobre RN-04 a RN-08.
+- CA-06: QUANDO alguém sincroniza o time em um projeto qualquer, sem perfil ou com qualquer perfil ENTÃO o projeto DEVE receber a regra de issues junto com as demais regras gerais. Cobre RN-04 a RN-08 e RN-07b.
+- CA-07: QUANDO alguém lê a regra de issues ENTÃO ela DEVE trazer o título como frase simples sem caminho nem código, as quatro seções da issue de bug na ordem certa, as três seções da issue de funcionalidade na ordem certa, que vale para issues do GitHub, sem tratar de quadros de tarefas, as etiquetas "bug" para bug e "enhancement" para funcionalidade com a orientação de usar as que o projeto já tem, a proibição de quem cria a issue definir tamanho ou prioridade, o tamanho definido pelo dono do projeto com o agente de issues só como exemplo deste repositório, e o apontamento para o padrão de problemas do time quanto ao que nunca vai na issue, sem repetir a lista. Cobre RN-04 a RN-08, RN-07a e RN-07b.
 - CA-08: QUANDO alguém lê o padrão de problemas do time ENTÃO ele DEVE apontar para a regra de issues para o título e as seções, em vez de repetir o formato, e DEVE continuar dizendo onde abrir, quem abre, a busca por duplicata e o que nunca vai na issue. Cobre RN-08, RN-11.
 - CA-09: QUANDO alguém procura uma skill de criar issue ENTÃO o time DEVE continuar sem ela. Cobre RN-11.
 - CA-10: QUANDO alguém lê as instruções do agente de issues ENTÃO elas DEVEM mandar a descrição do pull request com as seções "O que muda", "Como foi verificado" e "Observações", nesta ordem, explicar que o texto vai direto no comando, sem arquivo, sem crase, sem cifrão e sem heredoc, com as quebras de linha dentro do próprio texto, e continuar pedindo "Closes #n" e a linha "Aberto pelo agente de issues.". Cobre RN-09.
@@ -68,7 +70,8 @@ Geral:
 - Prioridade de issues e de pull requests.
 - Reclassificar ou reescrever pull requests e issues antigos.
 - Skill nova de criar issue.
-- Etiquetas de outros quadros de tarefas, fora das issues do GitHub.
+- Quadros de tarefas de outros projetos e as etiquetas deles: a regra de issues trata só de issues do GitHub (D-02).
+- Criar etiqueta no GitHub: a "enhancement" já existe e nenhuma tarefa cria etiqueta (D-01).
 
 ## Plano de execução
 
@@ -89,9 +92,9 @@ Sobre o `.claude/` gerado: o hook de pre-commit regenera o `.claude/` e recusa o
 - Dev: Dev Doc (dev-doc).
 - Depende de: nada.
 - Reaproveita: o formato das regras gerais de hoje (título, quando vale, lista curta); a lista de seções da skill `create-pull-request`; as quatro seções do `feedback-standard`; o teste do `feedback-standard` em `tests/team.test.js` como modelo.
-- Atende: RN-01 a RN-08; CA-01, CA-02, CA-03, CA-06, CA-07.
+- Atende: RN-01 a RN-08, RN-07a, RN-07b; CA-01, CA-02, CA-03, CA-06, CA-07.
 - Passos:
-  1. Acrescentar `pull-request-standard` e `issue-standard` à lista `general` de `tests/standards.test.js` e escrever em `tests/team.test.js` um teste por regra: registrada com `applies` `["all"]`, presente em todos os perfis, e com o conteúdo pedido (as três seções do pull request na ordem, "Closes #", o padrão de commits, uma ideia por comentário, a citação ao `review-standard`; o título simples, as quatro seções de bug na ordem, as três de funcionalidade na ordem, "bug" e "feature", nunca prioridade, o tamanho pelo agente de issues e a citação ao `feedback-standard`). Ver falhar.
+  1. Acrescentar `pull-request-standard` e `issue-standard` à lista `general` de `tests/standards.test.js` e escrever em `tests/team.test.js` um teste por regra: registrada com `applies` `["all"]`, presente em todos os perfis, e com o conteúdo pedido (as três seções do pull request na ordem, "Closes #", o padrão de commits, uma ideia por comentário, a citação ao `review-standard`; o título simples, as quatro seções de bug na ordem, as três de funcionalidade na ordem, "bug" e "enhancement" com a orientação de usar as etiquetas que o projeto já tem, a ausência de "feature" como etiqueta, quem cria nunca define tamanho nem prioridade, o tamanho pelo dono do projeto, o agente de issues citado só como exemplo, que vale para issues do GitHub e a citação ao `feedback-standard`). Ver falhar.
   2. Escrever as duas regras, curtas (o teste de standards limita a 60 linhas), sem repetir o texto do `review-standard` nem a lista do que nunca vai na issue do `feedback-standard`.
   3. Registrar as duas no `catalog.json` e incluí-las em `profiles/default.json`, `backend.json`, `frontend.json` e `tooling.json`.
   4. Rodar `npm run sync` e commitar as fontes, os testes e os gerados juntos, por caminho exato.
@@ -179,9 +182,9 @@ Sobre o `.claude/` gerado: o hook de pre-commit regenera o `.claude/` e recusa o
 
 Do product-owner:
 
-- D-01: o repositório não tem a etiqueta "feature" (tem "enhancement", "bug" e as de tamanho). A regra de issues diz "bug" ou "feature". A etiqueta "feature" deve ser criada no repositório, ou a regra deve usar "enhancement"? Criar etiqueta no GitHub não está em nenhuma tarefa.
-- D-02: a regra de issues vale para todos os projetos. Nos outros repositórios, ela vale só para issues do GitHub ou também para as tarefas que o product-owner cria no quadro de tarefas do projeto, que têm etiquetas próprias? Hoje a especificação trata só de issues do GitHub e deixa os outros quadros fora do escopo.
-- D-03: nos outros repositórios não existe agente de issues. A frase "o tamanho continua sendo dado pelo agente de issues" deve valer só para este repositório, ou a regra deve dizer que quem cria a issue não define tamanho em nenhum projeto?
+- D-01 (respondida, fonte: product-owner): a issue de funcionalidade leva a etiqueta "enhancement", que já existe no repositório. A etiqueta "feature" não é criada e nenhuma tarefa cria etiqueta. Aplicada em RN-07, CA-07, T1 e "Fora do escopo".
+- D-02 (respondida, fonte: product-owner): a regra vale para issues do GitHub em qualquer repositório que receba o time pela sincronização e não trata de quadros de tarefas de outros projetos. Sobre etiquetas, ela diz: "use as etiquetas que o projeto já tem; se houver bug e enhancement, use-as". Aplicada em RN-07, RN-07b, CA-06, CA-07, T1 e "Fora do escopo".
+- D-03 (respondida, fonte: product-owner): a regra é geral. Quem cria a issue nunca define tamanho nem prioridade, e o tamanho é definido pelo dono do projeto. O agente de issues aparece só como exemplo do que acontece neste repositório, porque ele não existe nos outros. Aplicada em RN-07a, CA-07 e T1.
 
 Só o usuário responde:
 
