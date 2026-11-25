@@ -1,6 +1,6 @@
 # Problema no próprio time vira issue
 
-Os agentes, as regras e as skills deste projeto vêm do `claude-core`, mantido no repositório `felipe-sant/claude-kit`. Quando o problema está nessas instruções, e não no código do projeto, ele é corrigido lá. Por isso, todo problema assim vira uma issue nesse repositório assim que aparece.
+Os agentes, as regras e as skills deste projeto vêm do `claude-kit`, mantido no repositório `felipe-sant/claude-kit`. Quando o problema está nessas instruções, e não no código do projeto, ele é corrigido lá. Por isso, todo problema assim vira uma issue nesse repositório assim que aparece.
 
 ## O que conta como problema
 
@@ -22,7 +22,7 @@ Erro no código do projeto, teste falhando ou dúvida de regra de negócio não 
 2. Abra com `gh issue create --repo felipe-sant/claude-kit --label bug --title "<título>" --body-file <arquivo>`, usando um arquivo temporário para o corpo.
 3. Escreva o título e o corpo como manda o `issue-standard`, com as quatro seções da issue de bug.
 
-Em "Causa provável", cite o agente, a regra ou a skill e o trecho da instrução (o nome do arquivo no `claude-core`, como `agents/dev-backend.md`), não do projeto.
+Em "Causa provável", cite o agente, a regra ou a skill e o trecho da instrução (o nome do arquivo no `claude-kit`, como `agents/dev-backend.md`), não do projeto.
 
 ## O que nunca vai na issue
 
