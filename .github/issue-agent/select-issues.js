@@ -13,6 +13,10 @@ const SIZES_NOT_TREATED = ['Size: M', 'Size: G']
 const API_URL = 'https://api.github.com'
 const PAGE_SIZE = 100
 const BOT_PATH_PREFIX = '/apps/'
+const CODE_BLOCK_PATTERN = /```[\s\S]*?```/g
+const INLINE_CODE_PATTERN = /`[^`\n]*`/g
+const DEPENDENCY_PATTERN = /\bdepende\s+d[eoa]\s+(#\d+(?:(?:\s*,\s*e\s+|\s*,\s*|\s+e\s+)#\d+)*)/gi
+const ISSUE_NUMBER_PATTERN = /#(\d+)/g
 
 function hasSizeLabel(issue) {
   return issue.labels.some((label) => label.startsWith(SIZE_PREFIX))
@@ -24,6 +28,20 @@ function hasAgentClassification(issue) {
 
 function hasOwnBranch(issue, branches) {
   return branches.some((name) => new RegExp(`^[a-z]+/${issue.number}-`).test(name))
+}
+
+function extractDependencies(body, ownNumber) {
+  const text = (body || '').replace(CODE_BLOCK_PATTERN, ' ').replace(INLINE_CODE_PATTERN, ' ')
+  const numbers = new Set()
+  for (const phrase of text.matchAll(DEPENDENCY_PATTERN)) {
+    for (const cited of phrase[1].matchAll(ISSUE_NUMBER_PATTERN)) numbers.add(Number(cited[1]))
+  }
+  numbers.delete(ownNumber)
+  return [...numbers].sort((first, second) => first - second)
+}
+
+function openDependencies(issue, openNumbers) {
+  return extractDependencies(issue.body, issue.number).filter((number) => openNumbers.has(number))
 }
 
 function isBaseEligible(issue) {
@@ -46,12 +64,13 @@ function byOldest(first, second) {
 const REQUESTED_ISSUE_PATTERN = /^[1-9][0-9]*$/
 const MODES = ['size-set', 'agent']
 
-function isQueuedSmall(issue, branches) {
+function isQueuedSmall(issue, branches, openNumbers) {
   return (
     isBaseEligible(issue) &&
     issue.labels.includes(SIZE_SMALL) &&
     !SIZES_NOT_TREATED.some((size) => issue.labels.includes(size)) &&
-    !hasOwnBranch(issue, branches)
+    !hasOwnBranch(issue, branches) &&
+    openDependencies(issue, openNumbers).length === 0
   )
 }
 
@@ -67,7 +86,13 @@ function selectSizeSet({ issues, eventIssue }) {
   return { classify, reason }
 }
 
-function refusalReason(issue, number, branches) {
+function dependencyReason(number, open) {
+  if (open.length === 0) return ''
+  const listed = open.map((cited) => `#${cited}`).join(', ')
+  return open.length === 1 ? `A issue ${number} depende da issue ${listed}, ainda aberta.` : `A issue ${number} depende das issues ${listed}, ainda abertas.`
+}
+
+function refusalReason(issue, number, branches, openNumbers) {
   if (!issue || issue.isPullRequest) return `A issue ${number} não foi encontrada entre as issues abertas: ela não existe, está fechada ou é um pull request.`
   if (!COLLABORATOR_ASSOCIATIONS.includes(issue.authorAssociation)) return `A issue ${number} não foi aberta por dono, membro ou colaborador do repositório.`
   if (issue.assignees.length > 0) return `A issue ${number} tem responsável.`
@@ -75,7 +100,7 @@ function refusalReason(issue, number, branches) {
   if (SIZES_NOT_TREATED.some((size) => issue.labels.includes(size))) return `A issue ${number} tem o tamanho Size: M ou Size: G.`
   if (!issue.labels.includes(SIZE_SMALL)) return `A issue ${number} não tem o tamanho Size: P.`
   if (hasOwnBranch(issue, branches)) return `A issue ${number} já tem branch própria.`
-  return ''
+  return dependencyReason(number, openDependencies(issue, openNumbers))
 }
 
 function limitReason(agentPullCount, ending) {
@@ -86,10 +111,11 @@ function selectAgent({ issues, openPulls, branches, requested }) {
   const requestedText = requested === null ? '' : requested.trim()
   const agentPullCount = openPulls.filter(isAgentPull).length
   const limitReached = agentPullCount >= MAX_AGENT_PULLS
+  const openNumbers = new Set(issues.filter((issue) => !issue.isPullRequest).map((issue) => issue.number))
 
   if (requestedText === '') {
     if (limitReached) return { prIssue: '', reason: limitReason(agentPullCount, 'a fila das P espera.') }
-    const queued = issues.filter((issue) => isQueuedSmall(issue, branches)).sort(byOldest)
+    const queued = issues.filter((issue) => isQueuedSmall(issue, branches, openNumbers)).sort(byOldest)
     if (queued.length === 0) return { prIssue: '', reason: 'Nenhuma issue P na fila.' }
     return { prIssue: queued[0].number, reason: `Pull request da issue ${queued[0].number}.` }
   }
@@ -97,7 +123,7 @@ function selectAgent({ issues, openPulls, branches, requested }) {
   if (!REQUESTED_ISSUE_PATTERN.test(requestedText)) return { prIssue: '', reason: 'O número informado não é válido: use só dígitos, como 76.' }
   if (limitReached) return { prIssue: '', reason: limitReason(agentPullCount, 'nenhuma issue é tratada agora.') }
   const number = Number(requestedText)
-  const reason = refusalReason(issues.find((issue) => issue.number === number), number, branches)
+  const reason = refusalReason(issues.find((issue) => issue.number === number), number, branches, openNumbers)
   if (reason !== '') return { prIssue: '', reason }
   return { prIssue: number, reason: `Pull request da issue ${number}.` }
 }
@@ -147,6 +173,7 @@ const ISSUES_QUERY = `query($owner: String!, $name: String!, $cursor: String) {
       nodes {
         number
         createdAt
+        body
         authorAssociation
         assignees(first: 1) { totalCount }
         labels(first: 50) { nodes { name } }
@@ -171,6 +198,7 @@ function normalizeIssue(node) {
     assignees: Array.from({ length: node.assignees.totalCount }, () => 'assignee'),
     labels: node.labels.nodes.map((label) => label.name),
     linkedPullRequests: node.closedByPullRequestsReferences.totalCount,
+    body: node.body || '',
     comments: node.comments.nodes.map((comment) => ({ author: normalizeAuthor(comment.author), body: comment.body }))
   }
 }
@@ -237,4 +265,4 @@ if (require.main === module) {
   })
 }
 
-module.exports = { selectSizeSet, selectAgent, parseMode, writeOutputs, writeSummary, normalizeAuthor, normalizeIssue, fetchIssues, request, MAX_CLASSIFY, MAX_AGENT_PULLS }
+module.exports = { selectSizeSet, selectAgent, extractDependencies, parseMode, writeOutputs, writeSummary, normalizeAuthor, normalizeIssue, fetchIssues, request, MAX_CLASSIFY, MAX_AGENT_PULLS }

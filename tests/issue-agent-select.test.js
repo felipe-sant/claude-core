@@ -63,12 +63,15 @@ test('normalizeIssue converte o nó da API para o formato da seleção', () => {
     assignees: { totalCount: 2 },
     labels: { nodes: [{ name: 'Size: P' }] },
     closedByPullRequestsReferences: { totalCount: 1 },
+    body: 'depende de #3',
     comments: { nodes: [{ body: 'oi', author: { login: 'claude', resourcePath: '/apps/claude' } }, { body: 'x', author: null }] }
   }
   const normalized = normalizeIssue(node)
   assert.equal(normalized.assignees.length, 2)
   assert.deepEqual(normalized.labels, ['Size: P'])
   assert.equal(normalized.linkedPullRequests, 1)
+  assert.equal(normalized.body, 'depende de #3')
+  assert.equal(normalizeIssue({ ...node, body: null }).body, '')
   assert.deepEqual(normalized.comments.map((comment) => comment.author), ['claude[bot]', ''])
 })
 

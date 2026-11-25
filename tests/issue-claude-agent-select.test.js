@@ -3,7 +3,7 @@ const assert = require('node:assert/strict')
 const path = require('node:path')
 const h = require('./helpers')
 
-const { selectAgent, MAX_AGENT_PULLS } = require(path.join(h.repoRoot, '.github', 'issue-agent', 'select-issues.js'))
+const { selectAgent, extractDependencies, MAX_AGENT_PULLS } = require(path.join(h.repoRoot, '.github', 'issue-agent', 'select-issues.js'))
 
 let counter = 0
 function issue(overrides = {}) {
@@ -17,6 +17,7 @@ function issue(overrides = {}) {
     labels: ['Size: P'],
     linkedPullRequests: 0,
     comments: [],
+    body: '',
     ...overrides
   }
 }
@@ -231,4 +232,118 @@ test('número de issue com branch própria é recusado com o motivo', () => {
   const result = select([target], { requested: String(target.number), branches: [`fix/${target.number}-algo`] })
   assert.equal(result.prIssue, '')
   assert.equal(result.reason, `A issue ${target.number} já tem branch própria.`)
+})
+
+function dependent(body, overrides = {}) {
+  return issue({ body, ...overrides })
+}
+
+test('P que depende de issue aberta fica fora da fila e a seguinte é escolhida', () => {
+  const blocker = issue({ labels: [] })
+  const waiting = dependent(`Depende de #${blocker.number}`)
+  const next = issue()
+  assert.equal(select([blocker, waiting, next]).prIssue, next.number)
+})
+
+test('P que depende de issue já fechada é tratada normalmente', () => {
+  const waiting = dependent('depende de #9999')
+  assert.equal(select([waiting]).prIssue, waiting.number)
+})
+
+test('a única P que espera dependência aberta deixa a fila vazia', () => {
+  const blocker = issue({ labels: [] })
+  const waiting = dependent(`depende de #${blocker.number}`)
+  const result = select([blocker, waiting])
+  assert.equal(result.prIssue, '')
+  assert.equal(result.reason, 'Nenhuma issue P na fila.')
+})
+
+test('citação de issue sem a expressão depende de não bloqueia', () => {
+  const blocker = issue({ labels: [] })
+  const related = dependent(`relacionada a #${blocker.number}, ver #${blocker.number}`)
+  assert.equal(select([blocker, related]).prIssue, related.number)
+})
+
+test('com várias dependências, uma aberta basta para esperar', () => {
+  const open = issue({ labels: [] })
+  const waiting = dependent(`depende de #9998 e #${open.number}`)
+  assert.equal(select([open, waiting]).prIssue, '')
+})
+
+test('com várias dependências todas fechadas, a issue é tratada', () => {
+  const waiting = dependent('depende de #9997 e #9998')
+  assert.equal(select([waiting]).prIssue, waiting.number)
+})
+
+test('depende do e depende da, em qualquer caixa, também esperam', () => {
+  const blocker = issue({ labels: [] })
+  for (const phrase of ['depende do', 'DEPENDE DA', 'Depende De']) {
+    const waiting = dependent(`${phrase} #${blocker.number}`)
+    assert.equal(select([blocker, waiting]).prIssue, '', phrase)
+  }
+})
+
+test('número que é de pull request aberto, e não de issue, não bloqueia', () => {
+  const waiting = dependent('depende de #9996')
+  assert.equal(select([waiting], { openPulls: [] }).prIssue, waiting.number)
+})
+
+test('com a issue fechada depois, ela volta à fila', () => {
+  const blocker = issue({ labels: [] })
+  const waiting = dependent(`depende de #${blocker.number}`)
+  assert.equal(select([blocker, waiting]).prIssue, '')
+  assert.equal(select([waiting]).prIssue, waiting.number)
+})
+
+test('disparo à mão de issue que espera dependência aberta é recusado com o motivo', () => {
+  const blocker = issue({ labels: [] })
+  const waiting = dependent(`depende de #${blocker.number}`)
+  const result = select([blocker, waiting], { requested: String(waiting.number) })
+  assert.equal(result.prIssue, '')
+  assert.equal(result.reason, `A issue ${waiting.number} depende da issue #${blocker.number}, ainda aberta.`)
+})
+
+test('disparo à mão com várias dependências lista só as abertas em ordem crescente', () => {
+  const first = issue({ labels: [] })
+  const second = issue({ labels: [] })
+  const waiting = dependent(`depende de #${second.number}, #9995 e #${first.number}`)
+  const result = select([first, second, waiting], { requested: String(waiting.number) })
+  assert.equal(result.reason, `A issue ${waiting.number} depende das issues #${first.number}, #${second.number}, ainda abertas.`)
+})
+
+test('disparo à mão no limite recusa pelo limite antes da dependência', () => {
+  const blocker = issue({ labels: [] })
+  const waiting = dependent(`depende de #${blocker.number}`)
+  const result = select([blocker, waiting], { requested: String(waiting.number), openPulls: pulls(5) })
+  assert.match(result.reason, /limite é 5: nenhuma issue é tratada agora\./)
+})
+
+test('disparo à mão de issue sem dependência aberta é tratado', () => {
+  const waiting = dependent('depende de #9994')
+  assert.equal(select([waiting], { requested: String(waiting.number) }).prIssue, waiting.number)
+})
+
+test('extrai os números citados depois de depende de, do e da', () => {
+  assert.deepEqual(extractDependencies('Depende de #3 e #4', 1), [3, 4])
+  assert.deepEqual(extractDependencies('depende do #5', 1), [5])
+  assert.deepEqual(extractDependencies('DEPENDE DA #6', 1), [6])
+  assert.deepEqual(extractDependencies('depende de #3, #4 e #7', 1), [3, 4, 7])
+})
+
+test('ignora citação sem a expressão, a própria issue e outro repositório', () => {
+  assert.deepEqual(extractDependencies('ver #3 e relacionada a #4', 1), [])
+  assert.deepEqual(extractDependencies('depende de #1', 1), [])
+  assert.deepEqual(extractDependencies('depende de dono/repo#3', 1), [])
+  assert.deepEqual(extractDependencies('depende de #3 e dono/repo#4', 1), [3])
+})
+
+test('ignora a dependência dentro de bloco de código e de código na linha', () => {
+  assert.deepEqual(extractDependencies('```\ndepende de #3\n```', 1), [])
+  assert.deepEqual(extractDependencies('veja `depende de #3` aqui', 1), [])
+  assert.deepEqual(extractDependencies('```\ndepende de #3\n```\ndepende de #4', 1), [4])
+})
+
+test('corpo vazio ou nulo não tem dependência', () => {
+  assert.deepEqual(extractDependencies('', 1), [])
+  assert.deepEqual(extractDependencies(null, 1), [])
 })
