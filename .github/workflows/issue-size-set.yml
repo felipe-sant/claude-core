@@ -110,8 +110,34 @@ jobs:
           failures=0
           fail() { echo "::error::$1"; failures=$((failures + 1)); }
           main_after=$(git ls-remote origin refs/heads/main | cut -f1)
-          [ "$main_after" = "$(cat "$CHECK_DIR/main")" ] || fail "A branch principal mudou durante a execução."
-          git ls-remote --heads origin | sort | cmp -s - "$CHECK_DIR/branches" || fail "A lista de branches mudou durante a execução."
+          main_before=$(cat "$CHECK_DIR/main")
+          if [ "$main_after" = "$main_before" ]; then
+            main_status=identical
+          elif gh api "repos/$GITHUB_REPOSITORY/compare/$main_before...$main_after" --jq '.status' > "$CHECK_DIR/main-status"; then
+            main_status=$(cat "$CHECK_DIR/main-status")
+          else
+            main_status=unknown
+          fi
+          case "$main_status" in
+            identical|ahead) ;;
+            *) fail "A branch principal perdeu o ponto em que estava antes da execução, ou a comparação com o GitHub falhou." ;;
+          esac
+          git ls-remote --heads origin | sort > "$CHECK_DIR/branches-after"
+          while read -r sha_before ref; do
+            [ "$ref" != "refs/heads/main" ] || continue
+            sha_after=$(awk -v ref="$ref" '$2 == ref {print $1}' "$CHECK_DIR/branches-after")
+            [ -n "$sha_after" ] || continue
+            [ "$sha_after" != "$sha_before" ] || continue
+            if gh api "repos/$GITHUB_REPOSITORY/compare/$sha_before...$sha_after" --jq '.status' > "$CHECK_DIR/branch-status" < /dev/null; then
+              branch_status=$(cat "$CHECK_DIR/branch-status")
+            else
+              branch_status=unknown
+            fi
+            case "$branch_status" in
+              identical|ahead) ;;
+              *) fail "A branch ${ref#refs/heads/} perdeu o ponto em que estava antes da execução, ou a comparação com o GitHub falhou." ;;
+            esac
+          done < "$CHECK_DIR/branches"
           open_agent_pulls=$(gh api --paginate "repos/$GITHUB_REPOSITORY/pulls?state=open" --jq "[.[] | select(.user.login == \"claude[bot]\" or ((.body // \"\") | contains(\"$PULL_REQUEST_LINE\")))] | length" | awk '{total += $1} END {print total + 0}')
           echo "Pull requests do agente abertos: $open_agent_pulls"
           [ "$open_agent_pulls" -le "$(cat "$CHECK_DIR/pulls")" ] || fail "A classificação abriu pull request."
