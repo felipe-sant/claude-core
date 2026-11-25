@@ -267,6 +267,16 @@ gh workflow run issue-claude-agent.yml -f issue=<número>
 
 O campo `issue` existe só na Issue Claude Agent e é opcional. Vazio, ela pega a P mais antiga que pode ser tratada; se não há nenhuma, termina com sucesso sem chamar o Claude e diz no resumo da execução que não há issue P na fila, ou que já há um pull request do agente aberto. Com o número de uma issue que não pode ser tratada, termina sem fazer nada e mostra o motivo no resumo e no registro da execução. O valor só pode ter dígitos; qualquer outra coisa é recusada como número inválido.
 
+### Pull request fechado sem merge
+
+A issue com pull request ligado, aberto ou fechado, não volta para a fila. Por isso, se o pull request do agente é fechado sem merge, a issue continua fora da fila: fechar sem merge costuma ser uma recusa, e o agente não tenta de novo sozinho.
+
+Para liberar a issue de novo, à mão:
+
+1. Edite a descrição do pull request fechado e apague a linha `Closes #<número>`, para ele deixar de estar ligado à issue.
+2. Apague a branch do agente dessa issue, se ela ainda existir no repositório (o nome começa com o tipo e o número da issue, como `fix/<número>-...`), porque branch própria também tira a issue da fila.
+3. Confira que a issue está com `Size: P` e sem responsável. Na próxima execução da Issue Claude Agent ela volta a ser tratada; para não esperar, dispare-a à mão com o número da issue.
+
 ### Fila única e limites
 
 As duas ficam numa fila única e nunca rodam ao mesmo tempo: a segunda espera a primeira terminar. Quando várias são disparadas juntas, o GitHub mantém uma rodando e uma esperando, e a que espera é cancelada se chega outra mais nova; o que ficou para trás é pego pela próxima varredura, pela rede de segurança das 02:47 ou pelo próximo disparo. Só há um pull request do agente aberto por vez. Rodar as duas em seguida, ou a mesma duas vezes, não repete o tamanho, o comentário nem o pull request.
