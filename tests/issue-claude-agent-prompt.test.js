@@ -52,7 +52,7 @@ const guards = {
   'grava a descrição com a ferramenta de escrita': 'Grave a descrição do pull request com a ferramenta de escrita',
   'nunca abre o pull request': 'Nunca abra o pull request: a automação o abre depois',
   'não escreve o vínculo nem a linha fixa': 'Não escreva o vínculo `Closes` nem a linha fixa do agente, que a automação acrescenta',
-  'comentário de um parágrafo sem cerquilha': 'Comente na issue o que houve, com o link da execução, em um único parágrafo, sem linha começando com cerquilha, sem crase e sem cifrão',
+  'comentário de um parágrafo sem cerquilha': 'comente na issue o que houve, com o link da execução, em um único parágrafo, sem linha começando com cerquilha, sem crase e sem cifrão',
   'comenta quando um comando é negado': 'um comando for negado',
   'comenta quando a execução falha ou trava': 'a execução falhar ou travar',
   'guia do Claude é o único editado à mão': 'O `.claude/CLAUDE.md` é o único arquivo do `.claude/` editado à mão',
@@ -107,4 +107,9 @@ test('as instruções não mandam o agente abrir o pull request', () => {
 
 test('as instruções mandam comentar na issue o que houve uma única vez', () => {
   assert.equal(prompt().split('comente na issue o que houve').length - 1 + prompt().split('Comente na issue o que houve').length - 1, 1)
+})
+
+test('a orientação de comentar quando algo dá errado é uma frase só, com a condição e a ordem juntas', () => {
+  assert.doesNotMatch(prompt(), /terminar\. Comente/)
+  assert.match(prompt(), /não conseguir terminar, comente na issue o que houve, com o link da execução/)
 })

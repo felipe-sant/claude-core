@@ -45,7 +45,7 @@ Para a issue do pull request:
 
 ## Se algo der errado
 
-Se um comando for negado, a execução falhar ou travar, ou você não conseguir terminar. Comente na issue o que houve, com o link da execução, em um único parágrafo, sem linha começando com cerquilha, sem crase e sem cifrão, porque um comentário com linha começando com cerquilha também é negado. Use o link que vem pronto em "Valores desta execução". Não apague a branch enviada: a automação cuida dela.
+Se um comando for negado, a execução falhar ou travar, ou você não conseguir terminar, comente na issue o que houve, com o link da execução, em um único parágrafo, sem linha começando com cerquilha, sem crase e sem cifrão, porque um comentário com linha começando com cerquilha também é negado. Use o link que vem pronto em "Valores desta execução". Não apague a branch enviada: a automação cuida dela.
 
 ## Se a issue P for maior do que parecia
 
