@@ -140,6 +140,15 @@ jobs:
           CONTEXT_DIR: ${{ runner.temp }}/issue-agent
           CHECK_DIR: ${{ runner.temp }}/issue-check
         run: node .github/issue-agent/open-pull-request.js "$CONTEXT_DIR" "$PR_ISSUE"
+      - name: Registro do comentário do agente
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CHECK_DIR: ${{ runner.temp }}/issue-check
+        run: |
+          gh api --paginate "repos/$GITHUB_REPOSITORY/issues/$PR_ISSUE/comments" --jq '[.[] | select(.user.login == "claude[bot]")] | length' > "$CHECK_DIR/agent-comments-now"
+          comments_now=$(awk '{total += $1} END {print total + 0}' "$CHECK_DIR/agent-comments-now")
+          [ "$comments_now" -le "$(cat "$CHECK_DIR/agent-comments")" ] || echo yes > "$CHECK_DIR/agent-commented"
       - name: Conferência final
         if: always()
         env:
@@ -183,7 +192,6 @@ jobs:
           gh api --paginate "repos/$GITHUB_REPOSITORY/issues/$PR_ISSUE/comments" --jq '[.[] | select(.user.login == "claude[bot]")] | length' > "$CHECK_DIR/agent-comments-pages"
           agent_comments=$(awk '{total += $1} END {print total + 0}' "$CHECK_DIR/agent-comments-pages")
           echo "Issue $PR_ISSUE: pull requests do agente=$pulls_for_issue, comentários do agente=$agent_comments"
-          [ "$agent_comments" -le "$(cat "$CHECK_DIR/agent-comments")" ] || echo yes > "$CHECK_DIR/agent-commented"
           if [ "$pulls_for_issue" -eq 0 ] && [ "$agent_comments" -le "$(cat "$CHECK_DIR/agent-comments")" ]; then
             fail "A execução terminou sem pull request e sem comentário na issue $PR_ISSUE."
           fi
