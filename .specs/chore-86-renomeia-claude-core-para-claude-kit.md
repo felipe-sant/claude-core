@@ -166,7 +166,7 @@ O projeto não tem typecheck nem formatador, só lint (oxlint mais a checagem de
 - Teste: nenhum novo. O teste de sincronização confere a cópia gerada.
 - Gate: `npm run lint` e `node --test tests/self-sync.test.js tests/standards.test.js`
 - Modelo: economico
-- Status: pendente
+- Status: feita. Commit 6da620d, do Dev Doc, com a fonte e a cópia gerada da regra de feedback e o registro novo. Gate: `npm run lint` ok, `npm test` com 357 testes passando e 0 falhando e `node bin/ai-sync.js --check` ok. É só texto, então não houve teste falhando antes.
 
 ## Dúvidas
 
