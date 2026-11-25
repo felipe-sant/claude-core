@@ -14,6 +14,10 @@ const both = [
 ]
 const script = fs.readFileSync(path.join(h.repoRoot, '.github', 'issue-agent', 'select-issues.js'), 'utf8')
 
+const NUMBER_LIST = /\$\{?(PR_ISSUE|CLASSIFY)\b/
+const unquotedNumberLists = (text) =>
+  text.split('\n').filter((line) => NUMBER_LIST.test(line.replace(/\$\([^()]*\)/g, '').replace(/"[^"]*"/g, '')))
+
 const jobNames = (text) => [...text.slice(text.indexOf('\njobs:')).matchAll(/^ {2}(\w+):$/gm)].map((match) => match[1])
 
 test('a automação antiga e o prompt antigo não existem mais', () => {
@@ -85,8 +89,7 @@ test('a pasta do contexto é definida a partir de runner.temp em cada passo que 
 test('as listas de números são expandidas entre aspas no shell', () => {
   for (const [name, text] of both) {
     assert.doesNotMatch(text, /(^|[^"])\$\{CLASSIFY\/\/,\/ \}/m, name)
-    const unquotedLines = text.split('\n').filter((line) => !line.includes('"'))
-    assert.doesNotMatch(unquotedLines.join('\n'), /\$\{?(PR_ISSUE|CLASSIFY)\b/, name)
+    assert.deepEqual(unquotedNumberLists(text), [], name)
   }
   assert.match(sizeSet, /"\$\{numbers\[@\]\}"/)
 })
@@ -103,4 +106,9 @@ test('nenhum texto livre da issue ou do comentário é interpolado nas duas auto
   for (const [name, text] of both) {
     assert.doesNotMatch(text, /github\.event\.(issue|comment)/, name)
   }
+})
+
+test('a checagem de número sem aspas pega a linha que mistura trecho entre aspas e número solto', () => {
+  assert.deepEqual(unquotedNumberLists('node x.js "$CONTEXT_DIR" $PR_ISSUE'), ['node x.js "$CONTEXT_DIR" $PR_ISSUE'])
+  assert.deepEqual(unquotedNumberLists('node x.js "$CONTEXT_DIR" "$PR_ISSUE"'), [])
 })
