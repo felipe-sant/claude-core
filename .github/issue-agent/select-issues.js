@@ -2,6 +2,7 @@ const fs = require('node:fs')
 const { fetchWithRetry } = require('./fetch-with-retry')
 
 const MAX_CLASSIFY = 10
+const MAX_AGENT_PULLS = 5
 const COLLABORATOR_ASSOCIATIONS = ['OWNER', 'MEMBER', 'COLLABORATOR']
 const AGENT_AUTHOR = 'claude[bot]'
 const CLASSIFICATION_MARK = 'Tamanho definido pelo agente de issues'
@@ -77,19 +78,24 @@ function refusalReason(issue, number, branches) {
   return ''
 }
 
+function limitReason(agentPullCount, ending) {
+  return `Já há ${agentPullCount} pull requests do agente abertos e o limite é ${MAX_AGENT_PULLS}: ${ending}`
+}
+
 function selectAgent({ issues, openPulls, branches, requested }) {
   const requestedText = requested === null ? '' : requested.trim()
-  const agentPullOpen = openPulls.some(isAgentPull)
+  const agentPullCount = openPulls.filter(isAgentPull).length
+  const limitReached = agentPullCount >= MAX_AGENT_PULLS
 
   if (requestedText === '') {
-    if (agentPullOpen) return { prIssue: '', reason: 'Já há um pull request do agente aberto: a fila das P espera.' }
+    if (limitReached) return { prIssue: '', reason: limitReason(agentPullCount, 'a fila das P espera.') }
     const queued = issues.filter((issue) => isQueuedSmall(issue, branches)).sort(byOldest)
     if (queued.length === 0) return { prIssue: '', reason: 'Nenhuma issue P na fila.' }
     return { prIssue: queued[0].number, reason: `Pull request da issue ${queued[0].number}.` }
   }
 
   if (!REQUESTED_ISSUE_PATTERN.test(requestedText)) return { prIssue: '', reason: 'O número informado não é válido: use só dígitos, como 76.' }
-  if (agentPullOpen) return { prIssue: '', reason: 'Já há um pull request do agente aberto: nenhuma issue é tratada agora.' }
+  if (limitReached) return { prIssue: '', reason: limitReason(agentPullCount, 'nenhuma issue é tratada agora.') }
   const number = Number(requestedText)
   const reason = refusalReason(issues.find((issue) => issue.number === number), number, branches)
   if (reason !== '') return { prIssue: '', reason }
@@ -231,4 +237,4 @@ if (require.main === module) {
   })
 }
 
-module.exports = { selectSizeSet, selectAgent, parseMode, writeOutputs, writeSummary, normalizeAuthor, normalizeIssue, fetchIssues, request, MAX_CLASSIFY }
+module.exports = { selectSizeSet, selectAgent, parseMode, writeOutputs, writeSummary, normalizeAuthor, normalizeIssue, fetchIssues, request, MAX_CLASSIFY, MAX_AGENT_PULLS }

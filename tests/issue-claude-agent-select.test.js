@@ -3,7 +3,7 @@ const assert = require('node:assert/strict')
 const path = require('node:path')
 const h = require('./helpers')
 
-const { selectAgent } = require(path.join(h.repoRoot, '.github', 'issue-agent', 'select-issues.js'))
+const { selectAgent, MAX_AGENT_PULLS } = require(path.join(h.repoRoot, '.github', 'issue-agent', 'select-issues.js'))
 
 let counter = 0
 function issue(overrides = {}) {
@@ -27,6 +27,11 @@ function select(issues, extra = {}) {
 
 const agentComment = { author: 'claude[bot]', body: 'Tamanho definido pelo agente de issues: P' }
 const agentPull = { author: 'claude[bot]', body: '' }
+const markedPull = { author: 'felipe', body: 'Aberto pelo agente de issues.' }
+
+function pulls(count, pull = agentPull) {
+  return Array.from({ length: count }, () => pull)
+}
 
 test('P sem pull request, branch e responsável vira pr_issue', () => {
   const target = issue()
@@ -76,15 +81,59 @@ test('duas P na fila escolhem a mais antiga', () => {
   assert.equal(select([newer, older]).prIssue, older.number)
 })
 
-test('pull request do agente aberto deixa pr_issue vazio e a fila espera', () => {
-  const result = select([issue()], { openPulls: [agentPull] })
-  assert.equal(result.prIssue, '')
-  assert.equal(result.reason, 'Já há um pull request do agente aberto: a fila das P espera.')
+test('o limite de pull requests do agente é 5', () => {
+  assert.equal(MAX_AGENT_PULLS, 5)
 })
 
-test('pull request com a linha fixa no corpo conta como do agente', () => {
-  const result = select([issue()], { openPulls: [{ author: 'felipe', body: 'Aberto pelo agente de issues.' }] })
+test('abaixo do limite, a P mais antiga é tratada mesmo com pull requests do agente abertos', () => {
+  const older = issue()
+  const newer = issue()
+  for (const open of [1, 4]) {
+    assert.equal(select([newer, older], { openPulls: pulls(open) }).prIssue, older.number)
+  }
+})
+
+test('no limite, pr_issue fica vazio e o resumo explica o limite', () => {
+  const result = select([issue()], { openPulls: pulls(5) })
   assert.equal(result.prIssue, '')
+  assert.equal(result.reason, 'Já há 5 pull requests do agente abertos e o limite é 5: a fila das P espera.')
+})
+
+test('acima do limite o resumo mostra a quantidade aberta', () => {
+  const result = select([issue()], { openPulls: pulls(6) })
+  assert.equal(result.prIssue, '')
+  assert.equal(result.reason, 'Já há 6 pull requests do agente abertos e o limite é 5: a fila das P espera.')
+})
+
+test('pull requests de outras pessoas, mesmo muitos, não contam para o limite', () => {
+  const target = issue()
+  const others = pulls(7, { author: 'felipe', body: 'Closes #1' })
+  assert.equal(select([target], { openPulls: others }).prIssue, target.number)
+})
+
+test('conta como do agente a conta do Claude somada à linha fixa no corpo', () => {
+  const result = select([issue()], { openPulls: [...pulls(3), ...pulls(2, markedPull)] })
+  assert.equal(result.prIssue, '')
+  assert.match(result.reason, /Já há 5 pull requests do agente abertos/)
+})
+
+test('quatro do agente mais um de outra pessoa ainda deixam tratar a issue', () => {
+  const target = issue()
+  const openPulls = [...pulls(4), { author: 'felipe', body: '' }]
+  assert.equal(select([target], { openPulls }).prIssue, target.number)
+})
+
+test('cada execução devolve uma única issue, a mais antiga', () => {
+  const older = issue()
+  const newer = issue()
+  assert.equal(select([newer, older], { openPulls: pulls(2) }).prIssue, older.number)
+})
+
+test('issue com pull request ligado continua fora da fila abaixo do limite', () => {
+  const closedWithoutMerge = issue({ linkedPullRequests: 1 })
+  const result = select([closedWithoutMerge], { openPulls: pulls(1) })
+  assert.equal(result.prIssue, '')
+  assert.equal(result.reason, 'Nenhuma issue P na fila.')
 })
 
 test('pull request de outra pessoa não bloqueia', () => {
@@ -126,11 +175,27 @@ for (const invalid of ['abc', '0', '-1', '76a', '1 2', '07', '1.5']) {
   })
 }
 
-test('com número e pull request do agente aberto, a recusa é a do pull request', () => {
+test('com número abaixo do limite, a issue é tratada', () => {
   const target = issue()
-  const result = select([target], { requested: String(target.number), openPulls: [agentPull] })
+  assert.equal(select([target], { requested: String(target.number), openPulls: pulls(4) }).prIssue, target.number)
+})
+
+test('com número e no limite, a recusa é a do limite', () => {
+  const target = issue()
+  const result = select([target], { requested: String(target.number), openPulls: pulls(5) })
   assert.equal(result.prIssue, '')
-  assert.equal(result.reason, 'Já há um pull request do agente aberto: nenhuma issue é tratada agora.')
+  assert.equal(result.reason, 'Já há 5 pull requests do agente abertos e o limite é 5: nenhuma issue é tratada agora.')
+})
+
+test('número inválido no limite continua recusado como inválido', () => {
+  const result = select([issue()], { requested: 'abc', openPulls: pulls(5) })
+  assert.equal(result.reason, 'O número informado não é válido: use só dígitos, como 76.')
+})
+
+test('abaixo do limite, a issue com branch própria continua recusada com o motivo', () => {
+  const target = issue()
+  const result = select([target], { requested: String(target.number), openPulls: pulls(1), branches: [`fix/${target.number}-algo`] })
+  assert.equal(result.reason, `A issue ${target.number} já tem branch própria.`)
 })
 
 test('número de issue que não está entre as abertas é recusado', () => {
