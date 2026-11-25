@@ -13,8 +13,13 @@ const TOKEN_PATTERNS = [
   /eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}/g
 ]
 
+function encodeBasicCredential(value) {
+  return Buffer.from(`x-access-token:${value}`).toString('base64')
+}
+
 function redact(text, secrets) {
-  const values = secrets.filter((value) => typeof value === 'string' && value.length >= MIN_SECRET_LENGTH)
+  const raw = secrets.filter((value) => typeof value === 'string' && value.length >= MIN_SECRET_LENGTH)
+  const values = [...raw, ...raw.map(encodeBasicCredential)]
   const withoutValues = values.reduce((current, value) => current.split(value).join(MASK), text)
   return TOKEN_PATTERNS.reduce((current, pattern) => current.replace(pattern, MASK), withoutValues)
 }
