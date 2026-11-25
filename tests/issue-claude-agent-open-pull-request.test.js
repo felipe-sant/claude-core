@@ -102,3 +102,14 @@ test('aceita só a issue Size: P', () => {
   assert.notEqual(checkSize(['Size: M']), '')
   assert.notEqual(checkSize(['bug']), '')
 })
+
+test('recusa vínculo que fecha issue por URL completa, por GH- ou por repositório', () => {
+  for (const link of [
+    'Closes https://github.com/felipe-sant/claude-kit/issues/12',
+    'fixes HTTPS://GITHUB.COM/a/b/issues/3',
+    'resolves GH-3',
+    'closes felipe-sant/claude-kit#12'
+  ]) {
+    assert.notEqual(validateDescription(`${validDescription}\n${link}`), '', link)
+  }
+})
