@@ -284,8 +284,15 @@ test('depende do e depende da, em qualquer caixa, também esperam', () => {
 })
 
 test('número que é de pull request aberto, e não de issue, não bloqueia', () => {
-  const waiting = dependent('depende de #9996')
-  assert.equal(select([waiting], { openPulls: [] }).prIssue, waiting.number)
+  const pull = issue({ isPullRequest: true })
+  const waiting = dependent(`depende de #${pull.number}`)
+  assert.equal(select([pull, waiting]).prIssue, waiting.number)
+})
+
+test('depende de escrito só em comentário é ignorado mesmo com a issue aberta', () => {
+  const blocker = issue({ labels: [] })
+  const waiting = issue({ comments: [{ author: 'felipe', body: `depende de #${blocker.number}` }] })
+  assert.equal(select([blocker, waiting]).prIssue, waiting.number)
 })
 
 test('com a issue fechada depois, ela volta à fila', () => {
