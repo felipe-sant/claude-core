@@ -172,6 +172,7 @@ Validação em execução real, passo do usuário, fora do gate:
 - Teste: unitário. Falha primeiro o teste novo que exige a marca 7 nas duas ações das quatro automações e nenhuma marca 4 delas, e os testes do checkout ajustados para `@v7`.
 - Gate: `npm test`, `npm run lint`, `node bin/ai-sync.js --check` e actionlint 1.7.12 baixado pelo mesmo script fixado no CI para a pasta temporária. Sem typecheck nem formatador no projeto.
 - Modelo: economico.
+- Sugestão do reviewer fora do escopo, por decisão do usuário: reaproveitar a função de leitura.
 - Status: feita (commit dfce969; vermelho antes: 5 testes falhando; gate ok: npm test com 477 passando e 0 falhando, lint ok, --check ok, actionlint 1.7.12 ok; aprovada pelo reviewer).
 
 ### T2: Libera ao agente de issues só a alteração do guia do Claude (#104)
@@ -200,6 +201,7 @@ Validação em execução real, passo do usuário, fora do gate:
 - Teste: unitário. Falham primeiro os testes das duas automações que exigem a comparação pelo GitHub, a aceitação de `identical` e `ahead`, a mensagem nova e a ausência da mensagem antiga, e os da classificação que exigem a comparação por branch, a mensagem com o nome da branch e a ausência da frase da lista de branches.
 - Gate: o mesmo de T1.
 - Modelo: padrao.
+- Melhorias de teste pedidas pelo usuário, sugeridas pelo reviewer, pendentes: o `pipefail` e três casos ainda sem teste.
 - Status: feita (commit f0ef012, com a lista de branches; vermelho antes: 9 falhas no teste novo de conferência, conferido pelo reviewer, e os 2 testes que já passavam antes ("nada muda" e "comparação falha") eram esperados, porque o código antigo já reprovava nesses casos; gate ok: npm test com 501 passando e 0 falhando, lint ok, --check ok, actionlint 1.7.12 ok; limite: a conferência do agente de issues é verificada só pelo texto do script, e a execução fica para a validação real, passo 3; aprovada pelo reviewer).
 
 ### T4: Mostra a causa provável quando a etapa do agente falha (#100)
@@ -228,7 +230,7 @@ Validação em execução real, passo do usuário, fora do gate:
 - Teste: unitário. Falham primeiro: o teste com a origem sendo link simbólico e o teste com o destino sendo link simbólico, os dois sem alterar o guia.
 - Gate: o mesmo de T1.
 - Modelo: padrao.
-- Status: pendente.
+- Status: feita (commit 64021f6; vermelho antes: 4 falhas; gate ok: npm test com 509 passando, lint ok, --check ok, actionlint ok; falta a revisão do reviewer).
 
 ## Dúvidas
 
