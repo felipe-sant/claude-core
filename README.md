@@ -1,4 +1,4 @@
-# claude-core
+# claude-kit
 
 Ferramenta que roda em outros repositórios para configurar o Claude Code e o sistema de desenvolvimento da melhor forma, com um comando. Ela leva para cada projeto o time de agentes, os padrões de desenvolvimento e as skills que servem a ele, escolhendo sozinha o que é de cada stack.
 
@@ -18,13 +18,13 @@ Stacks com conteúdo hoje: React, NestJS, Laravel e AdonisJS.
 Requer Node 22 ou mais novo.
 
 ```
-node ~/claude-core/bin/ai-sync.js /caminho/do/repo
+node ~/claude-kit/bin/ai-sync.js /caminho/do/repo
 ```
 
 Ou, dentro do repositório, sem argumento de pasta:
 
 ```
-node ~/claude-core/bin/ai-sync.js
+node ~/claude-kit/bin/ai-sync.js
 ```
 
 Depois, abra o Claude normalmente no repositório e transforme a sessão na orquestradora do time:
@@ -42,7 +42,7 @@ Opções:
 | `--profile nome` (ou `-p`) | Escolhe um perfil à mão. Prevalece sobre a detecção e aplica exatamente o que o perfil lista. |
 | `--force` | Reinstala também os arquivos em conflito (veja "Sincronização segura"). |
 | `--teams` / `--no-teams` | Liga ou desliga o recurso experimental de times de agentes em `.claude/settings.local.json` (veja "Subagentes ou time de agentes"). Sem nenhum dos dois, o `ai-sync` não mexe nisso. |
-| `--check` | Confere se o catálogo, os arquivos e os perfis do `claude-core` estão consistentes. Não aplica nada. |
+| `--check` | Confere se o catálogo, os arquivos e os perfis do `claude-kit` estão consistentes. Não aplica nada. |
 
 Além de copiar os arquivos e aplicar a configuração base, o `ai-sync` libera, em `.claude/settings.local.json`, a pasta de worktrees das tarefas (`<repositório>-worktrees`, ao lado do repositório) e mantém `.claude/team-memory/` e `.claude/settings.local.json` fora do git, pelo `.git/info/exclude`.
 
@@ -58,7 +58,7 @@ Sem `--profile`, a ferramenta detecta a stack do projeto e aplica tudo o que val
 | AdonisJS | `@adonisjs/core` |
 
 - A detecção lê o `package.json` e o `composer.json` na raiz e nas pastas de primeiro nível (menos as ocultas, `node_modules`, `vendor`, `dist`, `build` e `coverage`). Um repositório com painel e API reconhece as duas stacks.
-- Só são detectadas stacks que têm conteúdo no `claude-core`. As regras de detecção ficam em `stacks`, no `catalog.json`.
+- Só são detectadas stacks que têm conteúdo no `claude-kit`. As regras de detecção ficam em `stacks`, no `catalog.json`.
 - Se nada for reconhecido, aplica só o que vale para qualquer projeto e avisa.
 - Os padrões e as skills de uma stack não chegam a projetos de outra.
 
@@ -69,22 +69,24 @@ Ficam em `profiles/*.json` e só valem com `--profile`. Cada perfil lista `agent
 - `default`: o time completo.
 - `frontend`: `dev-frontend`, `dev-fullstack` e `dev-doc`, com `designer`.
 - `backend`: `dev-backend`, `dev-fullstack`, `dev-database`, `dev-devops` e `dev-doc`, sem `designer`.
-- `tooling`: para repositórios de ferramentas, scripts, CLIs e conteúdo (como o próprio `claude-core`), sem telas nem banco. `dev-backend` (scripts e lógica), `dev-devops` (CI) e `dev-doc` (documentação e conteúdo em markdown), sem `designer`. Como esses repositórios não têm stack detectável, use `--profile tooling`.
+- `tooling`: para repositórios de ferramentas, scripts, CLIs e conteúdo (como o próprio `claude-kit`), sem telas nem banco. `dev-backend` (scripts e lógica), `dev-devops` (CI) e `dev-doc` (documentação e conteúdo em markdown), sem `designer`. Como esses repositórios não têm stack detectável, use `--profile tooling`.
 
 Todos incluem `product-owner`, `sdd`, `executor`, `reviewer` e `qa`, as nove regras gerais, as seis skills gerais (entre elas a `team-setup`, que faz da sessão a `orchestrator`) e a configuração base. Para uma configuração manual nova, crie `profiles/nome.json`.
 
 ## Sincronização segura
 
-O `ai-sync` registra o que instalou em `.claude/claude-core.lock.json` (caminho, versão e impressão digital de cada arquivo) e usa esse registro para nunca mexer no que é seu. Versione esse arquivo junto com o repositório.
+O `ai-sync` registra o que instalou em `.claude/claude-kit.lock.json` (caminho, versão e impressão digital de cada arquivo) e usa esse registro para nunca mexer no que é seu. Versione esse arquivo junto com o repositório.
 
-- Arquivo criado por você, ou que já existia com o mesmo nome de um do `claude-core`, não é apagado nem sobrescrito. Se o conteúdo for diferente, a ferramenta avisa.
-- Arquivo instalado e sem alterações é atualizado quando há versão nova, e removido quando sai do `claude-core`.
+Se o repositório ainda tem o registro com o nome antigo do projeto, o `ai-sync` o migra sozinho e sem aviso: passa a usar o novo e remove o antigo. Se os dois existirem, vale o novo e o antigo é removido. Se o antigo for inválido, a ferramenta para com erro.
+
+- Arquivo criado por você, ou que já existia com o mesmo nome de um do `claude-kit`, não é apagado nem sobrescrito. Se o conteúdo for diferente, a ferramenta avisa.
+- Arquivo instalado e sem alterações é atualizado quando há versão nova, e removido quando sai do `claude-kit`.
 - Arquivo instalado que você editou não é tocado. A ferramenta avisa e diz se há versão nova disponível.
-- Em repositório já configurado antes, os arquivos idênticos aos do `claude-core` passam a ser acompanhados; os diferentes ficam como estão, com aviso.
+- Em repositório já configurado antes, os arquivos idênticos aos do `claude-kit` passam a ser acompanhados; os diferentes ficam como estão, com aviso.
 - Rodar de novo com tudo em dia não muda nada.
 - Quando agentes são instalados, atualizados ou removidos, a ferramenta avisa para abrir uma sessão nova do Claude: sessões já abertas continuam com os agentes antigos. Se um dev não conseguir chamar o `executor` ou o `sdd`, ele avisa a `orchestrator`, que orienta você a rodar o `ai-sync` e abrir uma sessão nova.
 
-Para receber a versão nova dos arquivos em conflito (os que você editou e os que já existiam sem registro), rode com `--force`. Ele sobrescreve só os arquivos que o `claude-core` entrega e que estão em conflito, e lista cada um em "Sobrescritos". Arquivos que o `claude-core` não entrega nunca são tocados, e as edições sobrescritas não voltam: faça commit antes se quiser guardá-las.
+Para receber a versão nova dos arquivos em conflito (os que você editou e os que já existiam sem registro), rode com `--force`. Ele sobrescreve só os arquivos que o `claude-kit` entrega e que estão em conflito, e lista cada um em "Sobrescritos". Arquivos que o `claude-kit` não entrega nunca são tocados, e as edições sobrescritas não voltam: faça commit antes se quiser guardá-las.
 
 ## Configuração base do Claude
 
@@ -99,7 +101,7 @@ Como é aplicada:
 
 - Projeto sem `.claude/settings.json`: o arquivo é criado com o modelo.
 - Projeto com o arquivo: só o que falta é acrescentado. O que você já definiu nunca é alterado, e o que difere do recomendado aparece em "Sugerido e não aplicado", com o seu valor e o recomendado. Listas existentes (como `permissions.deny`) ficam como estão.
-- O que você apagar depois de a ferramenta acrescentar não volta, e um `settings.json` apagado não é recriado. O registro do que foi acrescentado fica no `claude-core.lock.json`.
+- O que você apagar depois de a ferramenta acrescentar não volta, e um `settings.json` apagado não é recriado. O registro do que foi acrescentado fica no `claude-kit.lock.json`.
 - Arquivo com JSON inválido não é tocado, e a ferramenta avisa.
 - Tirar uma chave do modelo não a remove dos projetos que já a receberam: apague-a à mão no `.claude/settings.json` deles. Foi o caso do bloqueio de leitura do `.env`, retirado porque a regra de negação também impede o `cp` do `.env` para a worktree da tarefa, e uma regra de permissão não abre exceção a ela.
 - O modelo não concede permissões amplas (nada de `allow`, `defaultMode` ou diretórios extras; o lint reprova). A única permissão nova é a da pasta de worktrees, e ela vai para `.claude/settings.local.json`, o arquivo local, que fica fora do git.
@@ -351,6 +353,6 @@ Instale as dependências uma vez com `npm ci`.
 - `npm test`: testes do `ai-sync` (detecção de stack, arquivos do usuário preservados, atualização e remoção seguras, `--force`, configuração base), do catálogo e dos perfis e do conteúdo dos padrões e skills. Trabalham só em pastas temporárias.
 - `npm run lint`: oxlint no código Node, com a regra de nunca escrever comentários, e checagem do formato de agentes (cabeçalho com `name`, `description` e `model`), regras, skills, perfis e JSON.
 - `node bin/ai-sync.js --check`: consistência do catálogo e dos perfis.
-- `npm run sync`: aplica o próprio `claude-core` neste repositório com o perfil `tooling`, atualizando o `.claude/`. O hook de pre-commit (`.githooks/pre-commit`, ligado pelo `npm ci`) roda isso a cada commit. No commit sem caminhos, inclui o `.claude/` no commit; no commit por caminhos, não adiciona nada e recusa o commit se os arquivos gerados não estiverem atualizados e coerentes com as fontes que vão nele, orientando a rodar `npm run sync` e a incluí-los nos caminhos. Se outro agente tem fontes alteradas e não commitadas na mesma pasta, o commit é recusado até ele commitar ou até você usar uma worktree isolada. Se o último commit já estiver fora de sincronia, o hook recusa também o commit que não toca fonte, com uma mensagem própria que diz como corrigir. Um teste também reprova a cópia desatualizada.
+- `npm run sync`: aplica o próprio `claude-kit` neste repositório com o perfil `tooling`, atualizando o `.claude/`. O hook de pre-commit (`.githooks/pre-commit`, ligado pelo `npm ci`) roda isso a cada commit. No commit sem caminhos, inclui o `.claude/` no commit; no commit por caminhos, não adiciona nada e recusa o commit se os arquivos gerados não estiverem atualizados e coerentes com as fontes que vão nele, orientando a rodar `npm run sync` e a incluí-los nos caminhos. Se outro agente tem fontes alteradas e não commitadas na mesma pasta, o commit é recusado até ele commitar ou até você usar uma worktree isolada. Se o último commit já estiver fora de sincronia, o hook recusa também o commit que não toca fonte, com uma mensagem própria que diz como corrigir. Um teste também reprova a cópia desatualizada.
 
 O GitHub roda lint e testes em todo PR, com os mesmos comandos.

@@ -1,5 +1,5 @@
 module.exports = {
-  meta: { name: 'claude-core' },
+  meta: { name: 'claude-kit' },
   rules: {
     'no-comments': {
       meta: { type: 'problem', schema: [] },

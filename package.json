@@ -1,5 +1,5 @@
 {
-  "name": "claude-core",
+  "name": "claude-kit",
   "version": "0.1.0",
   "description": "Time de agentes reutilizável para Claude Code",
   "private": true,

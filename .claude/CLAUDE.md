@@ -4,7 +4,7 @@ Orientações para o Claude Code ao trabalhar neste repositório.
 
 ## Contexto
 
-O `claude-core` é a fonte única do time de agentes do Felipe para o Claude Code. Os papéis (agentes) e as regras ficam aqui e o `ai-sync` os copia para qualquer outro repositório, de acordo com um perfil. Este repositório não tem aplicação nem build: é conteúdo (markdown e JSON) mais um script Node sem dependências.
+O `claude-kit` é a fonte única do time de agentes do Felipe para o Claude Code. Os papéis (agentes) e as regras ficam aqui e o `ai-sync` os copia para qualquer outro repositório, de acordo com um perfil. Este repositório não tem aplicação nem build: é conteúdo (markdown e JSON) mais um script Node sem dependências.
 
 Todo o texto dos agentes, das regras e da documentação é em **português**. Nomes de arquivos, de agentes e de perfis são em **inglês** e em minúsculas, com hífen (`product-owner`, `dev-frontend`).
 
@@ -23,7 +23,7 @@ Todo o texto dos agentes, das regras e da documentação é em **português**. N
 | `tests/` | Testes do `ai-sync` e do formato do conteúdo, com `node --test`. |
 | `.github/workflows/ci.yml` | Roda `npm run lint` e `npm test` em todo PR. |
 | `.github/workflows/issue-size-set.yml`, `.github/workflows/issue-claude-agent.yml` e `.github/issue-agent/` | Automações do agente de issues: a Issue Size Set classifica as issues por tamanho (P, M, G) e a Issue Claude Agent abre PR só das P. Documentadas no `README.md`. |
-| `bin/ai-sync.js` | Copia o conteúdo para um repositório. Sem `--profile`, detecta as stacks e aplica o que vale para todos mais o das stacks; com `--profile`, aplica só o perfil. Registra o que instalou em `.claude/claude-core.lock.json` e só atualiza ou remove arquivo instalado e sem alterações; `--force` sobrescreve os arquivos em conflito que o catálogo entrega. |
+| `bin/ai-sync.js` | Copia o conteúdo para um repositório. Sem `--profile`, detecta as stacks e aplica o que vale para todos mais o das stacks; com `--profile`, aplica só o perfil. Registra o que instalou em `.claude/claude-kit.lock.json` e só atualiza ou remove arquivo instalado e sem alterações; `--force` sobrescreve os arquivos em conflito que o catálogo entrega. |
 
 ## O time
 
