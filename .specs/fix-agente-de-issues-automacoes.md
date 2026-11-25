@@ -12,14 +12,14 @@ Issues: #98, #104, #94 e #100 de felipe-sant/claude-kit, nesta ordem. Um commit 
 
 - #98: toda execução das automações do repositório (verificação de pull request, fluxo do Claude, classificação de tamanho e agente de issues) mostra o aviso de que o Node.js 20 está obsoleto, porque as ações de baixar o código e de preparar o Node estão numa versão feita para ele.
 - #104: o agente de issues não consegue editar o guia do Claude da pasta de configuração do time, o único arquivo dessa pasta escrito à mão. A edição é negada, o agente só comenta na issue e ela fica sem solução automática.
-- #94: a conferência final do agente de issues reprova a execução quando o dono junta outro pull request enquanto o agente trabalha, com o erro "A branch principal mudou durante a execução", mesmo sem o agente ter mexido na principal. A classificação de tamanho tem a mesma checagem.
+- #94: a conferência final do agente de issues reprova a execução quando o dono junta outro pull request enquanto o agente trabalha, com o erro "A branch principal mudou durante a execução", mesmo sem o agente ter mexido na principal. A classificação de tamanho tem a mesma checagem. Na classificação, a checagem "A lista de branches mudou durante a execução" também reprova quando o dono junta um pull request e a branch é apagada, ou quando cria uma branch.
 - #100: quando a etapa do agente falha (por exemplo, por limite de uso do Claude), a execução fica vermelha, mas nenhuma mensagem diz com clareza a causa provável. A conferência final só mostra mensagens genéricas.
 
 ## Comportamento esperado
 
 - #98: as execuções rodam sem o aviso do Node.js 20 e sem mudança de comportamento.
 - #104: o agente de issues consegue alterar o guia do Claude quando a issue pede, e continua sem poder alterar o resto da pasta de configuração do time e a configuração de permissões.
-- #94: a conferência aceita que a principal avance durante a execução, desde que o ponto em que ela estava antes continue na história dela. Ela só reprova se a principal perdeu esse ponto (história reescrita).
+- #94: a conferência aceita que a principal avance durante a execução, desde que o ponto em que ela estava antes continue na história dela. Ela só reprova se a principal perdeu esse ponto (história reescrita). Na classificação, branch nova ou apagada não reprova; só reprova a branch que existia antes e perdeu o ponto em que estava.
 - #100: quando a etapa do agente falha, a execução mostra uma anotação de erro e um resumo dizendo que o agente falhou antes de concluir e que é para conferir o limite de uso do Claude e o log do passo do agente. O resto não muda.
 
 ## Impacto
@@ -61,10 +61,11 @@ Issues: #98, #104, #94 e #100 de felipe-sant/claude-kit, nesta ordem. Um commit 
 - RN-02: O agente de issues passa a poder alterar o guia do Claude da pasta de configuração do time, e só ele. Fonte: usuário (#104).
 - RN-03: Os demais arquivos da pasta de configuração do time (os gerados) e as configurações de permissão continuam sem poder ser alterados à mão pelo agente. Os gerados continuam mudando só pelas fontes e pela sincronização. Fonte: usuário (#104).
 - RN-04: A conferência da principal, no agente de issues e na classificação de tamanho, aceita que a principal avance durante a execução e só reprova se o ponto em que ela estava antes deixou de fazer parte da história dela. Fonte: usuário (#94).
-- RN-05: A conferência da principal não usa o autor das mudanças como critério. Fonte: issue #94 e usuário.
-- RN-06: Quando a etapa do agente de issues falha, a execução mostra, como anotação de erro e no resumo, a mensagem "O agente falhou antes de concluir: confira o limite de uso do Claude e o log do passo do agente.", sem depender do texto do erro. Fonte: usuário e issue #100.
-- RN-07: O resto do comportamento na falha do agente não muda: sem pull request, a limpeza da branch continua e a conferência final continua reprovando. Quando o agente conclui com sucesso, nenhuma mensagem nova aparece. Fonte: issue #100.
+- RN-05: A conferência da principal não usa o autor das mudanças como critério e não exige que cada mudança nova tenha vindo de pull request: basta a principal ter avançado sem perder a história antiga. Fonte: issue #94 e usuário (D-2).
+- RN-06: Quando a etapa do agente de issues falha ou é cancelada enquanto roda, a execução mostra, como anotação de erro e no resumo, a mensagem "O agente falhou antes de concluir: confira o limite de uso do Claude e o log do passo do agente.", sem depender do texto do erro. Fonte: usuário (D-4) e issue #100.
+- RN-07: O resto do comportamento na falha do agente não muda: sem pull request, a limpeza da branch continua e a conferência final continua reprovando. Quando o agente conclui com sucesso, ou quando a etapa do agente nem chega a rodar porque um passo anterior falhou, nenhuma mensagem nova aparece. Fonte: issue #100 e usuário (D-4).
 - RN-08: A mensagem de falha vale só para o agente de issues; a classificação de tamanho fica de fora, porque a issue #100 trata só do agente de issues. Fonte: usuário (#100).
+- RN-09: A conferência das branches da classificação de tamanho aceita as mudanças legítimas do dono durante a execução: branch nova criada e branch apagada (por exemplo, depois de juntar um pull request) não reprovam. Ela só reprova se uma branch que existia antes e continua existindo mudou de ponto sem ser avanço, ou seja, perdeu o ponto em que estava antes. Fonte: usuário (D-3).
 
 ## Permissões do agente de issues (para revisão atenta)
 
@@ -86,7 +87,7 @@ O que já existe hoje e esta tarefa não muda: como o agente pode alterar as fon
 
 Por que não basta uma regra de permissão: o experimento mostrou que, no modo sem perguntar, nenhuma regra de liberação vence a proteção do Claude Code sobre essa pasta. "Proibição vence liberação" não se aplica, porque não há proibição a trocar.
 
-Este caminho exige mexer, além da automação, nas instruções do agente e num script novo da automação do agente de issues, o que vai além do "só workflows" combinado. Ver D-1.
+Este caminho exige mexer, além da automação, nas instruções do agente e num script novo da automação do agente de issues, o que vai além do "só workflows" combinado inicialmente. Caminho aprovado pelo usuário (D-1).
 
 ## Critérios de aceite
 
@@ -102,10 +103,14 @@ Este caminho exige mexer, além da automação, nas instruções do agente e num
 - CA-10: QUANDO a principal não muda durante a execução ENTÃO as duas conferências DEVEM seguir aprovando a principal, como hoje. (RN-04)
 - CA-11: QUANDO a principal perde o ponto em que estava antes da execução (história reescrita ou ponto antigo fora da história) ENTÃO as duas conferências DEVEM reprovar com uma mensagem que diga isso. (RN-04)
 - CA-12: QUANDO a consulta que compara a principal de antes e de depois falha ENTÃO a conferência DEVE falhar de forma visível, sem aprovar a principal em silêncio. (RN-04)
-- CA-13: QUANDO a etapa do agente de issues falha ENTÃO o sistema DEVE mostrar a mensagem da RN-06 como anotação de erro e no resumo da execução, qualquer que seja o texto do erro. (RN-06)
+- CA-13: QUANDO a etapa do agente de issues falha, ou a execução é cancelada enquanto essa etapa roda, ENTÃO o sistema DEVE mostrar a mensagem da RN-06 como anotação de erro e no resumo da execução, qualquer que seja o texto do erro. (RN-06)
 - CA-14: QUANDO a etapa do agente de issues falha ENTÃO o sistema DEVE continuar sem abrir pull request, fazendo a limpeza da branch e reprovando na conferência final, como hoje. (RN-07)
-- CA-15: QUANDO a etapa do agente de issues termina com sucesso, ou nem chega a rodar porque um passo anterior falhou ENTÃO o sistema NÃO DEVE mostrar a mensagem da RN-06. (RN-07)
+- CA-15: QUANDO a etapa do agente de issues termina com sucesso, ou nem chega a rodar porque um passo anterior falhou ou porque a execução foi cancelada antes dela ENTÃO o sistema NÃO DEVE mostrar a mensagem da RN-06. (RN-07)
 - CA-16: QUANDO a classificação de tamanho falha ENTÃO o sistema NÃO DEVE mostrar a mensagem da RN-06. (RN-08)
+- CA-17: QUANDO, durante a classificação de tamanho, o dono cria uma branch nova ou apaga uma branch (por exemplo, ao juntar um pull request) ENTÃO a conferência final NÃO DEVE reprovar por causa das branches. (RN-09)
+- CA-18: QUANDO, durante a classificação de tamanho, uma branch que existia antes e continua existindo só avança ENTÃO a conferência final NÃO DEVE reprovar por causa dela. (RN-09)
+- CA-19: QUANDO, durante a classificação de tamanho, uma branch que existia antes e continua existindo perde o ponto em que estava antes (história reescrita) ENTÃO a conferência final DEVE reprovar com uma mensagem que diga qual branch foi. (RN-09)
+- CA-20: QUANDO as branches não mudam durante a classificação de tamanho ENTÃO a conferência final DEVE seguir aprovando as branches, como hoje. (RN-09)
 
 ## Critérios de sucesso
 
@@ -118,21 +123,22 @@ Este caminho exige mexer, além da automação, nas instruções do agente e num
 ## Fora do escopo
 
 - A ação de publicar arquivos e a ação do Claude (RN-01).
-- A verificação de que cada mudança nova da principal veio de pull request juntado (ver D-2): a proteção da principal já exige pull request, e a consulta de associação entre mudança e pull request pode atrasar logo depois do merge, o que traria de volta o alarme falso.
-- A checagem "A lista de branches mudou durante a execução" da classificação de tamanho, que também dispara quando o dono junta um pull request e a branch é apagada (ver D-3).
+- A verificação de que cada mudança nova da principal veio de pull request juntado (RN-05, decidido pelo usuário): a proteção da principal já exige pull request, e a consulta de associação entre mudança e pull request pode atrasar logo depois do merge, o que traria de volta o alarme falso.
 - A mensagem de falha na classificação de tamanho (RN-08).
 - O sincronizador e os testes dele, tratados por outro dev na issue #92. As tarefas daqui só mexem nos testes das automações e num arquivo de teste novo, nunca nos testes do sincronizador.
 
 ## Desenho
 
 - Versões (#98): nas quatro automações, a marca da versão das duas ações passa de 4 para 7, sem mexer nas opções de cada uso. A troca é conferida por um teste novo, que lê as quatro automações e exige a marca 7 nas duas ações e nenhuma marca 4 delas.
-- Guia do Claude (#104), dependente de D-1:
+- Guia do Claude (#104), caminho aprovado pelo usuário (D-1):
   - O agente grava o texto completo do novo guia num arquivo de nome fixo na pasta temporária do contexto da execução, que ele já escreve hoje com a ferramenta de escrita.
   - Um script novo da automação do agente de issues, sem argumentos, lê esse arquivo e o copia para o guia do Claude na raiz do repositório. Recusa arquivo ausente ou vazio, com mensagem. O caminho de destino é fixo no script.
   - A lista de ferramentas liberadas do agente ganha só a chamada exata desse script. A lista de proibições não muda, para continuar igual nas duas automações.
   - As instruções do agente explicam a exceção e o passo a passo, e continuam dizendo que o resto da pasta é gerado.
 - Principal (#94): a foto de antes continua guardando o ponto da principal. Na conferência, a automação pega o ponto atual e pede ao GitHub a comparação entre os dois, gravando a resposta em arquivo antes de ler (os testes proíbem encadear a consulta com outro comando). Aprova quando a comparação diz que são iguais ou que a principal só avançou; reprova em qualquer outro caso, com a mensagem nova. A falha da consulta derruba o passo. Vale igual nas duas automações.
-- Falha do agente (#100): um passo novo, logo depois da etapa do agente, roda só quando ela falhou, escreve a anotação de erro e acrescenta a mesma frase ao resumo da execução. O passo não muda o resultado da execução e não depende do texto do erro. A conferência final continua com a reprovação que já tem.
+- Branches da classificação (D-3, junto com a #94): a foto de antes já grava todas as branches com o ponto de cada uma. Na conferência, a automação lê de novo a lista e cruza as duas por nome. Branch só na lista de antes (apagada) ou só na de depois (nova) é aceita. Para cada branch presente nas duas com ponto diferente, pede ao GitHub a comparação entre o ponto de antes e o de depois, grava em arquivo e aprova só `identical` ou `ahead`; qualquer outro valor reprova citando a branch. A principal entra nessa mesma regra. Risco aceito: um envio forçado do próprio dono numa branch dele durante a classificação reprova a execução; é raro e é o mesmo caso que a regra quer pegar. A classificação já não tem permissão de escrita no conteúdo do repositório, então não consegue criar nem mudar branch.
+- Falha do agente (#100): um passo novo, logo depois da etapa do agente, roda só quando ela falhou ou foi cancelada enquanto rodava (condição `always()` mais resultado da etapa igual a falha ou cancelado), escreve a anotação de erro e acrescenta a mesma frase ao resumo da execução. O passo não muda o resultado da execução e não depende do texto do erro. A conferência final continua com a reprovação que já tem.
+- Cancelamento (#100): quando uma execução é cancelada, o GitHub interrompe o passo em andamento, que fica com resultado cancelado, e ainda roda os passos seguintes que usam `always()`; os demais ficam como pulados. Por isso a condição precisa de `always()`. Passos que ainda não tinham começado, como a etapa do agente cancelada antes de rodar, ficam como pulados e não disparam a mensagem. Limite registrado: se o cancelamento for forçado, ou se o prazo do GitHub para encerrar a execução cancelada se esgotar, os passos com `always()` deixam de rodar e a mensagem não aparece. Isso se confirma no disparo real (passo 6 da validação).
 
 ## Plano de execução
 
@@ -140,7 +146,6 @@ Todas as tarefas mexem na automação do agente de issues e nos mesmos testes, e
 
 - Fase 1 (sequencial): T1 → T2 → T3 → T4.
 - Gate de fase, ao fim da fase e antes do reviewer: `npm run lint`, `npm test` (suíte inteira), `node bin/ai-sync.js --check` e o actionlint na versão fixada pelo CI. Não há build, typecheck nem formatador no projeto.
-- Se a D-1 ainda estiver sem resposta quando T1 terminar, o dev pode fazer T3 e T4 antes de T2 e avisar a orchestrator; a ordem dos commits no pull request muda, mas cada commit continua com uma issue só.
 
 Validação em execução real, passo do usuário, fora do gate:
 
@@ -148,7 +153,8 @@ Validação em execução real, passo do usuário, fora do gate:
 2. Disparar à mão a Issue Size Set e a Issue Claude Agent na branch do pull request (Run workflow escolhendo a branch, ou pela linha de comando com a branch indicada) e conferir que não há o aviso.
 3. Durante a execução da Issue Claude Agent, juntar um pull request qualquer na principal e conferir que a conferência final não reprova pela principal.
 4. Para o guia do Claude, abrir uma issue P de teste que peça uma mudança pequena nele e disparar a Issue Claude Agent com o número dela.
-5. Para a mensagem de falha, a forma mais simples é esperar a próxima falha real da etapa do agente. Uma alternativa não verificada aqui é disparar na branch do pull request com um commit temporário que derrube a etapa do agente.
+5. Para a conferência das branches da classificação, durante uma execução da Issue Size Set, juntar um pull request apagando a branch e conferir que a conferência não reprova.
+6. Para a mensagem de falha, cancelar uma execução da Issue Claude Agent durante o passo do agente e conferir a anotação e o resumo. Para a falha, a forma mais simples é esperar a próxima falha real da etapa do agente. Uma alternativa não verificada aqui é disparar na branch do pull request com um commit temporário que derrube a etapa do agente.
 
 ## Tarefas
 
@@ -171,7 +177,7 @@ Validação em execução real, passo do usuário, fora do gate:
 - O quê: cria o comando que copia o texto preparado pelo agente para o guia do Claude, libera só esse comando ao agente e explica a exceção nas instruções.
 - Onde: script novo em `.github/issue-agent/` (por exemplo, `apply-claude-guide.js`); `--allowedTools` do passo `claude` em `.github/workflows/issue-claude-agent.yml`; `.github/issue-agent/agent-prompt.md`; `tests/issue-claude-agent-workflow.test.js`, `tests/issue-claude-agent-prompt.test.js` e teste novo do script em `tests/`.
 - Dev: dev-devops.
-- Depende de: T1 e da resposta à D-1.
+- Depende de: T1.
 - Reaproveita: o padrão dos scripts de `.github/issue-agent/` (como `open-pull-request.js`) e dos testes deles; a pasta do contexto que o agente já escreve (`runner.temp`/`issue-agent`). O `CONTEXT_DIR` não existe no ambiente do passo `claude`, então o script monta o caminho de origem a partir de `RUNNER_TEMP` (`$RUNNER_TEMP/issue-agent/<arquivo fixo>`), e as instruções citam o caminho completo do arquivo em "Valores desta execução", como já fazem com a descrição do pull request. A frase que `tests/issue-claude-agent-prompt.test.js` já exige ("O `.claude/CLAUDE.md` é o único arquivo do `.claude/` editado à mão") continua nas instruções.
 - Atende: RN-02, RN-03; CA-04, CA-05, CA-06, CA-07, CA-08.
 - Pronto quando: o script, sem argumentos, copia o arquivo preparado de nome fixo da pasta do contexto para `.claude/CLAUDE.md` e recusa arquivo ausente ou vazio, sem tocar no guia; o destino é fixo e nenhum outro arquivo é escrito; `--allowedTools` do agente ganha só a chamada exata do script; `--disallowedTools` não muda e segue igual nas duas automações; as instruções dizem como alterar o guia e que o resto da pasta segue gerado; gate passando; commit `Fix :bug: [#104] ...`.
@@ -180,42 +186,34 @@ Validação em execução real, passo do usuário, fora do gate:
 - Modelo: padrao.
 - Status: pendente.
 
-### T3: Aceita a principal avançar durante a execução (#94)
+### T3: Aceita a principal e as branches avançarem durante a execução (#94)
 
-- O quê: troca a comparação de igualdade da principal por uma comparação pelo GitHub que aceita a principal igual ou à frente do ponto de antes, nas duas automações.
+- O quê: troca a comparação de igualdade da principal por uma comparação pelo GitHub que aceita a principal igual ou à frente do ponto de antes, nas duas automações, e troca a comparação da lista inteira de branches da classificação por uma que aceita branch nova e apagada e só reprova branch que perdeu o ponto de antes.
 - Onde: passo "Conferência final" de `.github/workflows/issue-claude-agent.yml` e de `.github/workflows/issue-size-set.yml`; `tests/issue-claude-agent-workflow.test.js` e `tests/issue-size-set-workflow.test.js`.
 - Dev: dev-devops.
 - Depende de: T1 (mesmos arquivos; ordem no Plano de execução).
-- Reaproveita: a foto de antes que já grava o ponto da principal em `$CHECK_DIR/main`, a função `fail` e o padrão de gravar a saída do `gh api` em arquivo antes de ler.
-- Atende: RN-04, RN-05; CA-09, CA-10, CA-11, CA-12.
-- Pronto quando: as duas conferências consultam `repos/$GITHUB_REPOSITORY/compare/<antes>...<depois>`, gravam o `status` em arquivo e só aprovam `identical` ou `ahead`; qualquer outro valor reprova com mensagem nova que diga que a principal perdeu o ponto de antes; a frase "A branch principal mudou durante a execução" não existe mais; nenhuma checagem usa autor; a consulta não é encadeada com pipe; gate passando; commit `Fix :bug: [#94] ...`.
-- Teste: unitário. Falham primeiro os testes das duas automações que exigem a comparação pelo GitHub, a aceitação de `identical` e `ahead`, a mensagem nova e a ausência da mensagem antiga.
+- Reaproveita: a foto de antes que já grava o ponto da principal em `$CHECK_DIR/main` e, na classificação, todas as branches com o ponto em `$CHECK_DIR/branches`, a função `fail` e o padrão de gravar a saída do `gh api` em arquivo antes de ler.
+- Atende: RN-04, RN-05, RN-09; CA-09, CA-10, CA-11, CA-12, CA-17, CA-18, CA-19, CA-20.
+- Pronto quando: as duas conferências consultam `repos/$GITHUB_REPOSITORY/compare/<antes>...<depois>`, gravam o `status` em arquivo e só aprovam `identical` ou `ahead`; qualquer outro valor reprova com mensagem nova que diga que a principal perdeu o ponto de antes; a frase "A branch principal mudou durante a execução" não existe mais; na classificação, a frase "A lista de branches mudou durante a execução" não existe mais, branch nova e apagada não reprovam, e cada branch presente antes e depois com ponto diferente passa pela mesma comparação, reprovando com o nome da branch fora de `identical` ou `ahead`; nenhuma checagem usa autor; nenhuma consulta é encadeada com pipe; gate passando; commit `Fix :bug: [#94] ...`.
+- Teste: unitário. Falham primeiro os testes das duas automações que exigem a comparação pelo GitHub, a aceitação de `identical` e `ahead`, a mensagem nova e a ausência da mensagem antiga, e os da classificação que exigem a comparação por branch, a mensagem com o nome da branch e a ausência da frase da lista de branches.
 - Gate: o mesmo de T1.
 - Modelo: padrao.
 - Status: pendente.
 
 ### T4: Mostra a causa provável quando a etapa do agente falha (#100)
 
-- O quê: acrescenta um passo que, só quando a etapa do agente falha, escreve a anotação de erro e o resumo com a mensagem da RN-06.
+- O quê: acrescenta um passo que, só quando a etapa do agente falha ou é cancelada enquanto roda, escreve a anotação de erro e o resumo com a mensagem da RN-06.
 - Onde: trabalho `agent` de `.github/workflows/issue-claude-agent.yml`; `tests/issue-claude-agent-workflow.test.js`.
 - Dev: dev-devops.
 - Depende de: T3 (mesmos arquivos).
 - Reaproveita: o `id: claude` da etapa do agente e o padrão de passos com `if: always()`.
 - Atende: RN-06, RN-07, RN-08; CA-13, CA-14, CA-15, CA-16.
-- Pronto quando: há um passo logo depois da etapa do agente com a condição `always() && steps.claude.outcome == 'failure'`, que escreve `::error::` e acrescenta ao `$GITHUB_STEP_SUMMARY` a frase "O agente falhou antes de concluir: confira o limite de uso do Claude e o log do passo do agente.", sem ler o texto do erro e terminando com sucesso; a abertura do pull request, a limpeza e a conferência final ficam como estão; a classificação de tamanho não muda; gate passando; commit `Fix :bug: [#100] ...`.
-- Teste: unitário. Falham primeiro os testes que exigem o passo novo depois da etapa do agente e antes do relatório, a condição só de falha, a frase exata na anotação e no resumo, e a ausência da frase na classificação de tamanho.
+- Pronto quando: há um passo logo depois da etapa do agente com a condição `always() && (steps.claude.outcome == 'failure' || steps.claude.outcome == 'cancelled')`, que escreve `::error::` e acrescenta ao `$GITHUB_STEP_SUMMARY` a frase "O agente falhou antes de concluir: confira o limite de uso do Claude e o log do passo do agente.", sem ler o texto do erro e terminando com sucesso; a abertura do pull request, a limpeza e a conferência final ficam como estão; a classificação de tamanho não muda; gate passando; commit `Fix :bug: [#100] ...`.
+- Teste: unitário. Falham primeiro os testes que exigem o passo novo depois da etapa do agente e antes do relatório, a condição com `always()` que aceita só falha e cancelado (nunca sucesso nem pulado), a frase exata na anotação e no resumo, e a ausência da frase na classificação de tamanho.
 - Gate: o mesmo de T1.
 - Modelo: economico.
 - Status: pendente.
 
 ## Dúvidas
 
-Do usuário:
-
-- D-1 (bloqueia T2): o ajuste mínimo da #104 não cabe em "só workflows". Nenhuma regra de permissão vence a proteção do Claude Code sobre a pasta de configuração no modo sem perguntar. O caminho proposto exige um script novo na automação do agente de issues e uma mudança nas instruções do agente, além da liberação de um único comando na automação (ver a seção de permissões). Aprova esse caminho? A alternativa é deixar a #104 fora deste pull request.
-- D-2: confirma que a conferência da principal fica só na regra "o ponto de antes continua na história", sem exigir que cada mudança nova tenha vindo de pull request juntado? O risco aceito é uma mudança direta na principal passar pela conferência. Ela continua barrada pela proteção da principal, e a verificação por pull request traria de volta o alarme falso logo depois do merge.
-- D-4: a mensagem de falha aparece só quando a etapa do agente falha. Quando a execução é cancelada, ou a etapa nem roda porque um passo anterior falhou, a mensagem não aparece, para não culpar o limite de uso sem motivo. Está certo?
-
-Do product-owner:
-
-- D-3: a checagem "A lista de branches mudou durante a execução" da classificação de tamanho também dispara quando o dono junta um pull request e a branch é apagada, o mesmo tipo de alarme falso da #94. Entra como issue nova ou neste pull request?
+Nenhuma. As respostas do usuário viraram regra: D-1 (caminho do script da #104, seção de permissões e T2), D-2 (RN-05), D-3 (RN-09 e T3) e D-4 (RN-06, RN-07 e T4).
