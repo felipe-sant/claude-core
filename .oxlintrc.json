@@ -4,7 +4,7 @@
   "jsPlugins": ["./lint/no-comments-plugin.js"],
   "categories": { "correctness": "error", "suspicious": "error" },
   "rules": {
-    "claude-core/no-comments": "error",
+    "claude-kit/no-comments": "error",
     "eqeqeq": "error",
     "no-var": "error",
     "prefer-const": "error",

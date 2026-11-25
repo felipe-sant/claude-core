@@ -4,7 +4,7 @@ const path = require('node:path')
 const { spawnSync } = require('node:child_process')
 
 const GENERATED_PATHS = ['.claude/agents', '.claude/rules', '.claude/skills', '.claude/settings.json', '.claude/claude-kit.lock.json']
-const TEMP_PREFIX = 'claude-core-hook-'
+const TEMP_PREFIX = 'claude-kit-hook-'
 const COMPARE_STAGE = 'stage'
 const COMPARE_FOLDER = 'folder'
 
