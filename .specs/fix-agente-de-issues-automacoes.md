@@ -198,7 +198,7 @@ Validação em execução real, passo do usuário, fora do gate:
 - Teste: unitário. Falham primeiro os testes das duas automações que exigem a comparação pelo GitHub, a aceitação de `identical` e `ahead`, a mensagem nova e a ausência da mensagem antiga, e os da classificação que exigem a comparação por branch, a mensagem com o nome da branch e a ausência da frase da lista de branches.
 - Gate: o mesmo de T1.
 - Modelo: padrao.
-- Status: pendente.
+- Status: feita (commit f0ef012, com a lista de branches; vermelho antes: 10 falhas no teste novo de conferência; gate ok: npm test com 501 passando e 0 falhando, lint ok, --check ok, actionlint 1.7.12 ok; limite: a conferência do agente de issues é verificada só pelo texto do script, e a execução fica para a validação real, passo 3).
 
 ### T4: Mostra a causa provável quando a etapa do agente falha (#100)
 
