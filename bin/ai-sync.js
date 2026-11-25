@@ -173,6 +173,7 @@ const report = { created: [], updated: [], overwritten: [], removed: [], adopted
 const settingsReport = { created: false, added: [], suggested: [], broken: false }
 const previousSettings = new Set(previousManifest.settings?.applied || [])
 const appliedSettings = new Set(previousSettings)
+const manifestWasRecreated = !fs.existsSync(manifestFile) && !fs.existsSync(legacyManifestFile)
 
 const hashOf = (file) => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex')
 
@@ -309,6 +310,8 @@ function mergeMissing(existing, template, prefix) {
       mergeMissing(existing[key], recommended, keyPath)
     } else if (JSON.stringify(existing[key]) !== JSON.stringify(recommended)) {
       settingsReport.suggested.push({ path: keyPath, current: existing[key], recommended })
+    } else if (manifestWasRecreated) {
+      leafPaths(recommended, keyPath).forEach((leaf) => appliedSettings.add(leaf))
     }
   }
 }

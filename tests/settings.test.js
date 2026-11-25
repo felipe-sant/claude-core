@@ -195,3 +195,102 @@ test('o modelo do repositório respeita um projeto que já tem configuração', 
   assert.deepEqual(after.permissions.deny, ['Read(./segredo)'])
   assert.match(result.stdout, /Sugerido e não aplicado/)
 })
+
+const LOCK = '.claude/claude-kit.lock.json'
+const OLD_LOCK = '.claude/claude-core.lock.json'
+const appliedIn = (target) => JSON.parse(h.read(target, LOCK)).settings?.applied || []
+const ALL_LEAVES = ['effortLevel', 'env.OTHER', 'env.QUIET', 'permissions.deny']
+
+test('registro recriado lista as configurações já presentes e iguais ao modelo', () => {
+  const target = h.makeTarget({ '.claude/settings.json': JSON.stringify(template) })
+  const before = h.read(target, '.claude/settings.json')
+  const result = h.run(core(), target)
+
+  assert.equal(result.status, 0, result.output)
+  assert.deepEqual(appliedIn(target), ALL_LEAVES)
+  assert.equal(h.read(target, '.claude/settings.json'), before)
+  assert.doesNotMatch(result.output, /Sugerido/)
+})
+
+test('registro recriado lista só os itens iguais ao modelo em um grupo misto', () => {
+  const mine = { effortLevel: 'medium', env: { QUIET: '0', OTHER: 'a' } }
+  const target = h.makeTarget({ '.claude/settings.json': JSON.stringify(mine) })
+  const result = h.run(core(), target)
+
+  assert.deepEqual(appliedIn(target), ['effortLevel', 'env.OTHER', 'permissions.deny'])
+  assert.equal(settings(target).env.QUIET, '0')
+  assert.match(result.output, /env\.QUIET: está "0", recomendado "1"/)
+})
+
+test('registro recriado trata a lista como um item só', () => {
+  const same = h.makeTarget({ '.claude/settings.json': JSON.stringify({ permissions: { deny: ['Read(./.env)'] } }) })
+  h.run(core(), same)
+  assert.ok(appliedIn(same).includes('permissions.deny'))
+
+  const different = h.makeTarget({ '.claude/settings.json': JSON.stringify({ permissions: { deny: ['Read(./x)'] } }) })
+  const result = h.run(core(), different)
+  assert.ok(!appliedIn(different).includes('permissions.deny'))
+  assert.deepEqual(settings(different).permissions.deny, ['Read(./x)'])
+  assert.match(result.output, /permissions\.deny: está/)
+})
+
+test('registro recriado não registra chave que o modelo não entrega', () => {
+  const target = h.makeTarget({ '.claude/settings.json': JSON.stringify({ ...template, model: 'opus' }) })
+  h.run(core(), target)
+
+  assert.ok(!appliedIn(target).includes('model'))
+  assert.equal(settings(target).model, 'opus')
+})
+
+test('registro recriado acrescenta o que falta e registra junto com o que já era igual', () => {
+  const target = h.makeTarget({ '.claude/settings.json': JSON.stringify({ effortLevel: 'medium' }) })
+  h.run(core(), target)
+
+  assert.deepEqual(settings(target), template)
+  assert.deepEqual(appliedIn(target), ALL_LEAVES)
+})
+
+test('registro existente sem a configuração continua tratando-a como do usuário', () => {
+  const target = h.makeTarget({ '.claude/settings.json': JSON.stringify(template) })
+  h.run(core(), target)
+  fs.writeFileSync(path.join(target, LOCK), JSON.stringify({ files: {} }))
+  h.run(core(), target)
+
+  assert.deepEqual(appliedIn(target), [])
+})
+
+test('registro de nome antigo sem a configuração é migrado sem registrá-la', () => {
+  const target = h.makeTarget({
+    '.claude/settings.json': JSON.stringify(template),
+    [OLD_LOCK]: JSON.stringify({ files: {} })
+  })
+  const result = h.run(core(), target)
+
+  assert.equal(result.status, 0, result.output)
+  assert.ok(h.exists(target, LOCK))
+  assert.ok(!h.exists(target, OLD_LOCK))
+  assert.deepEqual(appliedIn(target), [])
+})
+
+test('settings.json inválido segue intocado e nada é registrado', () => {
+  const target = h.makeTarget({ '.claude/settings.json': '{ quebrado' })
+  h.run(core(), target)
+
+  assert.equal(h.read(target, '.claude/settings.json'), '{ quebrado')
+  assert.deepEqual(appliedIn(target), [])
+})
+
+test('configuração apagada depois do registro recriado não volta e a segunda rodada não muda nada', () => {
+  const target = h.makeTarget({ '.claude/settings.json': JSON.stringify(template) })
+  h.run(core(), target)
+  const edited = settings(target)
+  delete edited.effortLevel
+  fs.writeFileSync(path.join(target, '.claude/settings.json'), JSON.stringify(edited))
+  h.run(core(), target)
+  assert.equal(settings(target).effortLevel, undefined)
+
+  const before = h.snapshot(target)
+  const second = h.run(core(), target)
+  assert.equal(h.snapshot(target), before)
+  assert.match(second.output, /Tudo em dia, nada mudou/)
+})
