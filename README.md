@@ -241,7 +241,7 @@ Na dúvida entre P e M, o tamanho é M. As issues M e G recebem só o tamanho e 
 ### Quando roda
 
 - Quando uma issue é aberta ou reaberta: trata só essa issue.
-- Todo dia às 06:00 de Brasília (09:00 UTC), para pegar o que escapou.
+- Todo dia às 02:28 de Brasília (05:28 UTC), para pegar o que escapou. O minuto quebrado evita o pico de horas cheias do GitHub, que atrasa ou descarta execuções agendadas.
 - Na mão: em Actions, "Agente de issues", Run workflow, ou `gh workflow run issue-agent.yml`.
 
 Na varredura diária e no disparo manual, classifica no máximo 10 issues sem tamanho por execução, das mais antigas para as mais novas. Cada execução abre no máximo um pull request, e só há um pull request do agente aberto por vez. Só a P sem pull request, sem branch própria e sem responsável fica numa fila; a P que já tem branch ou responsável sai dela. A da fila é retomada na varredura ou no disparo manual, quando não há pull request do agente aberto, sem classificar de novo. Rodar o agente outra vez na mesma issue não repete o tamanho, o comentário nem o pull request.
