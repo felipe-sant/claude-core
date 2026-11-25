@@ -66,6 +66,12 @@ function checkSize(labels) {
 
 class Refusal extends Error {}
 
+function recordOutputs(file, values) {
+  if (!file) return
+  const lines = Object.entries(values).map(([name, value]) => `${name}=${String(value).replace(/\s*[\r\n]+\s*/g, ' ')}\n`)
+  fs.appendFileSync(file, lines.join(''))
+}
+
 async function readApiMessage(response) {
   try {
     const payload = await response.json()
@@ -143,6 +149,7 @@ async function main() {
   const openPulls = await request(token, `${API_URL}/repos/${repository}/pulls?state=open&head=${owner}:${branch}`)
   if (openPulls.length > 0) {
     console.log(`Já há pull request aberto da branch ${branch}.`)
+    recordOutputs(process.env.GITHUB_OUTPUT, { pull_request_url: openPulls[0].html_url })
     return
   }
 
@@ -153,13 +160,15 @@ async function main() {
     body: buildBody(description, issueNumber)
   })
   console.log(`Pull request aberto: ${created.html_url}`)
+  recordOutputs(process.env.GITHUB_OUTPUT, { pull_request_url: created.html_url })
 }
 
 if (require.main === module) {
   main().catch((error) => {
     console.log(`::error::${error.message}`)
+    recordOutputs(process.env.GITHUB_OUTPUT, { failure_reason: error.message })
     process.exit(1)
   })
 }
 
-module.exports = { createPullRequest, findIssueBranch, validateDescription, buildBody, buildTitle, checkSize, DESCRIPTION_FILE, PULL_REQUEST_LINE }
+module.exports = { recordOutputs, createPullRequest, findIssueBranch, validateDescription, buildBody, buildTitle, checkSize, DESCRIPTION_FILE, PULL_REQUEST_LINE }
