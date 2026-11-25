@@ -52,7 +52,7 @@ test('aplica tudo o que vale para qualquer projeto e registra o que instalou', (
   assert.ok(h.exists(target, '.claude/agents/qa.md'))
   assert.ok(h.exists(target, '.claude/rules/commit-standard.md'))
 
-  const lock = JSON.parse(h.read(target, '.claude/claude-core.lock.json'))
+  const lock = JSON.parse(h.read(target, '.claude/claude-kit.lock.json'))
   assert.deepEqual(Object.keys(lock.files).sort(), [
     '.claude/agents/designer.md',
     '.claude/agents/orchestrator.md',
@@ -184,7 +184,7 @@ test('arquivo do usuário com o mesmo nome não é apagado nem sobrescrito', () 
   assert.equal(h.read(target, '.claude/agents/qa.md'), 'meu qa\n')
   assert.match(result.output, /já existe um arquivo seu/)
   assert.match(result.output, /Deixados como estavam:\n\s+\.claude\/agents\/qa\.md/)
-  const lock = JSON.parse(h.read(target, '.claude/claude-core.lock.json'))
+  const lock = JSON.parse(h.read(target, '.claude/claude-kit.lock.json'))
   assert.ok(!('.claude/agents/qa.md' in lock.files))
 })
 
@@ -209,7 +209,7 @@ test('arquivo idêntico ao do repositório passa a ser acompanhado sem mudar', (
   const result = h.run(core, target)
 
   assert.match(result.output, /passaram a ser acompanhados\):\n\s+\.claude\/agents\/qa\.md/)
-  const lock = JSON.parse(h.read(target, '.claude/claude-core.lock.json'))
+  const lock = JSON.parse(h.read(target, '.claude/claude-kit.lock.json'))
   assert.ok('.claude/agents/qa.md' in lock.files)
 })
 
@@ -253,7 +253,7 @@ test('arquivo editado que ficou igual ao do repositório volta a ser acompanhado
 
   assert.equal(result.status, 0)
   assert.doesNotMatch(result.output, /Avisos/)
-  const lock = JSON.parse(h.read(target, '.claude/claude-core.lock.json'))
+  const lock = JSON.parse(h.read(target, '.claude/claude-kit.lock.json'))
   assert.equal(lock.files['.claude/agents/qa.md'].hash.length, 64)
 })
 
@@ -266,7 +266,7 @@ test('item retirado do repositório é removido do projeto se estiver sem altera
 
   assert.ok(!h.exists(target, '.claude/agents/designer.md'))
   assert.match(result.output, /Removidos:\n\s+\.claude\/agents\/designer\.md/)
-  const lock = JSON.parse(h.read(target, '.claude/claude-core.lock.json'))
+  const lock = JSON.parse(h.read(target, '.claude/claude-kit.lock.json'))
   assert.ok(!('.claude/agents/designer.md' in lock.files))
 })
 
@@ -466,4 +466,115 @@ test('não manda abrir sessão nova quando só regras mudam', () => {
 
   assert.match(result.output, /Atualizados:\n\s+\.claude\/rules\/commit-standard\.md/)
   assert.doesNotMatch(result.output, /sessão nova/)
+})
+
+const OLD_LOCK = '.claude/claude-core.lock.json'
+const NEW_LOCK = '.claude/claude-kit.lock.json'
+
+function withOldLock(core, target) {
+  h.run(core, target)
+  fs.renameSync(path.join(target, NEW_LOCK), path.join(target, OLD_LOCK))
+}
+
+test('primeira execução grava só o registro com o nome novo', () => {
+  const target = h.makeTarget()
+  h.run(basicCore(), target)
+
+  assert.ok(h.exists(target, NEW_LOCK))
+  assert.ok(!h.exists(target, OLD_LOCK))
+})
+
+test('registro antigo é migrado para o novo com tudo o que estava registrado', () => {
+  const core = h.makeCore({
+    items: [
+      { group: 'agents', name: 'qa', files: agent('qa') },
+      { group: 'settings', name: 'base', files: { permissions: { allow: ['Bash(ls)'] } } }
+    ],
+    profiles: { minimal: { agents: ['qa'], rules: [], settings: ['base'] } }
+  })
+  const target = h.makeTarget()
+  h.run(core, target, '--profile', 'minimal')
+  const before = JSON.parse(h.read(target, NEW_LOCK))
+  fs.renameSync(path.join(target, NEW_LOCK), path.join(target, OLD_LOCK))
+
+  const result = h.run(core, target, '--profile', 'minimal')
+
+  assert.equal(result.status, 0)
+  assert.ok(!h.exists(target, OLD_LOCK))
+  assert.deepEqual(JSON.parse(h.read(target, NEW_LOCK)), before)
+  assert.ok(before.settings.applied.length > 0)
+})
+
+test('migração do registro mostra a mesma saída de um registro já com o nome novo', () => {
+  const core = basicCore()
+  const migrated = h.makeTarget()
+  withOldLock(core, migrated)
+  h.setContent(core, 'agents/qa.md', agent('qa', ' novo'))
+  const current = h.makeTarget()
+  h.run(basicCore(), current)
+  const migratedResult = h.run(core, migrated)
+  const currentResult = h.run(core, current)
+
+  assert.equal(migratedResult.output.replaceAll(migrated, 'T'), currentResult.output.replaceAll(current, 'T'))
+})
+
+test('com os dois registros, usa só o novo e remove o antigo', () => {
+  const core = basicCore()
+  const target = h.makeTarget()
+  h.run(core, target)
+  fs.writeFileSync(path.join(target, OLD_LOCK), JSON.stringify({ files: { '.claude/agents/fantasma.md': { hash: 'x', version: '0' } } }))
+  const before = h.read(target, NEW_LOCK)
+
+  h.run(core, target)
+
+  assert.ok(!h.exists(target, OLD_LOCK))
+  assert.equal(h.read(target, NEW_LOCK), before)
+  assert.ok(!h.read(target, NEW_LOCK).includes('fantasma'))
+})
+
+test('registro antigo inválido para com erro e não copia nem grava nada', () => {
+  const core = basicCore()
+  const target = h.makeTarget({ [OLD_LOCK]: '{quebrado' })
+  const result = h.run(core, target)
+
+  assert.notEqual(result.status, 0)
+  assert.match(result.output, /registro antigo.*não pôde ser lido/)
+  assert.equal(h.read(target, OLD_LOCK), '{quebrado')
+  assert.ok(!h.exists(target, NEW_LOCK))
+  assert.ok(!h.exists(target, '.claude/agents/qa.md'))
+})
+
+test('migração mantém o arquivo editado pelo usuário e avisa', () => {
+  const core = basicCore()
+  const target = h.makeTarget()
+  withOldLock(core, target)
+  fs.writeFileSync(path.join(target, '.claude/agents/qa.md'), 'meu qa\n')
+  h.setContent(core, 'agents/qa.md', agent('qa', ' novo'))
+
+  const result = h.run(core, target)
+
+  assert.equal(h.read(target, '.claude/agents/qa.md'), 'meu qa\n')
+  assert.match(result.output, /você editou este arquivo/)
+})
+
+test('migração atualiza arquivo instalado sem alterações quando há versão nova', () => {
+  const core = basicCore()
+  const target = h.makeTarget()
+  withOldLock(core, target)
+  h.setContent(core, 'agents/qa.md', agent('qa', ' novo'))
+
+  const result = h.run(core, target)
+
+  assert.match(h.read(target, '.claude/agents/qa.md'), /novo/)
+  assert.match(result.output, /Atualizados/)
+})
+
+test('migração deixa intactos os outros arquivos da pasta .claude', () => {
+  const core = basicCore()
+  const target = h.makeTarget({ '.claude/meu-arquivo.txt': 'meu\n', '.claude/agents/meu-agente.md': 'meu\n' })
+  withOldLock(core, target)
+  h.run(core, target)
+
+  assert.equal(h.read(target, '.claude/meu-arquivo.txt'), 'meu\n')
+  assert.equal(h.read(target, '.claude/agents/meu-agente.md'), 'meu\n')
 })

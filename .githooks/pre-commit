@@ -12,6 +12,6 @@ case "$GIT_INDEX_FILE" in
     ;;
   *)
     node .githooks/check-sync.js folder
-    git add -A -- .claude/agents .claude/rules .claude/skills .claude/settings.json .claude/claude-core.lock.json
+    git add -A -- .claude/agents .claude/rules .claude/skills .claude/settings.json .claude/claude-kit.lock.json
     ;;
 esac

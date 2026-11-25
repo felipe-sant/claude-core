@@ -11,13 +11,13 @@ test('o .claude deste repositório está sincronizado com o perfil tooling', () 
   const result = h.run(h.repoRoot, target, '--profile', 'tooling')
   assert.equal(result.status, 0, result.output)
 
-  const expected = JSON.parse(h.read(target, '.claude/claude-core.lock.json'))
-  const lockFile = path.join(h.repoRoot, '.claude', 'claude-core.lock.json')
-  assert.ok(fs.existsSync(lockFile), 'falta o .claude/claude-core.lock.json: rode npm run sync')
+  const expected = JSON.parse(h.read(target, '.claude/claude-kit.lock.json'))
+  const lockFile = path.join(h.repoRoot, '.claude', 'claude-kit.lock.json')
+  assert.ok(fs.existsSync(lockFile), 'falta o .claude/claude-kit.lock.json: rode npm run sync')
   const actual = JSON.parse(fs.readFileSync(lockFile, 'utf8'))
 
   assert.deepEqual(Object.keys(actual.files).sort(), Object.keys(expected.files).sort(), 'os arquivos do .claude não batem com o catálogo: rode npm run sync')
-  for (const rel of [...Object.keys(expected.files), '.claude/claude-core.lock.json', '.claude/settings.json']) {
+  for (const rel of [...Object.keys(expected.files), '.claude/claude-kit.lock.json', '.claude/settings.json']) {
     assert.equal(h.read(h.repoRoot, rel), h.read(target, rel), `${rel} está desatualizado: rode npm run sync`)
   }
 })
@@ -37,7 +37,7 @@ test('o hook de pre-commit roda o sync e adiciona o .claude ao commit', () => {
 
 const { spawnSync } = require('node:child_process')
 
-const generatedPaths = ['.claude/agents', '.claude/rules', '.claude/skills', '.claude/settings.json', '.claude/claude-core.lock.json']
+const generatedPaths = ['.claude/agents', '.claude/rules', '.claude/skills', '.claude/settings.json', '.claude/claude-kit.lock.json']
 const copiedPaths = ['bin', 'catalog.json', 'agents', 'rules', 'skills', 'stacks', 'templates', 'profiles', '.claude', '.githooks', 'package.json']
 const refusalHint = 'npm run sync'
 
@@ -122,7 +122,7 @@ test('commit por caminho da fonte com os gerados atualizados passa e fica em sin
   appendLine(repo, 'rules/commit-standard.md')
   const synced = spawnSync('npm', ['run', 'sync'], { cwd: repo, encoding: 'utf8', env: gitEnv() })
   assert.equal(synced.status, 0, synced.stderr)
-  const result = git(repo, 'commit', '-m', 'Altera regra', '--', 'rules/commit-standard.md', '.claude/rules/commit-standard.md', '.claude/claude-core.lock.json')
+  const result = git(repo, 'commit', '-m', 'Altera regra', '--', 'rules/commit-standard.md', '.claude/rules/commit-standard.md', '.claude/claude-kit.lock.json')
   assert.equal(result.status, 0, result.output)
   assert.ok(headIsInSync(repo))
 })
@@ -133,7 +133,7 @@ test('commit sem caminhos com a fonte no stage passa, leva os gerados e fica em 
   git(repo, 'add', 'rules/commit-standard.md')
   const result = git(repo, 'commit', '-m', 'Altera regra')
   assert.equal(result.status, 0, result.output)
-  assert.ok(committedFiles(repo).includes('.claude/claude-core.lock.json'))
+  assert.ok(committedFiles(repo).includes('.claude/claude-kit.lock.json'))
   assert.ok(headIsInSync(repo))
 })
 
@@ -160,7 +160,7 @@ test('commit por caminho de uma fonte com outra fonte alterada por outro agente 
   assert.notEqual(refused.status, 0, refused.output)
   assert.match(refused.output, /outro agente/)
   assert.equal(head(repo), before)
-  const withGenerated = git(repo, 'commit', '-m', 'Altera regra', '--', 'rules/commit-standard.md', '.claude/rules/commit-standard.md', '.claude/rules/git-standard.md', '.claude/claude-core.lock.json')
+  const withGenerated = git(repo, 'commit', '-m', 'Altera regra', '--', 'rules/commit-standard.md', '.claude/rules/commit-standard.md', '.claude/rules/git-standard.md', '.claude/claude-kit.lock.json')
   assert.notEqual(withGenerated.status, 0, withGenerated.output)
   assert.equal(head(repo), before)
 })

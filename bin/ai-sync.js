@@ -148,15 +148,30 @@ if (profile) {
 
 const crypto = require('crypto')
 
-const manifestFile = path.join(target, '.claude', 'claude-core.lock.json')
+const manifestFile = path.join(target, '.claude', 'claude-kit.lock.json')
+const legacyManifestFile = path.join(target, '.claude', 'claude-core.lock.json')
+const previousManifestFile = fs.existsSync(manifestFile) ? manifestFile : legacyManifestFile
+
+function legacyManifestIsReadable() {
+  try {
+    const parsed = JSON.parse(fs.readFileSync(legacyManifestFile, 'utf8'))
+    return parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed)
+  } catch {
+    return false
+  }
+}
+
+if (previousManifestFile === legacyManifestFile && fs.existsSync(legacyManifestFile) && !legacyManifestIsReadable()) {
+  console.error('O registro antigo (.claude/claude-core.lock.json) não pôde ser lido. Corrija ou remova esse arquivo e rode de novo; nada foi copiado.')
+  process.exit(1)
+}
+const previousManifest = fs.existsSync(previousManifestFile) ? readJson(previousManifestFile) : {}
 const coreVersion = readJson(path.join(root, 'package.json')).version || '0.0.0'
-const previous = fs.existsSync(manifestFile) ? readJson(manifestFile).files || {} : {}
+const previous = previousManifest.files || {}
 const manifest = {}
 const report = { created: [], updated: [], overwritten: [], removed: [], adopted: [], kept: [], warnings: [] }
 const settingsReport = { created: false, added: [], suggested: [], broken: false }
-const previousSettings = new Set(
-  fs.existsSync(manifestFile) ? readJson(manifestFile).settings?.applied || [] : []
-)
+const previousSettings = new Set(previousManifest.settings?.applied || [])
 const appliedSettings = new Set(previousSettings)
 
 const hashOf = (file) => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex')
@@ -348,10 +363,13 @@ function writeManifest() {
   const settings = appliedSettings.size > 0 ? { applied: [...appliedSettings].sort() } : undefined
   const content = `${JSON.stringify({ files: sorted, ...(settings ? { settings } : {}) }, null, 2)}\n`
   const current = fs.existsSync(manifestFile) ? fs.readFileSync(manifestFile, 'utf8') : ''
-  if (Object.keys(sorted).length === 0 && appliedSettings.size === 0 && current === '') return
-  if (current === content) return
-  fs.mkdirSync(path.dirname(manifestFile), { recursive: true })
-  fs.writeFileSync(manifestFile, content)
+  const migrating = fs.existsSync(legacyManifestFile)
+  const unchanged = current === content || (Object.keys(sorted).length === 0 && appliedSettings.size === 0 && current === '')
+  if (!unchanged || (migrating && !fs.existsSync(manifestFile))) {
+    fs.mkdirSync(path.dirname(manifestFile), { recursive: true })
+    fs.writeFileSync(manifestFile, content)
+  }
+  if (migrating && fs.existsSync(manifestFile)) fs.rmSync(legacyManifestFile)
 }
 
 function formatValue(value) {
