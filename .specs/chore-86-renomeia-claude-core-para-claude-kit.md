@@ -127,7 +127,7 @@ O projeto não tem typecheck nem formatador, só lint (oxlint mais a checagem de
 - Teste: unitário. Primeiro, ajuste o teste do aviso de arquivo que saiu do catálogo para o texto novo e veja-o falhar. Depois, acrescente a conferência do nome nos avisos de arquivo já existente e de versão nova.
 - Gate: `npm run lint` e `node --test tests/ai-sync.test.js`
 - Modelo: economico
-- Status: pendente
+- Status: feita. Commit 02a8e87, do Dev Back. Gate: `npm run lint` ok e `tests/ai-sync.test.js` com 44 testes passando e 0 falhando. Antes da correção, falharam 3 testes de aviso que exigiam o nome novo (/claude-kit/ não casava). A suíte completa tinha 7 falhas de sincronização, causadas por fontes da T3 e da T5 ainda não commitadas; o gate de fase roda depois delas.
 
 ### T3 [P]: Nome do pacote, regra do lint e pasta temporária do hook
 - O quê: o pacote, o plugin do oxlint e a pasta temporária do hook passam a usar claude-kit.
