@@ -1,6 +1,6 @@
 # Definir o padrão de escrita de PRs, comentários e issues e corrigir o PR do agente de issues
 
-> Status: em-revisao
+> Status: aprovada
 > Tipo: funcionalidade
 > Tamanho: media
 > Branch: feat/73-padrao-de-pr-comentarios-e-issues
