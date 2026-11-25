@@ -271,6 +271,10 @@ Sem a credencial, a execução falha de forma visível no passo do Claude.
 
 No comentário da issue, que traz o motivo do tamanho e o link da execução, e no registro da execução em Actions, que mostra o que foi selecionado, o que o agente rodou e o resumo das decisões. A automação fica em `.github/workflows/issue-agent.yml` e os scripts e as instruções em `.github/issue-agent/`.
 
+## Menções ao Claude
+
+O Claude também responde quando alguém com permissão de escrita no repositório o menciona com @claude em uma issue ou em um comentário.
+
 ## Estrutura do repositório
 
 | Pasta ou arquivo | Conteúdo |
