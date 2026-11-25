@@ -269,8 +269,90 @@ test('problema no próprio time vira issue no claude-kit, sem dado do projeto', 
   assert.match(rule, /gh issue create --repo felipe-sant\/claude-kit --label bug/)
   assert.match(rule, /sem pedir confirmação/)
   assert.match(rule, /Nunca coloque na issue/)
-  assert.match(rule, /## O que aconteceu.*## Impacto.*## Causa provável.*## Sugestão/s)
+  assert.match(rule, /`issue-standard`/)
+  assert.doesNotMatch(rule, /## Impacto/)
   assert.match(rule, /relate o problema à orchestrator/)
   assert.match(teamSetup(), /`feedback-standard`/)
   assert.match(readme, /`feedback-standard`/)
+})
+
+function ruleText(name) {
+  return fs.readFileSync(path.join(repoRoot, catalog.rules[name].path), 'utf8')
+}
+
+function assertGeneralRuleInAllProfiles(name) {
+  assert.deepEqual(catalog.rules[name].applies, ['all'])
+  for (const file of fs.readdirSync(path.join(repoRoot, 'profiles'))) {
+    const profile = JSON.parse(fs.readFileSync(path.join(repoRoot, 'profiles', file), 'utf8'))
+    assert.ok(profile.rules.includes(name), `${file} deve incluir ${name}`)
+  }
+}
+
+test('o padrão de pull request e comentários define as seções, o fechamento da issue e o tom dos comentários', () => {
+  const rule = ruleText('pull-request-standard')
+
+  assertGeneralRuleInAllProfiles('pull-request-standard')
+  assert.match(rule, /## O que muda.*## Como foi verificado.*## Observações/s)
+  assert.doesNotMatch(rule, /\*\*O que muda\*\*/)
+  assert.match(rule, /o que foi rodado, o resultado e o que não foi testado/)
+  assert.match(rule, /Closes #/)
+  assert.match(rule, /linguagem simples/)
+  assert.match(rule, /sem caminhos/)
+  assert.match(rule, /`commit-standard`/)
+  assert.match(rule, /Uma ideia por comentário/)
+  assert.match(rule, /código, não .* pessoa/)
+  assert.match(rule, /`review-standard`/)
+  assert.doesNotMatch(rule, /\*\*bloqueia\*\*/)
+})
+
+test('o padrão de issues define título, seções de bug e de funcionalidade, etiquetas e tamanho', () => {
+  const rule = ruleText('issue-standard')
+
+  assertGeneralRuleInAllProfiles('issue-standard')
+  assert.match(rule, /issues do GitHub/)
+  assert.match(rule, /frase em português simples/)
+  assert.match(rule, /## O que aconteceu.*## Impacto.*## Causa provável.*## Sugestão/s)
+  assert.match(rule, /## O que se quer.*## Por que.*## Critérios de aceite/s)
+  assert.match(rule, /`bug`/)
+  assert.match(rule, /`enhancement`/)
+  assert.match(rule, /etiquetas que o projeto já tem/)
+  assert.doesNotMatch(rule, /`feature`/)
+  assert.match(rule, /Nunca defina tamanho nem prioridade/)
+  assert.match(rule, /dono do projeto/)
+  assert.match(rule, /agente de issues/)
+  assert.match(rule, /`feedback-standard`/)
+})
+
+function skillText(name) {
+  return fs.readFileSync(path.join(repoRoot, catalog.skills[name].path, 'SKILL.md'), 'utf8')
+}
+
+test('as skills de abrir pull request e de revisão seguem o pull-request-standard sem repetir o texto dele', () => {
+  const create = skillText('create-pull-request')
+  const review = skillText('code-review')
+
+  assert.match(create, /`pull-request-standard`/)
+  assert.match(review, /`pull-request-standard`/)
+  assert.doesNotMatch(create, /O que muda/)
+  assert.doesNotMatch(create, /Como foi verificado/)
+  assert.doesNotMatch(create, /Observações/)
+  assert.doesNotMatch(review, /Seja objetivo e fale do código, não da pessoa/)
+})
+
+test('não existe skill de criar issue', () => {
+  assert.ok(!Object.keys(catalog.skills).some((name) => /issue/.test(name)))
+})
+
+test('o padrão de revisão aponta para o pull-request-standard na parte de comentários', () => {
+  assert.match(ruleText('review-standard'), /`pull-request-standard`/)
+})
+
+test('o README lista as regras de pull request e de issues e a contagem das regras gerais', () => {
+  const readme = fs.readFileSync(path.join(repoRoot, 'README.md'), 'utf8')
+
+  assert.match(readme, /`pull-request-standard`/)
+  assert.match(readme, /`issue-standard`/)
+  assert.match(readme, /9 gerais e 4 por stack/)
+  assert.match(readme, /as nove regras gerais/)
+  assert.match(readme, /O que muda.*Como foi verificado.*Observações/s)
 })

@@ -66,3 +66,30 @@ test('as instruções citam a entrada pr_issue', () => {
 test('as instruções não citam entradas nem comandos do outro agente', () => {
   assert.doesNotMatch(prompt(), /classify|pr_allowed|classificada nesta execução|gh issue view|gh api/)
 })
+
+test('as instruções pedem as três seções do pull request na ordem', () => {
+  const text = prompt()
+  const positions = ['O que muda', 'Como foi verificado', 'Observações'].map((section) => text.indexOf(`## ${section}`))
+  positions.forEach((position, index) => assert.ok(position >= 0, `faltou a seção ${index + 1}`))
+  assert.ok(positions[0] < positions[1] && positions[1] < positions[2], 'seções fora de ordem')
+})
+
+test('as instruções explicam as quebras de linha dentro do próprio texto do --body', () => {
+  assert.match(prompt(), /quebras de linha dentro do próprio texto/)
+})
+
+test('as instruções citam heredoc entre o que não usar no corpo do pull request', () => {
+  assert.match(prompt(), /sem arquivo, sem crase, sem cifrão e sem heredoc/)
+})
+
+test('as instruções pedem em Como foi verificado o que não foi testado', () => {
+  assert.match(prompt(), /o que não foi testado/)
+})
+
+test('as instruções proíbem caminhos de arquivo e código na descrição do pull request', () => {
+  assert.match(prompt(), /sem caminhos de arquivo nem código, em linguagem simples/)
+})
+
+test('as instruções não ensinam a escrever código com aspas ou negrito', () => {
+  assert.doesNotMatch(prompt(), /aspas ou negrito em vez de crase/)
+})

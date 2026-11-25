@@ -20,15 +20,7 @@ Erro no código do projeto, teste falhando ou dúvida de regra de negócio não 
 
 1. Procure uma issue parecida antes: `gh issue list --repo felipe-sant/claude-kit --state all --search "<palavras-chave>"`. Se já existir uma aberta, comente nela o caso novo (`gh issue comment`) em vez de abrir outra. Se só houver uma fechada, abra uma nova citando a antiga.
 2. Abra com `gh issue create --repo felipe-sant/claude-kit --label bug --title "<título>" --body-file <arquivo>`, usando um arquivo temporário para o corpo.
-3. Título: uma frase em português que diz o problema, em linguagem simples.
-4. Corpo, nesta ordem:
-
-```
-## O que aconteceu
-## Impacto
-## Causa provável
-## Sugestão
-```
+3. Escreva o título e o corpo como manda o `issue-standard`, com as quatro seções da issue de bug.
 
 Em "Causa provável", cite o agente, a regra ou a skill e o trecho da instrução (o nome do arquivo no `claude-core`, como `agents/dev-backend.md`), não do projeto.
 

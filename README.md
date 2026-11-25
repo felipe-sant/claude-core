@@ -7,7 +7,7 @@ Ferramenta que roda em outros repositórios para configurar o Claude Code e o si
 | O que | Quantos | Onde fica no projeto |
 | --- | --- | --- |
 | Agentes (o time) | 13 | `.claude/agents/` |
-| Regras (padrões de desenvolvimento) | 7 gerais e 4 por stack | `.claude/rules/` |
+| Regras (padrões de desenvolvimento) | 9 gerais e 4 por stack | `.claude/rules/` |
 | Skills | 6 gerais e 2 por stack | `.claude/skills/` |
 | Configuração base do Claude | 1 modelo | `.claude/settings.json` |
 
@@ -71,7 +71,7 @@ Ficam em `profiles/*.json` e só valem com `--profile`. Cada perfil lista `agent
 - `backend`: `dev-backend`, `dev-fullstack`, `dev-database`, `dev-devops` e `dev-doc`, sem `designer`.
 - `tooling`: para repositórios de ferramentas, scripts, CLIs e conteúdo (como o próprio `claude-core`), sem telas nem banco. `dev-backend` (scripts e lógica), `dev-devops` (CI) e `dev-doc` (documentação e conteúdo em markdown), sem `designer`. Como esses repositórios não têm stack detectável, use `--profile tooling`.
 
-Todos incluem `product-owner`, `sdd`, `executor`, `reviewer` e `qa`, as sete regras gerais, as seis skills gerais (entre elas a `team-setup`, que faz da sessão a `orchestrator`) e a configuração base. Para uma configuração manual nova, crie `profiles/nome.json`.
+Todos incluem `product-owner`, `sdd`, `executor`, `reviewer` e `qa`, as nove regras gerais, as seis skills gerais (entre elas a `team-setup`, que faz da sessão a `orchestrator`) e a configuração base. Para uma configuração manual nova, crie `profiles/nome.json`.
 
 ## Sincronização segura
 
@@ -205,6 +205,8 @@ Gerais:
 - `review-standard`: como preparar e como fazer uma revisão de código.
 - `git-standard`: git com vários agentes na mesma worktree. Adicionar e commitar só os próprios arquivos, por caminho exato (`git commit -m "..." -- caminhos`), nunca `git add .`, `git add -A` nem `git commit -a`, e como reescrever o histórico sem `git rebase -i` (`GIT_SEQUENCE_EDITOR`, `--autosquash` e cherry-pick).
 - `feedback-standard`: problema nas instruções do próprio time (agente que não consegue usar uma ferramenta, regra mal escrita ou que trava o fluxo) vira issue no `felipe-sant/claude-kit` assim que aparece. Os agentes relatam à `orchestrator`, que procura duplicata e abre a issue sem pedir confirmação, sem código nem dado do projeto, porque o repositório é público.
+- `pull-request-standard`: a descrição do pull request tem as seções "O que muda", "Como foi verificado" e "Observações", com `Closes #n` quando conclui uma issue, e os comentários em pull request, em issue e de revisão são simples, objetivos, uma ideia por comentário e sobre o código, não sobre a pessoa.
+- `issue-standard`: criação de issues do GitHub, com título em frase simples, as quatro seções da issue de bug e as três da de funcionalidade, as etiquetas `bug` e `enhancement` e nunca definir tamanho nem prioridade.
 
 Por stack: `react-standard`, `nestjs-standard`, `laravel-standard` e `adonisjs-standard`. Têm `paths` no cabeçalho, então o Claude só as carrega ao mexer em arquivos da stack. Em um repositório com painel React e API NestJS, cada padrão aparece só nos arquivos certos.
 
@@ -249,7 +251,7 @@ Na dúvida entre P e M, o tamanho é M. Mudar automações, fluxos do GitHub, pe
 
 ### Issue Claude Agent
 
-- Faz: resolve uma issue P, no padrão de branch, commit e descrição do time, e abre o pull request ligado à issue, só com o lint e os testes passando.
+- Faz: resolve uma issue P, no padrão de branch, commit e descrição do time, e abre o pull request ligado à issue, só com o lint e os testes passando. A descrição do pull request sai com as seções "O que muda", "Como foi verificado" e "Observações", o `Closes #n` e a linha "Aberto pelo agente de issues.".
 - Nunca faz: classificar, nem pôr ou mudar tamanho. A única exceção: se começa uma P e percebe que ela é maior, para, explica na issue e troca P por M, sem deixar pull request.
 - Só trabalha em issue P, de dono, membro ou colaborador, sem pull request ligado, sem branch própria, sem responsável e sem tamanho M ou G, e só quando não há outro pull request do agente aberto. Abre no máximo um pull request por execução, da P mais antiga da fila.
 - Roda de três jeitos: encadeada pela Issue Size Set, quando há P esperando; todo dia às 02:47 de Brasília (05:47 UTC), logo depois da Issue Size Set, como rede de segurança; e à mão.

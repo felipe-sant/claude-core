@@ -23,4 +23,4 @@ Para cada achado: **bloqueia** ou **sugestão**, arquivo e linha, o problema e o
 - **Aprovado**: sem achado que bloqueia.
 - **Mudanças necessárias**: lista dos que bloqueiam.
 
-Seja objetivo e fale do código, não da pessoa. Não aprove com achado que bloqueia em aberto.
+Escreva os comentários como manda o `pull-request-standard` (`.claude/rules/pull-request-standard.md`). Não aprove com achado que bloqueia em aberto.
