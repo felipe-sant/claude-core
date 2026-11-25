@@ -54,6 +54,7 @@ jobs:
       PR_ISSUE: ${{ needs.select.outputs.pr_issue }}
       CLASSIFICATION_MARK: Tamanho definido pelo agente de issues
       PULL_REQUEST_LINE: Aberto pelo agente de issues.
+      MAX_AGENT_PULLS: 5
     steps:
       - uses: actions/checkout@v4
         with:
@@ -76,6 +77,8 @@ jobs:
           awk '{total += $1} END {print total + 0}' "$CHECK_DIR/marks-pages" > "$CHECK_DIR/marks"
           gh api --paginate "repos/$GITHUB_REPOSITORY/issues/$PR_ISSUE/comments" --jq '[.[] | select(.user.login == "claude[bot]")] | length' > "$CHECK_DIR/agent-comments-pages"
           awk '{total += $1} END {print total + 0}' "$CHECK_DIR/agent-comments-pages" > "$CHECK_DIR/agent-comments"
+          gh api --paginate "repos/$GITHUB_REPOSITORY/pulls?state=open" --jq "[.[] | select(.user.login == \"claude[bot]\" or ((.body // \"\") | contains(\"$PULL_REQUEST_LINE\")))] | length" > "$CHECK_DIR/agent-pulls-pages"
+          awk '{total += $1} END {print total + 0}' "$CHECK_DIR/agent-pulls-pages" > "$CHECK_DIR/agent-pulls"
           gh api --paginate "repos/$GITHUB_REPOSITORY/branches" --jq '.[].name' > "$CHECK_DIR/all-branches"
           grep -E "^[a-z]+/$PR_ISSUE-" "$CHECK_DIR/all-branches" > "$CHECK_DIR/branches-$PR_ISSUE" || true
       - name: Contexto filtrado da issue
@@ -128,19 +131,9 @@ jobs:
           gh api --paginate "repos/$GITHUB_REPOSITORY/pulls?state=open" --jq "[.[] | select(.user.login == \"claude[bot]\" or ((.body // \"\") | contains(\"$PULL_REQUEST_LINE\")))] | length" > "$CHECK_DIR/agent-pulls-pages"
           open_agent_pulls=$(awk '{total += $1} END {print total + 0}' "$CHECK_DIR/agent-pulls-pages")
           echo "Pull requests do agente abertos: $open_agent_pulls"
-          [ "$open_agent_pulls" -le 1 ] || fail "Há mais de um pull request do agente aberto."
-          size_labels=$(gh api "repos/$GITHUB_REPOSITORY/issues/$PR_ISSUE" --jq '[.labels[].name | select(startswith("Size:"))] | join(",")')
-          others=$(gh api "repos/$GITHUB_REPOSITORY/issues/$PR_ISSUE" --jq '[.labels[].name | select(startswith("Size:") | not)] | sort | join(",")')
-          gh api --paginate "repos/$GITHUB_REPOSITORY/issues/$PR_ISSUE/comments" --jq "[.[] | select(.user.login == \"claude[bot]\") | select(.body | contains(\"$CLASSIFICATION_MARK\"))] | length" > "$CHECK_DIR/marks-pages"
-          marks=$(awk '{total += $1} END {print total + 0}' "$CHECK_DIR/marks-pages")
-          echo "Issue $PR_ISSUE: etiquetas de tamanho=$size_labels, comentários de classificação=$marks"
-          case "$size_labels" in
-            "Size: P") ;;
-            "Size: M") [ "$open_agent_pulls" -eq 0 ] || fail "A issue $PR_ISSUE virou Size: M mas há pull request do agente aberto." ;;
-            *) fail "A issue $PR_ISSUE deveria ter exatamente uma etiqueta de tamanho, Size: P ou Size: M." ;;
-          esac
-          [ "$others" = "$(cat "$CHECK_DIR/labels-$PR_ISSUE")" ] || fail "As etiquetas da issue $PR_ISSUE que não são de tamanho mudaram."
-          [ "$marks" = "$(cat "$CHECK_DIR/marks")" ] || fail "A quantidade de comentários de classificação da issue $PR_ISSUE mudou."
+          agent_pulls_before=$(cat "$CHECK_DIR/agent-pulls")
+          [ "$open_agent_pulls" -le "$MAX_AGENT_PULLS" ] || fail "Há mais de $MAX_AGENT_PULLS pull requests do agente abertos."
+          [ "$open_agent_pulls" -le $((agent_pulls_before + 1)) ] || fail "A execução abriu mais de um pull request do agente."
           gh api --paginate "repos/$GITHUB_REPOSITORY/pulls?state=open" --jq '.[].head.ref' > "$CHECK_DIR/open-heads"
           gh api --paginate "repos/$GITHUB_REPOSITORY/branches" --jq '.[].name' > "$CHECK_DIR/branches-after"
           new_branches=$(grep -E "^[a-z]+/$PR_ISSUE-" "$CHECK_DIR/branches-after" | grep -vxFf "$CHECK_DIR/branches-$PR_ISSUE" || true)
@@ -152,6 +145,18 @@ jobs:
               fail "A branch $branch foi enviada sem pull request aberto."
             fi
           done
+          size_labels=$(gh api "repos/$GITHUB_REPOSITORY/issues/$PR_ISSUE" --jq '[.labels[].name | select(startswith("Size:"))] | join(",")')
+          others=$(gh api "repos/$GITHUB_REPOSITORY/issues/$PR_ISSUE" --jq '[.labels[].name | select(startswith("Size:") | not)] | sort | join(",")')
+          gh api --paginate "repos/$GITHUB_REPOSITORY/issues/$PR_ISSUE/comments" --jq "[.[] | select(.user.login == \"claude[bot]\") | select(.body | contains(\"$CLASSIFICATION_MARK\"))] | length" > "$CHECK_DIR/marks-pages"
+          marks=$(awk '{total += $1} END {print total + 0}' "$CHECK_DIR/marks-pages")
+          echo "Issue $PR_ISSUE: etiquetas de tamanho=$size_labels, comentários de classificação=$marks"
+          case "$size_labels" in
+            "Size: P") ;;
+            "Size: M") [ "$pulls_for_issue" -eq 0 ] || fail "A issue $PR_ISSUE virou Size: M mas há pull request do agente aberto para ela." ;;
+            *) fail "A issue $PR_ISSUE deveria ter exatamente uma etiqueta de tamanho, Size: P ou Size: M." ;;
+          esac
+          [ "$others" = "$(cat "$CHECK_DIR/labels-$PR_ISSUE")" ] || fail "As etiquetas da issue $PR_ISSUE que não são de tamanho mudaram."
+          [ "$marks" = "$(cat "$CHECK_DIR/marks")" ] || fail "A quantidade de comentários de classificação da issue $PR_ISSUE mudou."
           gh api --paginate "repos/$GITHUB_REPOSITORY/issues/$PR_ISSUE/comments" --jq '[.[] | select(.user.login == "claude[bot]")] | length' > "$CHECK_DIR/agent-comments-pages"
           agent_comments=$(awk '{total += $1} END {print total + 0}' "$CHECK_DIR/agent-comments-pages")
           echo "Issue $PR_ISSUE: pull requests do agente=$pulls_for_issue, comentários do agente=$agent_comments"

@@ -124,7 +124,7 @@ test('as proibições obrigatórias estão entre aspas simples, em dontAsk e com
   assert.match(block, /--max-turns 100/)
 })
 
-test('a conferência final roda sempre e exige Size P ou M, sem pull request se M', () => {
+test('a conferência final roda sempre e exige Size P ou M, sem pull request desta issue se M', () => {
   const block = job('agent')
   const step = block.slice(block.indexOf('name: Conferência final'))
   assert.match(step, /if: always\(\)/)
@@ -233,4 +233,29 @@ test('nenhuma chamada gh api é encadeada com pipe, para a falha da API derrubar
     .split('\n')
     .filter((line) => /gh api/.test(line) && /--jq ('[^']*'|"(?:[^"\\]|\\.)*")\s*\|/.test(line))
   assert.deepEqual(piped, [])
+})
+
+test('o trabalho do agente declara o limite de pull requests do agente', () => {
+  assert.match(job('agent'), /^ {6}MAX_AGENT_PULLS: 5$/m)
+})
+
+test('a foto de antes grava a contagem de pull requests do agente abertos', () => {
+  const step = stepOf(job('agent'), 'Foto de antes')
+  assert.match(step, /pulls\?state=open/)
+  assert.match(step, /> "\$CHECK_DIR\/agent-pulls"/)
+})
+
+test('a conferência final limita o total ao MAX_AGENT_PULLS e a um pull request novo por execução', () => {
+  const step = stepOf(job('agent'), 'Conferência final')
+  assert.match(step, /"\$open_agent_pulls" -le "\$MAX_AGENT_PULLS"/)
+  assert.match(step, /agent_pulls_before=\$\(cat "\$CHECK_DIR\/agent-pulls"\)/)
+  assert.match(step, /"\$open_agent_pulls" -le \$\(\(agent_pulls_before \+ 1\)\)/)
+  assert.doesNotMatch(step, /"\$open_agent_pulls" -le 1 /)
+})
+
+test('no tamanho M a conferência exige nenhum pull request desta issue, não zero no total', () => {
+  const step = stepOf(job('agent'), 'Conferência final')
+  assert.doesNotMatch(step, /"\$open_agent_pulls" -eq 0/)
+  assert.match(step, /"Size: M"\) \[ "\$pulls_for_issue" -eq 0 \]/)
+  assert.ok(step.indexOf('pulls_for_issue=0') < step.indexOf('case "$size_labels"'))
 })

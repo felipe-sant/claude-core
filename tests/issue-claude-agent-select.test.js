@@ -3,7 +3,7 @@ const assert = require('node:assert/strict')
 const path = require('node:path')
 const h = require('./helpers')
 
-const { selectAgent } = require(path.join(h.repoRoot, '.github', 'issue-agent', 'select-issues.js'))
+const { selectAgent, extractDependencies, MAX_AGENT_PULLS } = require(path.join(h.repoRoot, '.github', 'issue-agent', 'select-issues.js'))
 
 let counter = 0
 function issue(overrides = {}) {
@@ -17,6 +17,7 @@ function issue(overrides = {}) {
     labels: ['Size: P'],
     linkedPullRequests: 0,
     comments: [],
+    body: '',
     ...overrides
   }
 }
@@ -27,6 +28,11 @@ function select(issues, extra = {}) {
 
 const agentComment = { author: 'claude[bot]', body: 'Tamanho definido pelo agente de issues: P' }
 const agentPull = { author: 'claude[bot]', body: '' }
+const markedPull = { author: 'felipe', body: 'Aberto pelo agente de issues.' }
+
+function pulls(count, pull = agentPull) {
+  return Array.from({ length: count }, () => pull)
+}
 
 test('P sem pull request, branch e responsável vira pr_issue', () => {
   const target = issue()
@@ -76,15 +82,59 @@ test('duas P na fila escolhem a mais antiga', () => {
   assert.equal(select([newer, older]).prIssue, older.number)
 })
 
-test('pull request do agente aberto deixa pr_issue vazio e a fila espera', () => {
-  const result = select([issue()], { openPulls: [agentPull] })
-  assert.equal(result.prIssue, '')
-  assert.equal(result.reason, 'Já há um pull request do agente aberto: a fila das P espera.')
+test('o limite de pull requests do agente é 5', () => {
+  assert.equal(MAX_AGENT_PULLS, 5)
 })
 
-test('pull request com a linha fixa no corpo conta como do agente', () => {
-  const result = select([issue()], { openPulls: [{ author: 'felipe', body: 'Aberto pelo agente de issues.' }] })
+test('abaixo do limite, a P mais antiga é tratada mesmo com pull requests do agente abertos', () => {
+  const older = issue()
+  const newer = issue()
+  for (const open of [1, 4]) {
+    assert.equal(select([newer, older], { openPulls: pulls(open) }).prIssue, older.number)
+  }
+})
+
+test('no limite, pr_issue fica vazio e o resumo explica o limite', () => {
+  const result = select([issue()], { openPulls: pulls(5) })
   assert.equal(result.prIssue, '')
+  assert.equal(result.reason, 'Já há 5 pull requests do agente abertos e o limite é 5: a fila das P espera.')
+})
+
+test('acima do limite o resumo mostra a quantidade aberta', () => {
+  const result = select([issue()], { openPulls: pulls(6) })
+  assert.equal(result.prIssue, '')
+  assert.equal(result.reason, 'Já há 6 pull requests do agente abertos e o limite é 5: a fila das P espera.')
+})
+
+test('pull requests de outras pessoas, mesmo muitos, não contam para o limite', () => {
+  const target = issue()
+  const others = pulls(7, { author: 'felipe', body: 'Closes #1' })
+  assert.equal(select([target], { openPulls: others }).prIssue, target.number)
+})
+
+test('conta como do agente a conta do Claude somada à linha fixa no corpo', () => {
+  const result = select([issue()], { openPulls: [...pulls(3), ...pulls(2, markedPull)] })
+  assert.equal(result.prIssue, '')
+  assert.equal(result.reason, 'Já há 5 pull requests do agente abertos e o limite é 5: a fila das P espera.')
+})
+
+test('quatro do agente mais um de outra pessoa ainda deixam tratar a issue', () => {
+  const target = issue()
+  const openPulls = [...pulls(4), { author: 'felipe', body: '' }]
+  assert.equal(select([target], { openPulls }).prIssue, target.number)
+})
+
+test('cada execução devolve uma única issue, a mais antiga', () => {
+  const older = issue()
+  const newer = issue()
+  assert.equal(select([newer, older], { openPulls: pulls(2) }).prIssue, older.number)
+})
+
+test('issue com pull request ligado continua fora da fila abaixo do limite', () => {
+  const closedWithoutMerge = issue({ linkedPullRequests: 1 })
+  const result = select([closedWithoutMerge], { openPulls: pulls(1) })
+  assert.equal(result.prIssue, '')
+  assert.equal(result.reason, 'Nenhuma issue P na fila.')
 })
 
 test('pull request de outra pessoa não bloqueia', () => {
@@ -126,11 +176,27 @@ for (const invalid of ['abc', '0', '-1', '76a', '1 2', '07', '1.5']) {
   })
 }
 
-test('com número e pull request do agente aberto, a recusa é a do pull request', () => {
+test('com número abaixo do limite, a issue é tratada', () => {
   const target = issue()
-  const result = select([target], { requested: String(target.number), openPulls: [agentPull] })
+  assert.equal(select([target], { requested: String(target.number), openPulls: pulls(4) }).prIssue, target.number)
+})
+
+test('com número e no limite, a recusa é a do limite', () => {
+  const target = issue()
+  const result = select([target], { requested: String(target.number), openPulls: pulls(5) })
   assert.equal(result.prIssue, '')
-  assert.equal(result.reason, 'Já há um pull request do agente aberto: nenhuma issue é tratada agora.')
+  assert.equal(result.reason, 'Já há 5 pull requests do agente abertos e o limite é 5: nenhuma issue é tratada agora.')
+})
+
+test('número inválido no limite continua recusado como inválido', () => {
+  const result = select([issue()], { requested: 'abc', openPulls: pulls(5) })
+  assert.equal(result.reason, 'O número informado não é válido: use só dígitos, como 76.')
+})
+
+test('abaixo do limite, a issue com branch própria continua recusada com o motivo', () => {
+  const target = issue()
+  const result = select([target], { requested: String(target.number), openPulls: pulls(1), branches: [`fix/${target.number}-algo`] })
+  assert.equal(result.reason, `A issue ${target.number} já tem branch própria.`)
 })
 
 test('número de issue que não está entre as abertas é recusado', () => {
@@ -166,4 +232,125 @@ test('número de issue com branch própria é recusado com o motivo', () => {
   const result = select([target], { requested: String(target.number), branches: [`fix/${target.number}-algo`] })
   assert.equal(result.prIssue, '')
   assert.equal(result.reason, `A issue ${target.number} já tem branch própria.`)
+})
+
+function dependent(body, overrides = {}) {
+  return issue({ body, ...overrides })
+}
+
+test('P que depende de issue aberta fica fora da fila e a seguinte é escolhida', () => {
+  const blocker = issue({ labels: [] })
+  const waiting = dependent(`Depende de #${blocker.number}`)
+  const next = issue()
+  assert.equal(select([blocker, waiting, next]).prIssue, next.number)
+})
+
+test('P que depende de issue já fechada é tratada normalmente', () => {
+  const waiting = dependent('depende de #9999')
+  assert.equal(select([waiting]).prIssue, waiting.number)
+})
+
+test('a única P que espera dependência aberta deixa a fila vazia', () => {
+  const blocker = issue({ labels: [] })
+  const waiting = dependent(`depende de #${blocker.number}`)
+  const result = select([blocker, waiting])
+  assert.equal(result.prIssue, '')
+  assert.equal(result.reason, 'Nenhuma issue P na fila.')
+})
+
+test('citação de issue sem a expressão depende de não bloqueia', () => {
+  const blocker = issue({ labels: [] })
+  const related = dependent(`relacionada a #${blocker.number}, ver #${blocker.number}`)
+  assert.equal(select([blocker, related]).prIssue, related.number)
+})
+
+test('com várias dependências, uma aberta basta para esperar', () => {
+  const open = issue({ labels: [] })
+  const waiting = dependent(`depende de #9998 e #${open.number}`)
+  assert.equal(select([open, waiting]).prIssue, '')
+})
+
+test('com várias dependências todas fechadas, a issue é tratada', () => {
+  const waiting = dependent('depende de #9997 e #9998')
+  assert.equal(select([waiting]).prIssue, waiting.number)
+})
+
+test('depende do e depende da, em qualquer caixa, também esperam', () => {
+  const blocker = issue({ labels: [] })
+  for (const phrase of ['depende do', 'DEPENDE DA', 'Depende De']) {
+    const waiting = dependent(`${phrase} #${blocker.number}`)
+    assert.equal(select([blocker, waiting]).prIssue, '', phrase)
+  }
+})
+
+test('número que é de pull request aberto, e não de issue, não bloqueia', () => {
+  const pull = issue({ isPullRequest: true })
+  const waiting = dependent(`depende de #${pull.number}`)
+  assert.equal(select([pull, waiting]).prIssue, waiting.number)
+})
+
+test('depende de escrito só em comentário é ignorado mesmo com a issue aberta', () => {
+  const blocker = issue({ labels: [] })
+  const waiting = issue({ comments: [{ author: 'felipe', body: `depende de #${blocker.number}` }] })
+  assert.equal(select([blocker, waiting]).prIssue, waiting.number)
+})
+
+test('com a issue fechada depois, ela volta à fila', () => {
+  const blocker = issue({ labels: [] })
+  const waiting = dependent(`depende de #${blocker.number}`)
+  assert.equal(select([blocker, waiting]).prIssue, '')
+  assert.equal(select([waiting]).prIssue, waiting.number)
+})
+
+test('disparo à mão de issue que espera dependência aberta é recusado com o motivo', () => {
+  const blocker = issue({ labels: [] })
+  const waiting = dependent(`depende de #${blocker.number}`)
+  const result = select([blocker, waiting], { requested: String(waiting.number) })
+  assert.equal(result.prIssue, '')
+  assert.equal(result.reason, `A issue ${waiting.number} depende da issue #${blocker.number}, ainda aberta.`)
+})
+
+test('disparo à mão com várias dependências lista só as abertas em ordem crescente', () => {
+  const first = issue({ labels: [] })
+  const second = issue({ labels: [] })
+  const waiting = dependent(`depende de #${second.number}, #9995 e #${first.number}`)
+  const result = select([first, second, waiting], { requested: String(waiting.number) })
+  assert.equal(result.reason, `A issue ${waiting.number} depende das issues #${first.number}, #${second.number}, ainda abertas.`)
+})
+
+test('disparo à mão no limite recusa pelo limite antes da dependência', () => {
+  const blocker = issue({ labels: [] })
+  const waiting = dependent(`depende de #${blocker.number}`)
+  const result = select([blocker, waiting], { requested: String(waiting.number), openPulls: pulls(5) })
+  assert.match(result.reason, /limite é 5: nenhuma issue é tratada agora\./)
+})
+
+test('disparo à mão de issue sem dependência aberta é tratado', () => {
+  const waiting = dependent('depende de #9994')
+  assert.equal(select([waiting], { requested: String(waiting.number) }).prIssue, waiting.number)
+})
+
+test('extrai os números citados depois de depende de, do e da', () => {
+  assert.deepEqual(extractDependencies('Depende de #3 e #4', 1), [3, 4])
+  assert.deepEqual(extractDependencies('depende do #5', 1), [5])
+  assert.deepEqual(extractDependencies('DEPENDE DA #6', 1), [6])
+  assert.deepEqual(extractDependencies('depende de #3, #4 e #7', 1), [3, 4, 7])
+})
+
+test('ignora citação sem a expressão, a própria issue e outro repositório', () => {
+  assert.deepEqual(extractDependencies('ver #3 e relacionada a #4', 1), [])
+  assert.deepEqual(extractDependencies('depende de #1', 1), [])
+  assert.deepEqual(extractDependencies('depende de dono/repo#3', 1), [])
+  assert.deepEqual(extractDependencies('depende de #3 e dono/repo#4', 1), [3])
+})
+
+test('ignora a dependência dentro de bloco de código e de código na linha', () => {
+  assert.deepEqual(extractDependencies('```\ndepende de #3\n```', 1), [])
+  assert.deepEqual(extractDependencies('veja `depende de #3` aqui', 1), [])
+  assert.deepEqual(extractDependencies('```\ndepende de #3\n```\ndepende de #4', 1), [4])
+})
+
+test('corpo vazio ou nulo não tem dependência', () => {
+  assert.deepEqual(extractDependencies('', 1), [])
+  assert.deepEqual(extractDependencies(null, 1), [])
 })

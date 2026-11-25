@@ -249,7 +249,7 @@ Na dúvida entre P e M, o tamanho é M. Mudar automações, fluxos do GitHub, pe
 - Nunca faz: criar branch, commit ou pull request, nem alterar arquivos do repositório.
 - Roda quando uma issue é aberta ou reaberta (trata só essa issue), todo dia às 02:28 de Brasília (05:28 UTC) e quando disparada à mão. O minuto quebrado evita o pico de horas cheias do GitHub, que atrasa ou descarta execuções agendadas.
 - Na varredura diária e no disparo manual, classifica no máximo 10 issues sem tamanho por execução, das mais antigas para as mais novas; o resto fica para a próxima.
-- Ao terminar, confere se há uma P esperando e nenhum pull request do agente aberto e, só nesse caso, dispara a Issue Claude Agent. Isso vale mesmo que não tenha classificado nada. Se a classificação falhar, ela não dispara a Issue Claude Agent.
+- Ao terminar, confere se há uma P esperando e menos de 5 pull requests do agente abertos e, só nesse caso, dispara a Issue Claude Agent. Isso vale mesmo que não tenha classificado nada. Se a classificação falhar, ela não dispara a Issue Claude Agent.
 
 ### Issue Claude Agent
 
@@ -257,7 +257,7 @@ Na dúvida entre P e M, o tamanho é M. Mudar automações, fluxos do GitHub, pe
 - Quando algo dá errado: se um comando é negado, ou a execução falha ou trava, o agente comenta na issue o que houve, em um parágrafo, com o link da execução.
 - Limpeza: se a execução termina com uma branch do agente enviada e sem pull request, a automação apaga essa branch, para a issue voltar à fila. Nunca apaga uma branch que já existia antes da execução.
 - Nunca faz: classificar, nem pôr ou mudar tamanho. A única exceção: se começa uma P e percebe que ela é maior, para, explica na issue e troca P por M, sem deixar pull request.
-- Só trabalha em issue P, de dono, membro ou colaborador, sem pull request ligado, sem branch própria, sem responsável e sem tamanho M ou G, e só quando não há outro pull request do agente aberto. Abre no máximo um pull request por execução, da P mais antiga da fila.
+- Só trabalha em issue P, de dono, membro ou colaborador, sem pull request ligado, sem branch própria, sem responsável e sem tamanho M ou G, e só quando há menos de 5 pull requests do agente abertos. Pode haver até 5 abertos ao mesmo tempo, mas cada execução trata uma única issue e abre no máximo um pull request, da P mais antiga da fila que puder ser tratada. Conta como pull request do agente o que foi aberto pela conta do Claude ou o que traz na descrição a linha "Aberto pelo agente de issues.". O agente não tenta prever conflito entre as issues: isso fica para a revisão de cada pull request.
 - Roda de três jeitos: encadeada pela Issue Size Set, quando há P esperando; todo dia às 02:47 de Brasília (05:47 UTC), logo depois da Issue Size Set, como rede de segurança; e à mão.
 - No encadeamento ela pega a P mais antiga da fila, que pode não ser a issue que fez a Issue Size Set rodar. Uma issue de quem não é colaborador nunca é tratada por ela, mas a abertura dela faz a Issue Size Set rodar e pode adiantar uma P de colaborador que já estava na fila.
 
@@ -271,7 +271,21 @@ gh workflow run issue-claude-agent.yml
 gh workflow run issue-claude-agent.yml -f issue=<número>
 ```
 
-O campo `issue` existe só na Issue Claude Agent e é opcional. Vazio, ela pega a P mais antiga que pode ser tratada; se não há nenhuma, termina com sucesso sem chamar o Claude e diz no resumo da execução que não há issue P na fila, ou que já há um pull request do agente aberto. Com o número de uma issue que não pode ser tratada, termina sem fazer nada e mostra o motivo no resumo e no registro da execução. O valor só pode ter dígitos; qualquer outra coisa é recusada como número inválido.
+O campo `issue` existe só na Issue Claude Agent e é opcional. Vazio, ela pega a P mais antiga que pode ser tratada; se não há nenhuma, termina com sucesso sem chamar o Claude e diz no resumo da execução que não há issue P na fila, ou que o limite de 5 pull requests do agente abertos foi atingido. Com o número de uma issue que não pode ser tratada, termina sem fazer nada e mostra o motivo no resumo e no registro da execução; com o limite atingido, recusa também o número informado e o resumo diz que nenhuma issue é tratada agora. Se a issue diz que depende de outra ainda aberta (veja "Dependência entre issues"), a execução também recusa e o resumo lista as dependências que seguem abertas. O valor só pode ter dígitos; qualquer outra coisa é recusada como número inválido.
+
+### Limite de pull requests abertos
+
+O agente só trata uma nova issue quando há menos de 5 pull requests dele abertos. Só contam os pull requests do agente (da conta do Claude ou com a linha "Aberto pelo agente de issues."); os de outras pessoas não entram na conta. Com 5 ou mais abertos, a execução termina com sucesso, sem chamar o Claude e sem abrir pull request, e o resumo diz quantos pull requests do agente estão abertos e que o limite é 5. O limite vale também para o disparo à mão com o número de uma issue. Quando um pull request é fechado ou mergeado, a próxima execução volta a tratar a fila.
+
+### Dependência entre issues
+
+Se o corpo da issue diz "depende de #n" e a issue #n está aberta, a issue espera fora da fila e o agente trata a próxima P mais antiga que puder ser tratada. Quando a #n é fechada, a issue volta para a fila, sem disparar o agente na hora: ela é pega na próxima execução.
+
+- Valem "depende de", "depende do" e "depende da", sem diferenciar maiúsculas de minúsculas, e várias issues na mesma frase, como "depende de #3 e #4". A issue só entra na fila quando todas as citadas estão fechadas.
+- Só o corpo da issue conta; os comentários não.
+- São ignoradas a citação dentro de trecho de código (em bloco ou no meio da linha), a de issue de outro repositório, a da própria issue e a de um número que é de pull request aberto.
+- Citar "#n" sem dizer "depende de" (como "relacionada a #n") não cria dependência.
+- Se todas as issues P esperam dependência, a execução termina com sucesso, dizendo no resumo que não há issue P na fila.
 
 ### Pull request fechado sem merge
 
@@ -287,14 +301,14 @@ Se a issue continuar fora da fila mesmo assim, o caminho é abrir uma issue nova
 
 ### Fila única e limites
 
-As duas ficam numa fila única e nunca rodam ao mesmo tempo: a segunda espera a primeira terminar. Quando várias são disparadas juntas, o GitHub mantém uma rodando e uma esperando, e a que espera é cancelada se chega outra mais nova; o que ficou para trás é pego pela próxima varredura, pela rede de segurança das 02:47 ou pelo próximo disparo. Só há um pull request do agente aberto por vez. Rodar as duas em seguida, ou a mesma duas vezes, não repete o tamanho, o comentário nem o pull request.
+As duas ficam numa fila única e nunca rodam ao mesmo tempo: a segunda espera a primeira terminar. Quando várias são disparadas juntas, o GitHub mantém uma rodando e uma esperando, e a que espera é cancelada se chega outra mais nova; o que ficou para trás é pego pela próxima varredura, pela rede de segurança das 02:47 ou pelo próximo disparo. Pode haver até 5 pull requests do agente abertos ao mesmo tempo (veja "Limite de pull requests abertos"). Rodar as duas em seguida, ou a mesma duas vezes, não repete o tamanho, o comentário nem o pull request.
 
 ### O que as duas tratam e o que nunca fazem
 
 - Só tratam issues abertas por dono, membro ou colaborador do repositório. As demais são ignoradas.
 - Só leem o título, o corpo e os comentários de dono, membro ou colaborador. Comentários de qualquer outra pessoa nunca chegam ao Claude, e o texto da issue é tratado como descrição do problema, nunca como ordem.
 - Nunca fazem merge, nunca enviam nada direto para a branch principal, nunca definem prioridade e nunca editam à mão o `.claude/`, exceto o guia do Claude dessa pasta (`.claude/CLAUDE.md`), que é o único arquivo dela escrito à mão: o resto é gerado, a mudança é feita nas fontes e o `.claude/` é atualizado pelo sync.
-- Cada execução termina com uma conferência que falha de forma visível se algo saiu do permitido. Além dos casos de sempre, ela reprova a execução que deixa uma branch do agente enviada sem pull request e a que termina sem pull request e sem comentário novo do agente na issue.
+- Cada execução termina com uma conferência que falha de forma visível se algo saiu do permitido. Além dos casos de sempre, ela reprova a execução que termina com mais de 5 pull requests do agente abertos, a que abre mais de um pull request novo, a que deixa uma branch do agente enviada sem pull request e a que termina sem pull request e sem comentário novo do agente na issue.
 
 ### Instalação
 
