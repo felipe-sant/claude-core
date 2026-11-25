@@ -1,6 +1,6 @@
 # Ajustes nas automações do agente de issues e do CI
 
-> Status: em-revisao
+> Status: aprovada
 > Tipo: bug
 > Tamanho: grande
 > Branch: fix/agente-de-issues-automacoes
