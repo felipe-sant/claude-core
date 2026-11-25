@@ -77,7 +77,7 @@ Todos incluem `product-owner`, `sdd`, `executor`, `reviewer` e `qa`, as nove reg
 
 O `ai-sync` registra o que instalou em `.claude/claude-kit.lock.json` (caminho, versão e impressão digital de cada arquivo) e usa esse registro para nunca mexer no que é seu. Versione esse arquivo junto com o repositório.
 
-Se o repositório ainda tem o registro antigo, `.claude/claude-core.lock.json`, o `ai-sync` o migra sozinho e sem aviso: passa a usar o novo e remove o antigo. Se os dois existirem, vale o novo e o antigo é removido. Se o antigo for inválido, a ferramenta para com erro.
+Se o repositório ainda tem o registro com o nome antigo do projeto, o `ai-sync` o migra sozinho e sem aviso: passa a usar o novo e remove o antigo. Se os dois existirem, vale o novo e o antigo é removido. Se o antigo for inválido, a ferramenta para com erro.
 
 - Arquivo criado por você, ou que já existia com o mesmo nome de um do `claude-kit`, não é apagado nem sobrescrito. Se o conteúdo for diferente, a ferramenta avisa.
 - Arquivo instalado e sem alterações é atualizado quando há versão nova, e removido quando sai do `claude-kit`.
