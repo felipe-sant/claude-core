@@ -184,7 +184,7 @@ Validação em execução real, passo do usuário, fora do gate:
 - Teste: unitário. Falham primeiro: o teste do script (copia o texto preparado para o guia; recusa ausente e vazio sem alterar o guia; nunca escreve fora do guia), o teste da automação que exige a chamada exata do script entre as liberadas e nenhuma liberação nova de edição na pasta, e o teste das instruções que exige o passo a passo da exceção.
 - Gate: o mesmo de T1.
 - Modelo: padrao.
-- Status: pendente.
+- Status: feita (commit eed5911; vermelho antes: 7 falhas, o módulo do script inexistente, a permissão exata do script, a montagem das instruções com o arquivo do guia e 4 guardas novas das instruções; gate ok: npm test com 490 passando e 0 falhando, lint ok, --check ok, actionlint 1.7.12 ok; a conferir na validação real: a pasta temporária da execução chega ao comando do agente no GitHub).
 
 ### T3: Aceita a principal e as branches avançarem durante a execução (#94)
 
