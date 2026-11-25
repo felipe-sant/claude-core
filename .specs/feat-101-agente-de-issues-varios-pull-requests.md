@@ -147,7 +147,7 @@ Regra para devs e executores em todas as tarefas: nunca escreva comentários no 
 - Teste: unitário. Primeiro o que deve falhar: "quatro pull requests do agente abertos ainda deixam tratar a P mais antiga" (falha hoje, porque um já bloqueia). Depois: 5 bloqueiam (fila) com o texto novo; 6 bloqueiam; 5 de outras pessoas não bloqueiam; 5 somando conta do Claude e linha fixa bloqueiam; disparo à mão no limite recusa com o texto novo; número inválido no limite continua recusado como inválido; issue com pull request ligado (fechado sem merge) continua fora da fila abaixo do limite.
 - Gate: `node --test tests/issue-claude-agent-select.test.js`, `npm run lint` e `node bin/ai-sync.js --check`.
 - Modelo: padrao.
-- Status: feita (commit c6f1046; 11 testes falharam antes da mudança; os 3 testes antigos foram reescritos por causa da RN-01; gate: lint ok, 409 testes passando e 0 falhando, ai-sync --check ok).
+- Status: feita (commit c6f1046; 11 testes falharam antes da mudança; os 3 testes antigos foram reescritos por causa da RN-01; gate: lint ok, 409 testes passando e 0 falhando, ai-sync --check ok; ajuste da revisão no commit 56870ea: o teste do CA-06 passa a comparar a frase inteira do limite; gate do ajuste: lint ok e testes de seleção passando).
 
 ### T2 [P] Issue que depende de outra aberta espera fora da fila
 
