@@ -26,6 +26,7 @@ const guards = {
   'sync depois da fonte': 'npm run sync',
   'troca de P por M sem pull request': 'troque `Size: P` por `Size: M`',
   'comentário de P maior sem a marca': 'sem a marca de classificação',
+  'link pronto no comentário da troca de P por M': 'Use o link da execução que vem pronto em "Valores desta execução" e nunca leia variáveis de ambiente',
   'sem prioridade': 'Nunca defina prioridade',
   'sem comentários em código': 'Nunca escreva comentários em código nem em YAML',
   'sem segredos': 'Nunca mostre segredos',

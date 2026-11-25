@@ -39,7 +39,7 @@ Para a issue do pull request:
 
 ## Se a issue P for maior do que parecia
 
-Pare, apague a branch local, não envie branch nem abra pull request. Comente na issue o motivo, sem a marca de classificação, e troque `Size: P` por `Size: M`. Nunca deixe comentário com a marca de classificação.
+Pare, apague a branch local, não envie branch nem abra pull request. Comente na issue o motivo, sem a marca de classificação, e troque `Size: P` por `Size: M`. Nunca deixe comentário com a marca de classificação. Use o link da execução que vem pronto em "Valores desta execução" e nunca leia variáveis de ambiente.
 
 ## Limites
 
