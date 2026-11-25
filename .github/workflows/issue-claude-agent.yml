@@ -74,7 +74,8 @@ jobs:
           gh api "repos/$GITHUB_REPOSITORY/issues/$PR_ISSUE" --jq '[.labels[].name | select(startswith("Size:") | not)] | sort | join(",")' > "$CHECK_DIR/labels-$PR_ISSUE"
           gh api --paginate "repos/$GITHUB_REPOSITORY/issues/$PR_ISSUE/comments" --jq "[.[] | select(.user.login == \"claude[bot]\") | select(.body | contains(\"$CLASSIFICATION_MARK\"))] | length" | awk '{total += $1} END {print total + 0}' > "$CHECK_DIR/marks"
           gh api --paginate "repos/$GITHUB_REPOSITORY/issues/$PR_ISSUE/comments" --jq '[.[] | select(.user.login == "claude[bot]")] | length' | awk '{total += $1} END {print total + 0}' > "$CHECK_DIR/agent-comments"
-          gh api --paginate "repos/$GITHUB_REPOSITORY/branches" --jq '.[].name' | grep -E "^[a-z]+/$PR_ISSUE-" > "$CHECK_DIR/branches-$PR_ISSUE" || true
+          gh api --paginate "repos/$GITHUB_REPOSITORY/branches" --jq '.[].name' > "$CHECK_DIR/all-branches"
+          grep -E "^[a-z]+/$PR_ISSUE-" "$CHECK_DIR/all-branches" > "$CHECK_DIR/branches-$PR_ISSUE" || true
       - name: Contexto filtrado da issue
         run: node .github/issue-agent/issue-context.js "$CONTEXT_DIR" "$PR_ISSUE"
         env:

@@ -220,3 +220,10 @@ test('a limpeza roda sempre depois da conferência e só apaga branch nova da is
   assert.match(step, /pulls\?state=open/)
   assert.match(step, /gh api -X DELETE "repos\/\$GITHUB_REPOSITORY\/git\/refs\/heads\/\$branch"/)
 })
+
+test('a foto das branches grava a saída da API antes de filtrar, para a falha da API derrubar o passo', () => {
+  const step = stepOf(job('agent'), 'Foto de antes')
+  assert.doesNotMatch(step, /branches' \| grep/)
+  assert.match(step, /--jq '\.\[\]\.name' > "\$CHECK_DIR\/all-branches"/)
+  assert.match(step, /grep -E "\^\[a-z\]\+\/\$PR_ISSUE-" "\$CHECK_DIR\/all-branches" > "\$CHECK_DIR\/branches-\$PR_ISSUE" \|\| true/)
+})
