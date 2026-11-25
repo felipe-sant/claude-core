@@ -161,7 +161,7 @@ Regra para devs e executores em todas as tarefas: nunca escreva comentários no 
 - Teste: unitário. Primeiro o que deve falhar: "P mais antiga que depende de uma issue aberta fica fora da fila e a seguinte é escolhida". Depois: dependência de issue fechada (fora da lista de abertas) não bloqueia; única P esperando dependência dá "Nenhuma issue P na fila."; citação de "#n" sem "depende de" não bloqueia; citação de outro repositório é ignorada; referência à própria issue é ignorada; "depende de #3 e #4" com só uma fechada bloqueia e com as duas fechadas libera; "Depende do" e "DEPENDE DA" bloqueiam; citação só dentro de trecho de código (bloco e no meio da linha) é ignorada; citação só em comentário é ignorada; "#n" de pull request aberto não bloqueia; disparo à mão de issue com dependência aberta recusa com o texto do Desenho (uma e várias abertas, só as abertas listadas); disparo à mão com dependência aberta e limite atingido recusa pelo limite.
 - Gate: `node --test tests/issue-claude-agent-select.test.js tests/issue-agent-select.test.js`, `npm run lint` e `node bin/ai-sync.js --check`.
 - Modelo: padrao.
-- Status: pendente.
+- Status: feita (commit 2c000b3; 12 testes falharam antes da mudança, por exemplo "P que depende de issue aberta fica fora da fila e a seguinte é escolhida"; gate de fase: lint ok, 431 testes passando e 0 falhando, ai-sync --check ok).
 
 ### T3 [P] Conferência final aceita até 5 pull requests e um novo por execução
 
@@ -189,7 +189,7 @@ Regra para devs e executores em todas as tarefas: nunca escreva comentários no 
 - Teste: teste de conteúdo. Escreva-o e confirme que falha trocando o valor em um só lado numa cópia local, sem commitar a troca.
 - Gate: `node --test tests/issue-automations.test.js`, `npm run lint` e `node bin/ai-sync.js --check`.
 - Modelo: economico.
-- Status: pendente.
+- Status: feita (commit f8061da; o teste de igualdade do limite falhou ao trocar o valor só no workflow, 6 contra 5, e o valor foi restaurado antes do commit; gate de fase: lint ok, 431 testes passando e 0 falhando, ai-sync --check ok).
 
 ### T5 [P] Documentação do limite e da dependência
 
