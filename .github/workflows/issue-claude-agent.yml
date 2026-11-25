@@ -110,6 +110,23 @@ jobs:
             --allowedTools "Read,Glob,Grep,Edit,Write,Agent,Skill,Bash(git add:*),Bash(git commit:*),Bash(git push:*),Bash(git switch:*),Bash(git checkout -b:*),Bash(git status:*),Bash(git diff:*),Bash(git log:*),Bash(git branch:*),Bash(git show:*),Bash(git rev-parse:*),Bash(npm ci),Bash(npm run lint),Bash(npm test),Bash(npm run sync),Bash(node bin/ai-sync.js:*),Bash(gh issue comment:*),Bash(gh issue edit * --add-label *),Bash(gh issue edit * --remove-label *),Bash(gh pr list:*)"
             --disallowedTools 'Bash(*$*),Bash(*`*),Bash(*environ*),Bash(*/proc/*),Bash(*--body-file*),Bash(*--file*),Bash(*--template*),Bash(* -F*),Bash(* -T *),Bash(env:*),Bash(printenv:*),Bash(export:*),Bash(set:*),Bash(declare:*),Bash(cat *environ*),Bash(head *environ*),Bash(tail *environ*),Bash(echo *TOKEN*),Bash(printf *TOKEN*),Read(//proc/**),Bash(gh issue edit *--title*),Bash(gh issue edit *--body*),Bash(gh issue edit *--add-assignee*),Bash(gh issue edit *--remove-assignee*),Bash(gh issue edit *--add-project*),Bash(gh issue edit *--remove-project*),Bash(gh issue edit *--milestone*),Bash(gh pr merge:*),Bash(gh issue view:*),Bash(gh api:*),Bash(git push --force:*),Bash(git push -f:*),Bash(git push --force-with-lease:*),Bash(git push origin main:*),Bash(git push origin HEAD:main:*)'
             --permission-mode dontAsk
+      - name: Relatório da execução
+        if: always() && steps.claude.outputs.execution_file != ''
+        env:
+          EXECUTION_FILE: ${{ steps.claude.outputs.execution_file }}
+          REPORT_DIR: ${{ runner.temp }}/execution-report
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ACTION_TOKEN: ${{ steps.claude.outputs.github_token }}
+        run: node .github/issue-agent/execution-report.js "$EXECUTION_FILE" "$REPORT_DIR"
+      - name: Saída da execução
+        if: always() && steps.claude.outputs.execution_file != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: saida-do-agente
+          path: ${{ runner.temp }}/execution-report/claude-execution-output.json
+          retention-days: 7
+          if-no-files-found: ignore
       - name: Abertura do pull request
         if: steps.claude.outcome == 'success'
         env:
