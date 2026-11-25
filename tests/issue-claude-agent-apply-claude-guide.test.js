@@ -70,3 +70,49 @@ test('rodado sem o texto preparado, recusa com erro e não altera o guia', () =>
   assert.match(result.stdout, /::error::/)
   assert.equal(fs.readFileSync(TARGET_FILE, 'utf8'), before)
 })
+
+test('recusa quando o texto preparado é um link simbólico e não lê o arquivo apontado', () => {
+  const { dir, source, target } = workspace()
+  const secret = path.join(dir, 'segredo.txt')
+  fs.writeFileSync(secret, 'conteúdo de outro arquivo\n')
+  fs.symlinkSync(secret, path.join(source, GUIDE_FILE))
+  assert.throws(() => applyGuide(source, target), /arquivo comum/)
+  assert.equal(fs.readFileSync(target, 'utf8'), 'guia antigo\n')
+})
+
+test('recusa quando o texto preparado é uma pasta', () => {
+  const { source, target } = workspace()
+  fs.mkdirSync(path.join(source, GUIDE_FILE))
+  assert.throws(() => applyGuide(source, target), /arquivo comum/)
+  assert.equal(fs.readFileSync(target, 'utf8'), 'guia antigo\n')
+})
+
+test('recusa quando o guia é um link simbólico e não grava no arquivo apontado', () => {
+  const { dir, source } = workspace()
+  const outside = path.join(dir, 'fora.txt')
+  fs.writeFileSync(outside, 'intocado\n')
+  const link = path.join(dir, 'link-CLAUDE.md')
+  fs.symlinkSync(outside, link)
+  fs.writeFileSync(path.join(source, GUIDE_FILE), 'guia novo\n')
+  assert.throws(() => applyGuide(source, link), /arquivo comum/)
+  assert.equal(fs.readFileSync(outside, 'utf8'), 'intocado\n')
+  assert.ok(fs.lstatSync(link).isSymbolicLink())
+})
+
+test('recusa quando o guia é um link simbólico quebrado e não cria o arquivo apontado', () => {
+  const { dir, source } = workspace()
+  const missing = path.join(dir, 'nao-existe.txt')
+  const link = path.join(dir, 'link-quebrado.md')
+  fs.symlinkSync(missing, link)
+  fs.writeFileSync(path.join(source, GUIDE_FILE), 'guia novo\n')
+  assert.throws(() => applyGuide(source, link), /arquivo comum/)
+  assert.equal(fs.existsSync(missing), false)
+})
+
+test('quando o guia ainda não existe, cria o arquivo', () => {
+  const { dir, source } = workspace()
+  const novo = path.join(dir, 'novo-CLAUDE.md')
+  fs.writeFileSync(path.join(source, GUIDE_FILE), 'guia novo\n')
+  applyGuide(source, novo)
+  assert.equal(fs.readFileSync(novo, 'utf8'), 'guia novo\n')
+})

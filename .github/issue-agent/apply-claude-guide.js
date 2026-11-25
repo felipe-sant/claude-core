@@ -6,9 +6,22 @@ const TARGET_FILE = path.join(__dirname, '..', '..', '.claude', 'CLAUDE.md')
 
 class Refusal extends Error {}
 
+function statWithoutFollowing(file) {
+  try {
+    return fs.lstatSync(file)
+  } catch (error) {
+    if (error.code === 'ENOENT') return null
+    throw error
+  }
+}
+
 function applyGuide(contextDir, targetFile) {
   const sourceFile = path.join(contextDir, GUIDE_FILE)
-  if (!fs.existsSync(sourceFile)) throw new Refusal('O agente não gravou o arquivo do novo guia do Claude.')
+  const sourceStat = statWithoutFollowing(sourceFile)
+  if (!sourceStat) throw new Refusal('O agente não gravou o arquivo do novo guia do Claude.')
+  if (!sourceStat.isFile()) throw new Refusal('O arquivo do novo guia do Claude precisa ser um arquivo comum.')
+  const targetStat = statWithoutFollowing(targetFile)
+  if (targetStat && !targetStat.isFile()) throw new Refusal('O guia do Claude precisa ser um arquivo comum.')
   const guide = fs.readFileSync(sourceFile, 'utf8')
   if (guide.trim() === '') throw new Refusal('O arquivo do novo guia do Claude está vazio.')
   fs.writeFileSync(targetFile, guide)
