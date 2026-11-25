@@ -175,7 +175,7 @@ Regra para devs e executores em todas as tarefas: nunca escreva comentários no 
 - Teste: teste de conteúdo do workflow. Primeiro o que deve falhar: "a conferência final limita o total ao MAX_AGENT_PULLS e a um pull request novo por execução" (procura `MAX_AGENT_PULLS`, a contagem de antes e a ausência de `-le 1`). Depois: "no tamanho M a conferência exige zero pull request desta issue, não zero no total"; "a foto de antes grava a contagem de pull requests do agente". Renomear o teste `...sem pull request se M` para dizer "desta issue".
 - Gate: `node --test tests/issue-claude-agent-workflow.test.js tests/issue-automations.test.js`, `npm run lint` e `node bin/ai-sync.js --check`. O actionlint roda no CI.
 - Modelo: padrao.
-- Status: feita (commit 67ae0dc; 4 testes falharam antes da mudança; o teste "...sem pull request se M" foi renomeado para "...desta issue se M", como previsto; gate: lint ok, 413 testes passando e 0 falhando, ai-sync --check ok; o actionlint não rodou localmente porque não está instalado e fica para o CI).
+- Status: feita (commit 67ae0dc; 4 testes falharam antes da mudança; o teste "...sem pull request se M" foi renomeado para "...desta issue se M", como previsto; gate: lint ok, 413 testes passando e 0 falhando, ai-sync --check ok; o actionlint não rodou localmente porque não está instalado e fica para o CI; correção da revisão no commit 41577b8: um teste passa a conferir a regra de no máximo um pull request novo por execução (CA-14), e ele falhou quando a linha da regra foi apagada numa cópia local; gate da correção: 431 testes passando, lint ok e ai-sync --check ok).
 
 ### T4 [P] Teste de que o limite é o mesmo na seleção e na automação
 
