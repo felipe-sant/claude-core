@@ -273,9 +273,11 @@ A issue com pull request ligado, aberto ou fechado, não volta para a fila. Por 
 
 Para liberar a issue de novo, à mão:
 
-1. Edite a descrição do pull request fechado e apague a linha `Closes #<número>`, para ele deixar de estar ligado à issue.
+1. Edite a descrição do pull request fechado e apague a linha `Closes #<número>`, para ele deixar de estar ligado à issue. Em pull request já fechado isso pode não desfazer a ligação: nesse caso, na issue, em "Development", desligue o pull request e confira que ele não aparece mais ali.
 2. Apague a branch do agente dessa issue, se ela ainda existir no repositório (o nome começa com o tipo e o número da issue, como `fix/<número>-...`), porque branch própria também tira a issue da fila.
 3. Confira que a issue está com `Size: P` e sem responsável. Na próxima execução da Issue Claude Agent ela volta a ser tratada; para não esperar, dispare-a à mão com o número da issue.
+
+Se a issue continuar fora da fila mesmo assim, o caminho é abrir uma issue nova.
 
 ### Fila única e limites
 
