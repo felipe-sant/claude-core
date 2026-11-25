@@ -115,7 +115,7 @@ test('pull requests de outras pessoas, mesmo muitos, não contam para o limite',
 test('conta como do agente a conta do Claude somada à linha fixa no corpo', () => {
   const result = select([issue()], { openPulls: [...pulls(3), ...pulls(2, markedPull)] })
   assert.equal(result.prIssue, '')
-  assert.match(result.reason, /Já há 5 pull requests do agente abertos/)
+  assert.equal(result.reason, 'Já há 5 pull requests do agente abertos e o limite é 5: a fila das P espera.')
 })
 
 test('quatro do agente mais um de outra pessoa ainda deixam tratar a issue', () => {
