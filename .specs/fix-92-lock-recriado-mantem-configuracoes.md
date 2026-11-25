@@ -1,6 +1,6 @@
 # Registro de instalação recriado perde as configurações já aplicadas
 
-> Status: em-andamento
+> Status: resolvida
 > Tipo: bug
 > Tamanho: media
 > Branch: fix/92-lock-recriado-mantem-configuracoes
@@ -91,7 +91,7 @@ Hipótese: na junção do modelo com o arquivo existente, o ramo que encontra um
 - Gate: `node --test tests/settings.test.js`, `npm run lint` e `node bin/ai-sync.js --check` (sem typecheck nem formatador no projeto).
 - Pronto quando: o teste do CA-01 falhou antes e passa depois; todos os testes novos e os existentes passam; o gate passa; um commit atômico, por caminho, só com `bin/ai-sync.js` e `tests/settings.test.js`, por exemplo `Fix :bug: [#92] Registra as configurações iguais ao modelo quando o registro é recriado`.
 - Modelo: padrao.
-- Status: feita (commit 1ad2ecb; gate ok: 5 testes vermelhos antes, 23 passando no arquivo de testes das configurações, lint ok; gate de fase ok: npm run lint, npm test com 483 de 483, --check ok, ai-sync em pasta temporária sem erro).
+- Status: feita (commit 1ad2ecb; gate ok: 5 testes vermelhos antes, 23 passando no arquivo de testes das configurações, lint ok; gate de fase ok: npm run lint, npm test com 483 de 483, --check ok, ai-sync em pasta temporária sem erro; commit 9180db0 com as sugestões do reviewer, só em testes: teste novo do CA-12 e o CA-07 com o registro da primeira rodada; gate no 9180db0 ok: lint ok, npm test com 484 de 484, --check ok, git status limpo; aprovada pelo reviewer).
 
 ### T2 [P] Documentar o registro recriado no README
 
