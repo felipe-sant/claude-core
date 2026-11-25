@@ -344,3 +344,13 @@ test('não existe skill de criar issue', () => {
 test('o padrão de revisão aponta para o pull-request-standard na parte de comentários', () => {
   assert.match(ruleText('review-standard'), /`pull-request-standard`/)
 })
+
+test('o README lista as regras de pull request e de issues e a contagem das regras gerais', () => {
+  const readme = fs.readFileSync(path.join(repoRoot, 'README.md'), 'utf8')
+
+  assert.match(readme, /`pull-request-standard`/)
+  assert.match(readme, /`issue-standard`/)
+  assert.match(readme, /9 gerais e 4 por stack/)
+  assert.match(readme, /as nove regras gerais/)
+  assert.match(readme, /O que muda.*Como foi verificado.*Observações/s)
+})
