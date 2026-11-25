@@ -1,6 +1,6 @@
 # Definir o padrão de escrita de PRs, comentários e issues e corrigir o PR do agente de issues
 
-> Status: em-andamento
+> Status: implementada
 > Tipo: funcionalidade
 > Tamanho: media
 > Branch: feat/73-padrao-de-pr-comentarios-e-issues
@@ -102,7 +102,7 @@ Sobre o `.claude/` gerado: o hook de pre-commit regenera o `.claude/` e recusa o
 - Pronto quando: as duas regras existem, estão no catálogo e nos quatro perfis, os testes novos passam, os de hoje continuam passando sem afrouxar e o gate passa.
 - Gate: `npm run lint`, `npm test` e `node bin/ai-sync.js --check`.
 - Modelo: padrao.
-- Status: feita. Commit 91c5886. Gate passou.
+- Status: feita. Commit 91c5886. Gate passou. Ajuste de alinhamento pedido pelo usuário depois da primeira revisão: commit d6a7b49, as seções da regra pull-request-standard viram títulos "##", gate passou.
 
 ### T2 Skills de pull request e de revisão apontam para a regra nova
 
@@ -176,7 +176,7 @@ Sobre o `.claude/` gerado: o hook de pre-commit regenera o `.claude/` e recusa o
 - Pronto quando: os testes novos passam, todas as guardas de hoje continuam passando sem afrouxar, nada fora dos dois arquivos mudou e o gate passa.
 - Gate: `npm run lint`, `npm test` e `node bin/ai-sync.js --check`.
 - Modelo: padrao.
-- Status: feita. Commit a068275. Gate: `npm run lint` passou, `node bin/ai-sync.js --check` passou e os 3 testes novos do prompt passam.
+- Status: feita. Commit a068275. Gate: `npm run lint` passou, `node bin/ai-sync.js --check` passou e os 3 testes novos do prompt passam. Ajuste de alinhamento pedido pelo usuário depois da primeira revisão: commit 93034de, o prompt pede "o que não foi testado" e proíbe caminhos e código na descrição, gate passou. Gate final depois dos ajustes: lint ok, 347 testes passando e 0 falhas, `node bin/ai-sync.js --check` ok. Reviewer aprovou a tarefa inteira, sem achado que bloqueie.
 
 ## Dúvidas
 
