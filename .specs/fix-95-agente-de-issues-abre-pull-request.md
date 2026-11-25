@@ -1,6 +1,6 @@
 # O agente de issues não consegue abrir o pull request no formato pedido e termina sem avisar
 
-> Status: em-andamento
+> Status: resolvida
 > Tipo: bug
 > Tamanho: media
 > Branch: fix/95-agente-de-issues-abre-pull-request
@@ -218,6 +218,8 @@ Verificado no código da ação no commit fixado pela automação:
 
 - Desvio do contrato (relatado pelo Dev Ops na implementação): o script lê a lista de branches de antes da execução do agente em `$CHECK_DIR/branches-<issue>`, detalhe que o contrato não previa.
 - Validação pendente (relatada pelo Dev Ops): a conferência "sem comentário" conta os comentários do `claude[bot]`, o que só dá para validar em um disparo real da automação.
+
+- Aprovação final (relatada pela orchestrator): o Reviewer aprovou o commit d7da79a sem achado que bloqueie e sem sugestão pendente. O gate de fase passou: npm run lint, npm test com 395 testes, ai-sync --check e sync em pasta temporária, e o actionlint nos três workflows. O QA validou todos os critérios de aceite sem falha. Ficam para conferir em um disparo real no GitHub só os pontos que dependem dele, como a conferência "sem comentário" acima.
 
 ## Decisões resolvidas
 
