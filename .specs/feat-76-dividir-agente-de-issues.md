@@ -429,6 +429,16 @@ Actionlint local: use o binário já baixado em `/tmp/claude-1000/-home-felipe-p
 - Modelo: economico.
 - Status: feita. O README foi conferido contra a entrega, e a divergência do texto "fila vazia" foi corrigida no bb9538d. O 7f71eb5 ajustou o filtro do `$PR_ISSUE`, e há mais um ajuste em andamento, sugerido pelo Reviewer. Gate de fase: `npm run lint`, `npm test` com 318 testes passando, `node bin/ai-sync.js --check`, o actionlint e o sync em pasta temporária passaram. O Reviewer conferiu o encaixe de CA-01 a CA-28 e aprovou a entrega inteira, sem achado que bloqueia em aberto. A branch está 0 commits atrás da main, sem conflito.
 
+## QA ao vivo e correções depois do merge do #77
+
+- Aprovados no QA ao vivo: CA-01, CA-02, CA-22, CA-17 (pelo disparo manual, PR #79), M e G, CA-16, CA-05, CA-06, CA-24, CA-10, CA-27 e CA-08, com 0 permissões negadas em todas as execuções.
+- Reprovado: o encadeamento (execução 45634930828). A ação do Claude recusou a execução porque o ator era o bot `github-actions`.
+- Não testados: CA-21, CA-11, CA-15, CA-18, CA-23 e CA-28.
+- Correções na branch `fix/76-encadeamento-do-agente`, aprovadas pelo Reviewer:
+  - 618ead3: `allowed_bots: github-actions` só na Issue Claude Agent; o `--permission-mode dontAsk` continua valendo.
+  - 334d43b: nova tentativa em erro 5xx ou falha de rede, só nas leituras (D-06).
+- Documentação: 15a4c28 explica no README o pull request do agente fechado sem merge e como liberar a issue à mão (D-05).
+
 ## Decididas pelo usuário
 
 - D-01 (usuário, 2026-11-25): a Issue Claude Agent encadeada pega a P mais antiga da fila, e não só a issue do evento que fez a Issue Size Set rodar. Aplicada em RN-07, CA-13 e em "O que muda em relação à #64" (RN-20 e CA-24).
@@ -436,6 +446,8 @@ Actionlint local: use o binário já baixado em `/tmp/claude-1000/-home-felipe-p
 - D-03 (usuário, 2026-11-25): a rede de segurança da Issue Claude Agent roda às 02:47 de Brasília (`47 5 * * *`). Aplicada em RN-07, CA-15 e T6.
 - D-04 (usuário, 2026-11-25): uma issue aberta por quem não é colaborador pode adiantar a Issue Claude Agent para uma P de colaborador que já estava na fila. Isso só adianta o que rodaria às 02:47 e continua valendo um único pull request do agente aberto por vez. Aplicada em RN-07 e CA-12.
 - Aprovação da especificação pelo usuário em 2026-11-25.
+- D-05 (usuário, 2026-11-25): um pull request do agente fechado sem merge mantém a issue fora da fila, porque é uma recusa. A forma de liberar a issue à mão está documentada no README (15a4c28 e o ajuste seguinte).
+- D-06 (usuário, 2026-11-25): as leituras da API do GitHub ganham nova tentativa em erro 5xx ou falha de rede (334d43b).
 - Fila de concorrência (decisão técnica do Dev Ops, confirmada pela orchestrator): aceitar que a execução que espera na fila seja substituída pela mais nova, em vez de usar grupos diferentes, e não adotar `queue: max` enquanto o actionlint não aceitar a chave. Aplicada em S-03, CA-28, Limite conhecido e T5.
 
 ## Dúvidas
