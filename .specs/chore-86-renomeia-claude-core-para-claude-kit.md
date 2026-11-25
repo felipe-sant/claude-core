@@ -114,7 +114,7 @@ O projeto não tem typecheck nem formatador, só lint (oxlint mais a checagem de
 - Teste: unitário e de integração com `node --test`. Falham primeiro: (a) a primeira execução cria `claude-kit.lock.json` e não cria o antigo; (b) com só o registro antigo, `files` e `settings.applied` vão para o novo e o antigo some; (c) registro antigo igual ao que seria gravado ainda gera o novo e remove o antigo; (d) arquivo editado pelo usuário e registrado no antigo continua intocado, com aviso; (e) arquivo instalado sem alteração e registrado no antigo é atualizado quando há versão nova; (f) outro arquivo do usuário na pasta `.claude` continua lá depois da migração; (g) com os dois registros, vale só o conteúdo do novo e o antigo some; (h) com só o registro antigo inválido, a execução termina com erro, o antigo continua com o mesmo conteúdo e o novo não é criado; (i) a saída da migração é igual à de uma execução com o registro já no nome novo, sem aviso de migração.
 - Gate: `npm run lint` e `node --test tests/ai-sync.test.js tests/self-sync.test.js`
 - Modelo: padrao
-- Status: pendente
+- Status: feita. Commit 037991e, do Dev Back. Gate: `npm run lint` ok e `npm test` com 357 testes passando e 0 falhando. Antes da correção, falharam: "primeira execução grava só o registro com o nome novo" e "registro antigo é migrado..." (ENOENT), e "registro antigo inválido para com erro..." (Expected actual strictly unequal to 0). O projeto não tem typecheck nem formatador.
 
 ### T2 [P]: Mensagens da ferramenta com o nome novo
 - O quê: os três avisos da ferramenta que citam o projeto passam a dizer claude-kit.
