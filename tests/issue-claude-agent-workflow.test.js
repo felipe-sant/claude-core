@@ -248,7 +248,8 @@ test('a foto de antes grava a contagem de pull requests do agente abertos', () =
 test('a conferência final limita o total ao MAX_AGENT_PULLS e a um pull request novo por execução', () => {
   const step = stepOf(job('agent'), 'Conferência final')
   assert.match(step, /"\$open_agent_pulls" -le "\$MAX_AGENT_PULLS"/)
-  assert.match(step, /\$CHECK_DIR\/agent-pulls"\)/)
+  assert.match(step, /agent_pulls_before=\$\(cat "\$CHECK_DIR\/agent-pulls"\)/)
+  assert.match(step, /"\$open_agent_pulls" -le \$\(\(agent_pulls_before \+ 1\)\)/)
   assert.doesNotMatch(step, /"\$open_agent_pulls" -le 1 /)
 })
 
