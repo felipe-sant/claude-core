@@ -81,6 +81,11 @@ jobs:
           awk '{total += $1} END {print total + 0}' "$CHECK_DIR/agent-pulls-pages" > "$CHECK_DIR/agent-pulls"
           gh api --paginate "repos/$GITHUB_REPOSITORY/branches" --jq '.[].name' > "$CHECK_DIR/all-branches"
           grep -E "^[a-z]+/$PR_ISSUE-" "$CHECK_DIR/all-branches" > "$CHECK_DIR/branches-$PR_ISSUE" || true
+      - name: Início do acompanhamento
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CHECK_DIR: ${{ runner.temp }}/issue-check
+        run: node .github/issue-agent/progress-comment.js start
       - name: Contexto filtrado da issue
         run: node .github/issue-agent/issue-context.js "$CONTEXT_DIR" "$PR_ISSUE"
         env:
@@ -128,6 +133,7 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
       - name: Abertura do pull request
+        id: open
         if: steps.claude.outcome == 'success'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -177,8 +183,8 @@ jobs:
           gh api --paginate "repos/$GITHUB_REPOSITORY/issues/$PR_ISSUE/comments" --jq '[.[] | select(.user.login == "claude[bot]")] | length' > "$CHECK_DIR/agent-comments-pages"
           agent_comments=$(awk '{total += $1} END {print total + 0}' "$CHECK_DIR/agent-comments-pages")
           echo "Issue $PR_ISSUE: pull requests do agente=$pulls_for_issue, comentários do agente=$agent_comments"
+          [ "$agent_comments" -le "$(cat "$CHECK_DIR/agent-comments")" ] || echo yes > "$CHECK_DIR/agent-commented"
           if [ "$pulls_for_issue" -eq 0 ] && [ "$agent_comments" -le "$(cat "$CHECK_DIR/agent-comments")" ]; then
-            gh issue comment "$PR_ISSUE" --body "O agente de issues terminou esta execução sem abrir pull request e sem explicar o motivo, então nada foi feito nesta issue. Veja o que aconteceu: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" || echo "::warning::Não foi possível comentar na issue $PR_ISSUE."
             fail "A execução terminou sem pull request e sem comentário na issue $PR_ISSUE."
           fi
           [ "$AGENT_OUTCOME" = "success" ] || fail "A etapa do agente terminou sem sucesso: $AGENT_OUTCOME."
@@ -198,3 +204,14 @@ jobs:
               gh api -X DELETE "repos/$GITHUB_REPOSITORY/git/refs/heads/$branch"
             fi
           done
+      - name: Fim do acompanhamento
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CHECK_DIR: ${{ runner.temp }}/issue-check
+          REPORT_DIR: ${{ runner.temp }}/execution-report
+          AGENT_OUTCOME: ${{ steps.claude.outcome }}
+          OPEN_OUTCOME: ${{ steps.open.outcome }}
+          PULL_REQUEST_URL: ${{ steps.open.outputs.pull_request_url }}
+          FAILURE_REASON: ${{ steps.open.outputs.failure_reason }}
+        run: node .github/issue-agent/progress-comment.js end
