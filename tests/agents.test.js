@@ -112,6 +112,21 @@ test('o padrão de git manda seguir a regra de coautoria do repositório e confe
   assert.match(text, /Sem proibição no repositório/)
 })
 
+test('o padrão de git diz que a coautoria varia entre agentes e que um não impõe a atribuição ao outro', () => {
+  const text = fs.readFileSync(path.join(h.repoRoot, 'rules', 'git-standard.md'), 'utf8')
+
+  assert.match(text, /A coautoria pode variar entre os agentes da mesma branch/)
+  assert.match(text, /Nunca peça a outro agente que troque a atribuição dele/)
+})
+
+test('os devs dizem que o formato da especificação, IDs incluídos, é do sdd', () => {
+  const devs = committers.filter((name) => name.startsWith('dev-'))
+
+  for (const name of devs) {
+    assert.match(body(name), /formato da especificação, IDs de regra e critério incluídos, é definido pelo `sdd`/, `${name} deixa o formato com o sdd`)
+  }
+})
+
 test('devs e executor proíbem stash, reset, restore e clean na worktree compartilhada e indicam a alternativa', () => {
   for (const name of committers) {
     const text = body(name)
