@@ -102,7 +102,7 @@ Sobre o `.claude/` gerado: o hook de pre-commit regenera o `.claude/` e recusa o
 - Pronto quando: as duas regras existem, estão no catálogo e nos quatro perfis, os testes novos passam, os de hoje continuam passando sem afrouxar e o gate passa.
 - Gate: `npm run lint`, `npm test` e `node bin/ai-sync.js --check`.
 - Modelo: padrao.
-- Status: pendente.
+- Status: feita. Commit 91c5886. Gate passou.
 
 ### T2 Skills de pull request e de revisão apontam para a regra nova
 
@@ -120,7 +120,7 @@ Sobre o `.claude/` gerado: o hook de pre-commit regenera o `.claude/` e recusa o
 - Pronto quando: as duas skills citam a regra, não repetem o texto dela, continuam dizendo quando usar e o que entregam, e o gate passa.
 - Gate: `npm run lint`, `npm test` e `node bin/ai-sync.js --check`.
 - Modelo: economico.
-- Status: pendente.
+- Status: feita. Commit 3b477e1. Gate passou.
 
 ### T3 Padrão de revisão e padrão de problemas do time apontam para as regras novas
 
@@ -138,7 +138,7 @@ Sobre o `.claude/` gerado: o hook de pre-commit regenera o `.claude/` e recusa o
 - Pronto quando: as duas regras apontam para as novas sem repetir o formato, as conferências de hoje do `feedback-standard` seguem valendo (menos a das seções, movida para o `issue-standard`) e o gate passa.
 - Gate: `npm run lint`, `npm test` e `node bin/ai-sync.js --check`.
 - Modelo: padrao.
-- Status: pendente.
+- Status: feita. Commit 2368160. Gate passou.
 
 ### T4 README e conferência final do `.claude/`
 
@@ -157,7 +157,7 @@ Sobre o `.claude/` gerado: o hook de pre-commit regenera o `.claude/` e recusa o
 - Pronto quando: o README está coerente com a entrega, o `.claude/` está em dia, não existe skill de criar issue e o gate de fase passa.
 - Gate: o gate de fase da Fase 2.
 - Modelo: economico.
-- Status: pendente.
+- Status: feita. Commit 7fde4c3. Gate passou. Ressalva: o teste do README foi escrito depois do texto e não foi visto falhando. Gate de fase: `npm run lint` ok, `npm test` com 344 passando e 0 falhas, `node bin/ai-sync.js --check` ok e o sync em pasta temporária entregou as 9 regras gerais.
 
 ### T5 [P] Instruções do agente de issues com as três seções
 
@@ -176,7 +176,7 @@ Sobre o `.claude/` gerado: o hook de pre-commit regenera o `.claude/` e recusa o
 - Pronto quando: os testes novos passam, todas as guardas de hoje continuam passando sem afrouxar, nada fora dos dois arquivos mudou e o gate passa.
 - Gate: `npm run lint`, `npm test` e `node bin/ai-sync.js --check`.
 - Modelo: padrao.
-- Status: feita. Commit a068275. Gate: `npm run lint` passou, `node bin/ai-sync.js --check` passou e os 3 testes novos do prompt passam. Pendência conhecida: o `npm test` teve 8 falhas, todas em testes que esperam a T1, ainda em andamento; não são falhas da T5.
+- Status: feita. Commit a068275. Gate: `npm run lint` passou, `node bin/ai-sync.js --check` passou e os 3 testes novos do prompt passam.
 
 ## Dúvidas
 
