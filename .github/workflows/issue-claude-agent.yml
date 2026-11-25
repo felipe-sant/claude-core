@@ -1,0 +1,128 @@
+name: Issue Claude Agent
+
+on:
+  schedule:
+    - cron: "47 5 * * *"
+  workflow_dispatch:
+    inputs:
+      issue:
+        description: "Número da issue (vazio: a P mais antiga da fila)"
+        required: false
+        type: string
+
+permissions: {}
+
+concurrency:
+  group: issue-agent
+  cancel-in-progress: false
+
+jobs:
+  select:
+    name: Seleção
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: read
+      pull-requests: read
+    outputs:
+      pr_issue: ${{ steps.select.outputs.pr_issue }}
+      reason: ${{ steps.select.outputs.reason }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - id: select
+        run: node .github/issue-agent/select-issues.js agent
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REQUESTED_ISSUE: ${{ inputs.issue }}
+
+  agent:
+    name: Agente
+    needs: select
+    if: needs.select.outputs.pr_issue != ''
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+      id-token: write
+    env:
+      PR_ISSUE: ${{ needs.select.outputs.pr_issue }}
+      CLASSIFICATION_MARK: Tamanho definido pelo agente de issues
+      PULL_REQUEST_LINE: Aberto pelo agente de issues.
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Foto de antes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CHECK_DIR: ${{ runner.temp }}/issue-check
+        run: |
+          mkdir -p "$CHECK_DIR"
+          git ls-remote origin refs/heads/main | cut -f1 > "$CHECK_DIR/main"
+          gh api "repos/$GITHUB_REPOSITORY/issues/$PR_ISSUE" --jq '[.labels[].name | select(startswith("Size:") | not)] | sort | join(",")' > "$CHECK_DIR/labels-$PR_ISSUE"
+          gh api --paginate "repos/$GITHUB_REPOSITORY/issues/$PR_ISSUE/comments" --jq "[.[] | select(.user.login == \"claude[bot]\") | select(.body | contains(\"$CLASSIFICATION_MARK\"))] | length" | awk '{total += $1} END {print total + 0}' > "$CHECK_DIR/marks"
+      - name: Contexto filtrado da issue
+        run: node .github/issue-agent/issue-context.js "$CONTEXT_DIR" "$PR_ISSUE"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CONTEXT_DIR: ${{ runner.temp }}/issue-agent
+      - id: prompt
+        name: Montagem das instruções
+        env:
+          CONTEXT_DIR: ${{ runner.temp }}/issue-agent
+        run: |
+          {
+            echo "text<<PROMPT_END"
+            cat .github/issue-agent/agent-prompt.md
+            printf '\n## Valores desta execução\n\n- pr_issue: %s\n- Pasta do contexto filtrado: %s\n- Link da execução: %s\n' "$PR_ISSUE" "$CONTEXT_DIR" "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            echo "PROMPT_END"
+          } >> "$GITHUB_OUTPUT"
+      - id: claude
+        uses: anthropics/claude-code-action@eb56b6666facdbd501035f4a0269d8caee2e7a8b
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: ${{ steps.prompt.outputs.text }}
+          display_report: true
+          claude_args: |
+            --max-turns 100
+            --add-dir ${{ runner.temp }}/issue-agent
+            --allowedTools "Read,Glob,Grep,Edit,Write,Agent,Skill,Bash(git add:*),Bash(git commit:*),Bash(git push:*),Bash(git switch:*),Bash(git checkout -b:*),Bash(git status:*),Bash(git diff:*),Bash(git log:*),Bash(git branch:*),Bash(git show:*),Bash(git rev-parse:*),Bash(npm ci),Bash(npm run lint),Bash(npm test),Bash(npm run sync),Bash(node bin/ai-sync.js:*),Bash(gh issue comment:*),Bash(gh issue edit * --add-label *),Bash(gh issue edit * --remove-label *),Bash(gh pr create:*),Bash(gh pr list:*)"
+            --disallowedTools 'Bash(*$*),Bash(*`*),Bash(*environ*),Bash(*/proc/*),Bash(*--body-file*),Bash(*--file*),Bash(*--template*),Bash(* -F*),Bash(* -T *),Bash(env:*),Bash(printenv:*),Bash(export:*),Bash(set:*),Bash(declare:*),Bash(cat *environ*),Bash(head *environ*),Bash(tail *environ*),Bash(echo *TOKEN*),Bash(printf *TOKEN*),Read(//proc/**),Bash(gh issue edit *--title*),Bash(gh issue edit *--body*),Bash(gh issue edit *--add-assignee*),Bash(gh issue edit *--remove-assignee*),Bash(gh issue edit *--add-project*),Bash(gh issue edit *--remove-project*),Bash(gh issue edit *--milestone*),Bash(gh pr merge:*),Bash(gh issue view:*),Bash(gh api:*),Bash(git push --force:*),Bash(git push -f:*),Bash(git push --force-with-lease:*),Bash(git push origin main:*),Bash(git push origin HEAD:main:*)'
+            --permission-mode dontAsk
+      - name: Conferência final
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CHECK_DIR: ${{ runner.temp }}/issue-check
+        run: |
+          failures=0
+          fail() { echo "::error::$1"; failures=$((failures + 1)); }
+          main_after=$(git ls-remote origin refs/heads/main | cut -f1)
+          [ "$main_after" = "$(cat "$CHECK_DIR/main")" ] || fail "A branch principal mudou durante a execução."
+          open_agent_pulls=$(gh api --paginate "repos/$GITHUB_REPOSITORY/pulls?state=open" --jq "[.[] | select(.user.login == \"claude[bot]\" or ((.body // \"\") | contains(\"$PULL_REQUEST_LINE\")))] | length" | awk '{total += $1} END {print total + 0}')
+          echo "Pull requests do agente abertos: $open_agent_pulls"
+          [ "$open_agent_pulls" -le 1 ] || fail "Há mais de um pull request do agente aberto."
+          size_labels=$(gh api "repos/$GITHUB_REPOSITORY/issues/$PR_ISSUE" --jq '[.labels[].name | select(startswith("Size:"))] | join(",")')
+          others=$(gh api "repos/$GITHUB_REPOSITORY/issues/$PR_ISSUE" --jq '[.labels[].name | select(startswith("Size:") | not)] | sort | join(",")')
+          marks=$(gh api --paginate "repos/$GITHUB_REPOSITORY/issues/$PR_ISSUE/comments" --jq "[.[] | select(.user.login == \"claude[bot]\") | select(.body | contains(\"$CLASSIFICATION_MARK\"))] | length" | awk '{total += $1} END {print total + 0}')
+          echo "Issue $PR_ISSUE: etiquetas de tamanho=$size_labels, comentários de classificação=$marks"
+          case "$size_labels" in
+            "Size: P") ;;
+            "Size: M") [ "$open_agent_pulls" -eq 0 ] || fail "A issue $PR_ISSUE virou Size: M mas há pull request do agente aberto." ;;
+            *) fail "A issue $PR_ISSUE deveria ter exatamente uma etiqueta de tamanho, Size: P ou Size: M." ;;
+          esac
+          [ "$others" = "$(cat "$CHECK_DIR/labels-$PR_ISSUE")" ] || fail "As etiquetas da issue $PR_ISSUE que não são de tamanho mudaram."
+          [ "$marks" = "$(cat "$CHECK_DIR/marks")" ] || fail "A quantidade de comentários de classificação da issue $PR_ISSUE mudou."
+          [ "$failures" -eq 0 ]
