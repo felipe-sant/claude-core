@@ -121,7 +121,7 @@ Nenhuma tarefa nova começa a ser codificada sem uma especificação aprovada pe
 - Se a especificação mudar durante a implementação, volte a pedir a aprovação do usuário.
 - Implementação segue TDD em lógica e comportamento (o teste que falha vem antes do código), um commit atômico por tarefa, o `Gate` de cada tarefa (typecheck, teste, lint e checagem de formatação dos arquivos alterados, nunca sem o typecheck) e o `Gate de fase` (build, suíte completa, lint completo e checagem de formatação completa), ambos com as mesmas checagens que o CI do projeto roda ao fim de cada fase. Isso vale mesmo quando a especificação foi dispensada.
 - A tarefa só é dada como concluída quando o reviewer aprovar e não houver achado em aberto (cada um corrigido, ou adiado por decisão explícita do usuário). Só então peça ao `sdd` que mude o status para `implementada` (funcionalidade) ou `resolvida` (bug), informando que o reviewer aprovou.
-- Ao dar cada tarefa como concluída, se a skill `closed-in-context` estiver disponível na sessão, você mesma a roda e escreve o fechamento na conversa principal. Esta é a exceção a "só delegar": nunca delegue o fechamento a um integrante, porque ele não aparece na conversa principal. Faça um fechamento por tarefa, mesmo que a sessão continue com outra depois. Se a skill não estiver disponível, siga sem o passo e sem avisar.
+- Com a tarefa concluída, ofereça a entrega (abrir o pull request ou fazer o merge, ver "Worktree por tarefa") antes de qualquer fechamento. Só depois da entrega feita, ou da decisão do usuário de não entregar agora, e se a skill `closed-in-context` estiver disponível na sessão, você mesma a roda e escreve o fechamento na conversa principal, com o link do pull request quando houver e o resultado real (por exemplo, "entregue", "aguardando revisão" ou "sem entrega por ora"). Esta é a exceção a "só delegar": nunca delegue o fechamento a um integrante, porque ele não aparece na conversa principal. Ao exibi-lo, deixe claro que é o fechamento da tarefa e que a sessão continua, sem usar o título "Fechamento da sessão". Faça um fechamento por tarefa, mesmo que a sessão continue com outra depois. Se a skill não estiver disponível, siga sem o passo e sem avisar.
 
 ## Execução em paralelo a partir da especificação
 
@@ -141,7 +141,7 @@ Várias sessões podem trabalhar ao mesmo tempo no mesmo repositório, e dois ti
 - A partir daí, todo agente do time recebe a pasta da worktree em cada delegação e trabalha só dentro dela. Os agentes continuam sendo os mesmos desta sessão; não é preciso rodar o `ai-sync` na worktree.
 - O sdd grava a especificação nela. O reviewer, o qa e o designer também olham a worktree, não a pasta principal.
 - O product-owner continua com uma única memória por repositório, compartilhada por todas as sessões.
-- Quando a tarefa terminar, ofereça entregar o trabalho (abrir o pull request ou fazer o merge) e só depois remover a worktree, e apenas se o usuário pedir. Nunca remova uma worktree com alterações sem commit sem avisar.
+- Quando a tarefa terminar, ofereça entregar o trabalho (abrir o pull request ou fazer o merge), escreva o fechamento da tarefa depois da entrega. Só remova a worktree se o usuário pedir, e nunca remova uma worktree com alterações sem commit sem avisar.
 - As worktrees de revisão criadas pelo reviewer são removidas por ele ao fim da revisão; se ele avisar que sobrou uma com alteração sem commit, pergunte ao usuário antes de remover.
 - Se existirem outras worktrees do mesmo repositório em uso, não mexa nelas.
 
