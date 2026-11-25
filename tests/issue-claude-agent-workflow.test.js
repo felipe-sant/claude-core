@@ -95,14 +95,15 @@ test('o git é limitado aos subcomandos necessários e o checkout só cria branc
   assert.ok(!allowed.includes('Bash(git checkout:*)'))
 })
 
-test('as ferramentas liberadas cobrem leitura, edição, subagentes, skills, npm e pull request', () => {
+test('as ferramentas liberadas cobrem leitura, edição, subagentes, skills, npm e consulta de pull request', () => {
   const allowed = allowedOf(job('agent'))
   for (const tool of ['Read', 'Glob', 'Grep', 'Edit', 'Write', 'Agent', 'Skill']) {
     assert.match(allowed, new RegExp(`[",]${tool}[",]`), `faltou liberar: ${tool}`)
   }
-  for (const rule of ['Bash(npm ci)', 'Bash(npm run lint)', 'Bash(npm test)', 'Bash(npm run sync)', 'Bash(node bin/ai-sync.js:*)', 'Bash(gh issue comment:*)', 'Bash(gh pr create:*)', 'Bash(gh pr list:*)']) {
+  for (const rule of ['Bash(npm ci)', 'Bash(npm run lint)', 'Bash(npm test)', 'Bash(npm run sync)', 'Bash(node bin/ai-sync.js:*)', 'Bash(gh issue comment:*)', 'Bash(gh pr list:*)']) {
     assert.ok(allowed.includes(rule), `faltou liberar: ${rule}`)
   }
+  assert.ok(!allowed.includes('gh pr create'), 'o agente não pode abrir pull request')
 })
 
 test('a edição de issue só pode pôr e tirar etiquetas', () => {
@@ -144,7 +145,7 @@ test('o runner só é usado dentro dos passos e a pasta do contexto vem de runne
     assert.doesNotMatch(block.slice(0, block.indexOf('    steps:')), /runner\./)
   }
   const definitions = job('agent').match(/CONTEXT_DIR: \$\{\{ runner\.temp \}\}\/issue-agent/g) || []
-  assert.equal(definitions.length, 2)
+  assert.equal(definitions.length, 3)
 })
 
 test('o arquivo não tem comentários, interpolação de texto livre nem crase dentro de aspas simples', () => {
@@ -159,4 +160,77 @@ test('só o bot do GitHub Actions é autorizado na ação, para o encadeamento e
   assert.match(block, /^\s+allowed_bots: github-actions$/m)
   assert.equal((text.match(/allowed_bots:/g) || []).length, 1)
   assert.doesNotMatch(text, /allowed_bots: .*\*/)
+})
+
+const stepOf = (block, name) => {
+  const start = block.indexOf(`- name: ${name}`)
+  assert.notEqual(start, -1, `passo ${name} não encontrado`)
+  const next = block.indexOf('\n      - ', start + 1)
+  return block.slice(start, next === -1 ? undefined : next)
+}
+
+test('o passo de abertura do pull request roda depois da ação, só com sucesso, e chama o script com argumentos entre aspas', () => {
+  const block = job('agent')
+  const step = stepOf(block, 'Abertura do pull request')
+  assert.ok(block.indexOf('id: claude') < block.indexOf('name: Abertura do pull request'))
+  assert.ok(block.indexOf('name: Abertura do pull request') < block.indexOf('name: Conferência final'))
+  assert.match(step, /if: steps\.claude\.outcome == 'success'/)
+  assert.doesNotMatch(step, /always\(\)/)
+  assert.match(step, /run: node \.github\/issue-agent\/open-pull-request\.js "\$CONTEXT_DIR" "\$PR_ISSUE"/)
+  assert.match(step, /GITHUB_TOKEN: \$\{\{ secrets\.GITHUB_TOKEN \}\}/)
+  assert.match(step, /CONTEXT_DIR: \$\{\{ runner\.temp \}\}\/issue-agent/)
+  assert.match(step, /CHECK_DIR: \$\{\{ runner\.temp \}\}\/issue-check/)
+  assert.doesNotMatch(step, /steps\.prompt|outputs\.text/)
+})
+
+test('o agente nunca recebe a leitura de arquivo para publicar e o passo de abertura não interpola texto', () => {
+  const step = stepOf(job('agent'), 'Abertura do pull request')
+  assert.doesNotMatch(step, /\$\{\{ (?!secrets\.GITHUB_TOKEN|runner\.temp)/)
+})
+
+test('a foto de antes grava as branches da issue e a contagem de comentários do agente', () => {
+  const step = stepOf(job('agent'), 'Foto de antes')
+  assert.match(step, /branches-\$PR_ISSUE/)
+  assert.match(step, /agent-comments/)
+})
+
+test('as instruções recebem o caminho do arquivo da descrição do pull request', () => {
+  const block = job('agent')
+  const step = block.slice(block.indexOf('id: prompt'), block.indexOf('id: claude'))
+  assert.match(step, /- Arquivo da descrição do pull request: %s/)
+  assert.match(step, /\$CONTEXT_DIR\/pull-request-body\.md/)
+})
+
+test('a conferência final reprova branch do agente sem pull request e execução sem rastro', () => {
+  const step = stepOf(job('agent'), 'Conferência final')
+  assert.match(step, /branches-\$PR_ISSUE/)
+  assert.match(step, /agent-comments/)
+  assert.match(step, /pulls\?state=open/)
+  assert.match(step, /fail "[^"]*sem pull request aberto/)
+  assert.match(step, /fail "[^"]*sem pull request e sem comentário/)
+  assert.match(step, /steps\.claude\.outcome/)
+})
+
+test('a limpeza roda sempre depois da conferência e só apaga branch nova da issue sem pull request aberto', () => {
+  const block = job('agent')
+  const step = stepOf(block, 'Limpeza')
+  assert.ok(block.indexOf('name: Conferência final') < block.indexOf('name: Limpeza'))
+  assert.match(step, /if: always\(\)/)
+  assert.match(step, /branches-\$PR_ISSUE/)
+  assert.match(step, /pulls\?state=open/)
+  assert.match(step, /gh api -X DELETE "repos\/\$GITHUB_REPOSITORY\/git\/refs\/heads\/\$branch"/)
+})
+
+test('a foto das branches grava a saída da API antes de filtrar, para a falha da API derrubar o passo', () => {
+  const step = stepOf(job('agent'), 'Foto de antes')
+  assert.doesNotMatch(step, /branches' \| grep/)
+  assert.match(step, /--jq '\.\[\]\.name' > "\$CHECK_DIR\/all-branches"/)
+  assert.match(step, /grep -E "\^\[a-z\]\+\/\$PR_ISSUE-" "\$CHECK_DIR\/all-branches" > "\$CHECK_DIR\/branches-\$PR_ISSUE" \|\| true/)
+})
+
+test('nenhuma chamada gh api é encadeada com pipe, para a falha da API derrubar o passo', () => {
+  const piped = job('agent')
+    .split('\n')
+    .filter((line) => /gh api/.test(line) && /--jq ('[^']*'|"(?:[^"\\]|\\.)*")\s*\|/.test(line))
+  assert.deepEqual(piped, [])
 })

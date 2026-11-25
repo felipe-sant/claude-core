@@ -82,7 +82,7 @@ test('a pasta do contexto é definida a partir de runner.temp em cada passo que 
     const uses = text.match(/"\$CONTEXT_DIR"|: %s\\n.*\$CONTEXT_DIR/g) || []
     const definitions = text.match(/CONTEXT_DIR: \$\{\{ runner\.temp \}\}\/issue-agent/g) || []
     assert.ok(uses.length > 0, name)
-    assert.equal(definitions.length, 2, name)
+    assert.equal(definitions.length, name === 'Issue Claude Agent' ? 3 : 2, name)
   }
 })
 
@@ -111,4 +111,29 @@ test('nenhum texto livre da issue ou do comentário é interpolado nas duas auto
 test('a checagem de número sem aspas pega a linha que mistura trecho entre aspas e número solto', () => {
   assert.deepEqual(unquotedNumberLists('node x.js "$CONTEXT_DIR" $PR_ISSUE'), ['node x.js "$CONTEXT_DIR" $PR_ISSUE'])
   assert.deepEqual(unquotedNumberLists('node x.js "$CONTEXT_DIR" "$PR_ISSUE"'), [])
+})
+
+const openPullRequest = fs.readFileSync(path.join(h.repoRoot, '.github', 'issue-agent', 'open-pull-request.js'), 'utf8')
+const agentPrompt = fs.readFileSync(path.join(h.repoRoot, '.github', 'issue-agent', 'agent-prompt.md'), 'utf8')
+
+test('o arquivo da descrição tem o mesmo nome no script e na automação', () => {
+  const fileName = openPullRequest.match(/DESCRIPTION_FILE = '([^']+)'/)[1]
+  assert.ok(claudeAgent.includes(`"$CONTEXT_DIR/${fileName}"`))
+})
+
+test('o script de abertura é chamado pela automação e existe', () => {
+  assert.ok(exists('.github', 'issue-agent', 'open-pull-request.js'))
+  assert.ok(claudeAgent.includes('node .github/issue-agent/open-pull-request.js "$CONTEXT_DIR" "$PR_ISSUE"'))
+})
+
+test('a linha fixa do pull request é a mesma na seleção, no script e na automação', () => {
+  const line = script.match(/PULL_REQUEST_LINE = '([^']+)'/)[1]
+  assert.ok(openPullRequest.includes(`PULL_REQUEST_LINE = '${line}'`))
+  assert.ok(claudeAgent.includes(`PULL_REQUEST_LINE: ${line}`))
+})
+
+test('as instruções citam o rótulo que a automação escreve para o arquivo da descrição', () => {
+  const label = 'Arquivo da descrição do pull request'
+  assert.ok(agentPrompt.includes(label))
+  assert.ok(claudeAgent.includes(`- ${label}: %s`))
 })

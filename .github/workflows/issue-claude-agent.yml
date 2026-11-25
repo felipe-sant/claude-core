@@ -72,7 +72,12 @@ jobs:
           mkdir -p "$CHECK_DIR"
           git ls-remote origin refs/heads/main | cut -f1 > "$CHECK_DIR/main"
           gh api "repos/$GITHUB_REPOSITORY/issues/$PR_ISSUE" --jq '[.labels[].name | select(startswith("Size:") | not)] | sort | join(",")' > "$CHECK_DIR/labels-$PR_ISSUE"
-          gh api --paginate "repos/$GITHUB_REPOSITORY/issues/$PR_ISSUE/comments" --jq "[.[] | select(.user.login == \"claude[bot]\") | select(.body | contains(\"$CLASSIFICATION_MARK\"))] | length" | awk '{total += $1} END {print total + 0}' > "$CHECK_DIR/marks"
+          gh api --paginate "repos/$GITHUB_REPOSITORY/issues/$PR_ISSUE/comments" --jq "[.[] | select(.user.login == \"claude[bot]\") | select(.body | contains(\"$CLASSIFICATION_MARK\"))] | length" > "$CHECK_DIR/marks-pages"
+          awk '{total += $1} END {print total + 0}' "$CHECK_DIR/marks-pages" > "$CHECK_DIR/marks"
+          gh api --paginate "repos/$GITHUB_REPOSITORY/issues/$PR_ISSUE/comments" --jq '[.[] | select(.user.login == "claude[bot]")] | length' > "$CHECK_DIR/agent-comments-pages"
+          awk '{total += $1} END {print total + 0}' "$CHECK_DIR/agent-comments-pages" > "$CHECK_DIR/agent-comments"
+          gh api --paginate "repos/$GITHUB_REPOSITORY/branches" --jq '.[].name' > "$CHECK_DIR/all-branches"
+          grep -E "^[a-z]+/$PR_ISSUE-" "$CHECK_DIR/all-branches" > "$CHECK_DIR/branches-$PR_ISSUE" || true
       - name: Contexto filtrado da issue
         run: node .github/issue-agent/issue-context.js "$CONTEXT_DIR" "$PR_ISSUE"
         env:
@@ -86,7 +91,7 @@ jobs:
           {
             echo "text<<PROMPT_END"
             cat .github/issue-agent/agent-prompt.md
-            printf '\n## Valores desta execução\n\n- pr_issue: %s\n- Pasta do contexto filtrado: %s\n- Link da execução: %s\n' "$PR_ISSUE" "$CONTEXT_DIR" "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            printf '\n## Valores desta execução\n\n- pr_issue: %s\n- Pasta do contexto filtrado: %s\n- Arquivo da descrição do pull request: %s\n- Link da execução: %s\n' "$PR_ISSUE" "$CONTEXT_DIR" "$CONTEXT_DIR/pull-request-body.md" "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
             echo "PROMPT_END"
           } >> "$GITHUB_OUTPUT"
       - id: claude
@@ -99,25 +104,35 @@ jobs:
           claude_args: |
             --max-turns 100
             --add-dir ${{ runner.temp }}/issue-agent
-            --allowedTools "Read,Glob,Grep,Edit,Write,Agent,Skill,Bash(git add:*),Bash(git commit:*),Bash(git push:*),Bash(git switch:*),Bash(git checkout -b:*),Bash(git status:*),Bash(git diff:*),Bash(git log:*),Bash(git branch:*),Bash(git show:*),Bash(git rev-parse:*),Bash(npm ci),Bash(npm run lint),Bash(npm test),Bash(npm run sync),Bash(node bin/ai-sync.js:*),Bash(gh issue comment:*),Bash(gh issue edit * --add-label *),Bash(gh issue edit * --remove-label *),Bash(gh pr create:*),Bash(gh pr list:*)"
+            --allowedTools "Read,Glob,Grep,Edit,Write,Agent,Skill,Bash(git add:*),Bash(git commit:*),Bash(git push:*),Bash(git switch:*),Bash(git checkout -b:*),Bash(git status:*),Bash(git diff:*),Bash(git log:*),Bash(git branch:*),Bash(git show:*),Bash(git rev-parse:*),Bash(npm ci),Bash(npm run lint),Bash(npm test),Bash(npm run sync),Bash(node bin/ai-sync.js:*),Bash(gh issue comment:*),Bash(gh issue edit * --add-label *),Bash(gh issue edit * --remove-label *),Bash(gh pr list:*)"
             --disallowedTools 'Bash(*$*),Bash(*`*),Bash(*environ*),Bash(*/proc/*),Bash(*--body-file*),Bash(*--file*),Bash(*--template*),Bash(* -F*),Bash(* -T *),Bash(env:*),Bash(printenv:*),Bash(export:*),Bash(set:*),Bash(declare:*),Bash(cat *environ*),Bash(head *environ*),Bash(tail *environ*),Bash(echo *TOKEN*),Bash(printf *TOKEN*),Read(//proc/**),Bash(gh issue edit *--title*),Bash(gh issue edit *--body*),Bash(gh issue edit *--add-assignee*),Bash(gh issue edit *--remove-assignee*),Bash(gh issue edit *--add-project*),Bash(gh issue edit *--remove-project*),Bash(gh issue edit *--milestone*),Bash(gh pr merge:*),Bash(gh issue view:*),Bash(gh api:*),Bash(git push --force:*),Bash(git push -f:*),Bash(git push --force-with-lease:*),Bash(git push origin main:*),Bash(git push origin HEAD:main:*)'
             --permission-mode dontAsk
+      - name: Abertura do pull request
+        if: steps.claude.outcome == 'success'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CONTEXT_DIR: ${{ runner.temp }}/issue-agent
+          CHECK_DIR: ${{ runner.temp }}/issue-check
+        run: node .github/issue-agent/open-pull-request.js "$CONTEXT_DIR" "$PR_ISSUE"
       - name: Conferência final
         if: always()
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CHECK_DIR: ${{ runner.temp }}/issue-check
+          AGENT_OUTCOME: ${{ steps.claude.outcome }}
         run: |
           failures=0
           fail() { echo "::error::$1"; failures=$((failures + 1)); }
           main_after=$(git ls-remote origin refs/heads/main | cut -f1)
           [ "$main_after" = "$(cat "$CHECK_DIR/main")" ] || fail "A branch principal mudou durante a execução."
-          open_agent_pulls=$(gh api --paginate "repos/$GITHUB_REPOSITORY/pulls?state=open" --jq "[.[] | select(.user.login == \"claude[bot]\" or ((.body // \"\") | contains(\"$PULL_REQUEST_LINE\")))] | length" | awk '{total += $1} END {print total + 0}')
+          gh api --paginate "repos/$GITHUB_REPOSITORY/pulls?state=open" --jq "[.[] | select(.user.login == \"claude[bot]\" or ((.body // \"\") | contains(\"$PULL_REQUEST_LINE\")))] | length" > "$CHECK_DIR/agent-pulls-pages"
+          open_agent_pulls=$(awk '{total += $1} END {print total + 0}' "$CHECK_DIR/agent-pulls-pages")
           echo "Pull requests do agente abertos: $open_agent_pulls"
           [ "$open_agent_pulls" -le 1 ] || fail "Há mais de um pull request do agente aberto."
           size_labels=$(gh api "repos/$GITHUB_REPOSITORY/issues/$PR_ISSUE" --jq '[.labels[].name | select(startswith("Size:"))] | join(",")')
           others=$(gh api "repos/$GITHUB_REPOSITORY/issues/$PR_ISSUE" --jq '[.labels[].name | select(startswith("Size:") | not)] | sort | join(",")')
-          marks=$(gh api --paginate "repos/$GITHUB_REPOSITORY/issues/$PR_ISSUE/comments" --jq "[.[] | select(.user.login == \"claude[bot]\") | select(.body | contains(\"$CLASSIFICATION_MARK\"))] | length" | awk '{total += $1} END {print total + 0}')
+          gh api --paginate "repos/$GITHUB_REPOSITORY/issues/$PR_ISSUE/comments" --jq "[.[] | select(.user.login == \"claude[bot]\") | select(.body | contains(\"$CLASSIFICATION_MARK\"))] | length" > "$CHECK_DIR/marks-pages"
+          marks=$(awk '{total += $1} END {print total + 0}' "$CHECK_DIR/marks-pages")
           echo "Issue $PR_ISSUE: etiquetas de tamanho=$size_labels, comentários de classificação=$marks"
           case "$size_labels" in
             "Size: P") ;;
@@ -126,4 +141,37 @@ jobs:
           esac
           [ "$others" = "$(cat "$CHECK_DIR/labels-$PR_ISSUE")" ] || fail "As etiquetas da issue $PR_ISSUE que não são de tamanho mudaram."
           [ "$marks" = "$(cat "$CHECK_DIR/marks")" ] || fail "A quantidade de comentários de classificação da issue $PR_ISSUE mudou."
+          gh api --paginate "repos/$GITHUB_REPOSITORY/pulls?state=open" --jq '.[].head.ref' > "$CHECK_DIR/open-heads"
+          gh api --paginate "repos/$GITHUB_REPOSITORY/branches" --jq '.[].name' > "$CHECK_DIR/branches-after"
+          new_branches=$(grep -E "^[a-z]+/$PR_ISSUE-" "$CHECK_DIR/branches-after" | grep -vxFf "$CHECK_DIR/branches-$PR_ISSUE" || true)
+          pulls_for_issue=0
+          for branch in $new_branches; do
+            if grep -qxF -- "$branch" "$CHECK_DIR/open-heads"; then
+              pulls_for_issue=$((pulls_for_issue + 1))
+            else
+              fail "A branch $branch foi enviada sem pull request aberto."
+            fi
+          done
+          gh api --paginate "repos/$GITHUB_REPOSITORY/issues/$PR_ISSUE/comments" --jq '[.[] | select(.user.login == "claude[bot]")] | length' > "$CHECK_DIR/agent-comments-pages"
+          agent_comments=$(awk '{total += $1} END {print total + 0}' "$CHECK_DIR/agent-comments-pages")
+          echo "Issue $PR_ISSUE: pull requests do agente=$pulls_for_issue, comentários do agente=$agent_comments"
+          if [ "$pulls_for_issue" -eq 0 ] && [ "$agent_comments" -le "$(cat "$CHECK_DIR/agent-comments")" ]; then
+            fail "A execução terminou sem pull request e sem comentário na issue $PR_ISSUE."
+          fi
+          [ "$AGENT_OUTCOME" = "success" ] || fail "A etapa do agente terminou sem sucesso: $AGENT_OUTCOME."
           [ "$failures" -eq 0 ]
+      - name: Limpeza
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CHECK_DIR: ${{ runner.temp }}/issue-check
+        run: |
+          gh api --paginate "repos/$GITHUB_REPOSITORY/pulls?state=open" --jq '.[].head.ref' > "$CHECK_DIR/open-heads"
+          gh api --paginate "repos/$GITHUB_REPOSITORY/branches" --jq '.[].name' > "$CHECK_DIR/branches-after"
+          new_branches=$(grep -E "^[a-z]+/$PR_ISSUE-" "$CHECK_DIR/branches-after" | grep -vxFf "$CHECK_DIR/branches-$PR_ISSUE" || true)
+          for branch in $new_branches; do
+            if ! grep -qxF -- "$branch" "$CHECK_DIR/open-heads"; then
+              echo "Apagando a branch $branch, enviada sem pull request."
+              gh api -X DELETE "repos/$GITHUB_REPOSITORY/git/refs/heads/$branch"
+            fi
+          done
