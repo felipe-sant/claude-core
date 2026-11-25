@@ -274,3 +274,48 @@ test('problema no próprio time vira issue no claude-kit, sem dado do projeto', 
   assert.match(teamSetup(), /`feedback-standard`/)
   assert.match(readme, /`feedback-standard`/)
 })
+
+function ruleText(name) {
+  return fs.readFileSync(path.join(repoRoot, catalog.rules[name].path), 'utf8')
+}
+
+function assertGeneralRuleInAllProfiles(name) {
+  assert.deepEqual(catalog.rules[name].applies, ['all'])
+  for (const file of fs.readdirSync(path.join(repoRoot, 'profiles'))) {
+    const profile = JSON.parse(fs.readFileSync(path.join(repoRoot, 'profiles', file), 'utf8'))
+    assert.ok(profile.rules.includes(name), `${file} deve incluir ${name}`)
+  }
+}
+
+test('o padrão de pull request e comentários define as seções, o fechamento da issue e o tom dos comentários', () => {
+  const rule = ruleText('pull-request-standard')
+
+  assertGeneralRuleInAllProfiles('pull-request-standard')
+  assert.match(rule, /O que muda.*Como foi verificado.*Observações/s)
+  assert.match(rule, /Closes #/)
+  assert.match(rule, /linguagem simples/)
+  assert.match(rule, /sem caminhos/)
+  assert.match(rule, /`commit-standard`/)
+  assert.match(rule, /Uma ideia por comentário/)
+  assert.match(rule, /código, não .* pessoa/)
+  assert.match(rule, /`review-standard`/)
+  assert.doesNotMatch(rule, /\*\*bloqueia\*\*/)
+})
+
+test('o padrão de issues define título, seções de bug e de funcionalidade, etiquetas e tamanho', () => {
+  const rule = ruleText('issue-standard')
+
+  assertGeneralRuleInAllProfiles('issue-standard')
+  assert.match(rule, /issues do GitHub/)
+  assert.match(rule, /frase em português simples/)
+  assert.match(rule, /## O que aconteceu.*## Impacto.*## Causa provável.*## Sugestão/s)
+  assert.match(rule, /## O que se quer.*## Por que.*## Critérios de aceite/s)
+  assert.match(rule, /`bug`/)
+  assert.match(rule, /`enhancement`/)
+  assert.match(rule, /etiquetas que o projeto já tem/)
+  assert.doesNotMatch(rule, /`feature`/)
+  assert.match(rule, /Nunca defina tamanho nem prioridade/)
+  assert.match(rule, /dono do projeto/)
+  assert.match(rule, /agente de issues/)
+  assert.match(rule, /`feedback-standard`/)
+})

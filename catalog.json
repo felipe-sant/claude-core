@@ -147,6 +147,16 @@
       "path": "rules/feedback-standard.md",
       "applies": ["all"],
       "description": "Problema nas instruções do próprio time vira issue no claude-kit, sem dado do projeto."
+    },
+    "pull-request-standard": {
+      "path": "rules/pull-request-standard.md",
+      "applies": ["all"],
+      "description": "Descrição do pull request com três seções e comentários em linguagem simples, objetivos e sobre o código."
+    },
+    "issue-standard": {
+      "path": "rules/issue-standard.md",
+      "applies": ["all"],
+      "description": "Criação de issues do GitHub: título simples, seções de bug e de funcionalidade, etiquetas e sem tamanho nem prioridade."
     }
   },
   "skills": {

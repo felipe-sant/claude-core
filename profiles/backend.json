@@ -18,7 +18,9 @@
     "testing-standard",
     "security-standard",
     "review-standard",
-    "feedback-standard"
+    "feedback-standard",
+    "pull-request-standard",
+    "issue-standard"
   ],
   "skills": [
     "team-setup",
