@@ -1,5 +1,6 @@
 const fs = require('node:fs')
 const path = require('node:path')
+const { fetchWithRetry } = require('./fetch-with-retry')
 
 const COLLABORATOR_ASSOCIATIONS = ['OWNER', 'MEMBER', 'COLLABORATOR']
 const API_URL = 'https://api.github.com'
@@ -27,7 +28,7 @@ function writeContexts(directory, contexts) {
 async function request(token, url) {
   let response
   try {
-    response = await fetch(url, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json' } })
+    response = await fetchWithRetry(url, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json' } })
   } catch {
     throw new Error(`Não foi possível falar com a API do GitHub em ${url}.`)
   }
