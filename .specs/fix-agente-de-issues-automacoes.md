@@ -231,6 +231,7 @@ Validação em execução real, passo do usuário, fora do gate:
 - Gate: o mesmo de T1.
 - Modelo: padrao.
 - Status: feita (commit 64021f6; vermelho antes: 4 falhas; gate ok: npm test com 509 passando, lint ok, --check ok, actionlint ok; falta a revisão do reviewer).
+- Extensão do reforço às pastas, pedida pelo usuário depois da sugestão do reviewer: feita no commit 803d51d. A pasta do texto preparado e a do guia são recusadas quando são link simbólico, e entrou um teste para o destino que é uma pasta. Vermelho antes: 2 falhas; gate ok: npm test com 515 passando, lint ok, --check ok, actionlint ok; aguarda revisão do reviewer.
 
 ## Dúvidas
 
