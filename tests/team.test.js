@@ -25,6 +25,14 @@ test('a orchestrator fecha cada tarefa concluída com a skill closed-in-context,
   assert.match(text, /sem avisar/)
 })
 
+test('a orchestrator só escreve o fechamento depois da entrega, com o link do pull request, e diz que a sessão continua', () => {
+  const text = teamSetup()
+  assert.match(text, /depois da entrega/i)
+  assert.match(text, /link do pull request/i)
+  assert.match(text, /resultado real/i)
+  assert.match(text, /a sessão continua/i)
+})
+
 test('o gate de cada tarefa inclui o typecheck e o de fase roda uma vez ao fim da fase', () => {
   for (const name of devs) {
     const text = body(name)
