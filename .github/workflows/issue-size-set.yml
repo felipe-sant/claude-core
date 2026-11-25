@@ -25,10 +25,10 @@ jobs:
       classify: ${{ steps.select.outputs.classify }}
       reason: ${{ steps.select.outputs.reason }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
       - id: select
@@ -51,10 +51,10 @@ jobs:
       CLASSIFICATION_MARK: Tamanho definido pelo agente de issues
       PULL_REQUEST_LINE: Aberto pelo agente de issues.
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
       - name: Foto de antes
@@ -142,10 +142,10 @@ jobs:
       pull-requests: read
       actions: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
       - id: agent

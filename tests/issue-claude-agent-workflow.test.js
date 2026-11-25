@@ -64,8 +64,8 @@ test('a ação do Claude é fixada por SHA, com o segredo certo e sem github_tok
 })
 
 test('o checkout baixa o histórico inteiro e não guarda credenciais', () => {
-  assert.match(job('agent'), /uses: actions\/checkout@v4\n\s+with:\n\s+fetch-depth: 0\n\s+persist-credentials: false/)
-  assert.match(job('select'), /uses: actions\/checkout@v4\n\s+with:\n\s+persist-credentials: false/)
+  assert.match(job('agent'), /uses: actions\/checkout@v7\n\s+with:\n\s+fetch-depth: 0\n\s+persist-credentials: false/)
+  assert.match(job('select'), /uses: actions\/checkout@v7\n\s+with:\n\s+persist-credentials: false/)
 })
 
 test('o contexto filtrado só da pr_issue e a foto de antes vêm antes da ação', () => {
