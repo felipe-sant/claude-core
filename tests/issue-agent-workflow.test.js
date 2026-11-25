@@ -24,7 +24,7 @@ function topLevel() {
 test('o workflow dispara em issue aberta ou reaberta, na varredura diária e na mão', () => {
   const top = topLevel()
   assert.match(top, /issues:\n\s+types: \[opened, reopened\]/)
-  assert.match(top, /schedule:\n\s+- cron: "0 9 \* \* \*"/)
+  assert.match(top, /schedule:\n\s+- cron: "28 5 \* \* \*"/)
   assert.match(top, /workflow_dispatch:\n/)
 })
 
