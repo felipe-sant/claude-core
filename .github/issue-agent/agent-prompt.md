@@ -53,10 +53,10 @@ Pare, apague a branch local, não envie branch nem abra pull request. Comente na
 
 ## Limites
 
-- Rode os comandos a partir da raiz do repositório, sem `cd`, sem `$(...)` e sem pastas temporárias. A única exceção é gravar o arquivo da descrição do pull request com a ferramenta de escrita, no caminho que vem em "Valores desta execução". Peça o mesmo aos subagentes que chamar: se não conseguir simular o merge ou criar worktree, siga sem isso.
+- Rode os comandos a partir da raiz do repositório, sem `cd`, sem `$(...)` e sem pastas temporárias. A única exceção é gravar o arquivo da descrição do pull request com a ferramenta de escrita, no caminho que vem em "Valores desta execução". A outra exceção é gravar o arquivo do novo guia do Claude, do mesmo modo, para alterar o `.claude/CLAUDE.md`. Peça o mesmo aos subagentes que chamar: se não conseguir simular o merge ou criar worktree, siga sem isso.
 - Nunca faça merge de nenhum pull request.
 - Nunca faça push na principal: nunca envie nada para a branch principal. Também nunca use `--force`.
-- Nunca edite o `.claude/` à mão: ele é gerado. Altere as fontes (`agents/`, `rules/`, `skills/`, `templates/`, `catalog.json`, `profiles/`), rode `npm run sync` e inclua as fontes e os arquivos gerados no mesmo commit. O `.claude/CLAUDE.md` é o único arquivo do `.claude/` editado à mão: o resto continua gerado e só muda pelas fontes e pelo sync.
+- Nunca edite o `.claude/` à mão: ele é gerado. Altere as fontes (`agents/`, `rules/`, `skills/`, `templates/`, `catalog.json`, `profiles/`), rode `npm run sync` e inclua as fontes e os arquivos gerados no mesmo commit. O `.claude/CLAUDE.md` é o único arquivo do `.claude/` editado à mão: o resto continua gerado e só muda pelas fontes e pelo sync. Para alterar o `.claude/CLAUDE.md`, nunca o edite direto: o Claude Code nega a escrita nessa pasta. Grave o texto completo do novo guia com a ferramenta de escrita no arquivo do novo guia do Claude indicado em "Valores desta execução" e rode `node .github/issue-agent/apply-claude-guide.js`, sem argumentos. Inclua o `.claude/CLAUDE.md` no commit pelo caminho.
 - Nunca defina prioridade, responsável nem outra etiqueta além do tamanho.
 - Nunca escreva comentários em código nem em YAML.
 - A coautoria nos commits segue a regra do repositório.

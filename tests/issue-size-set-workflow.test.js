@@ -78,7 +78,7 @@ test('a ação do Claude é fixada por SHA, sem github_token e mostrando o relat
 
 test('o checkout não guarda credenciais', () => {
   for (const name of ['select', 'classify', 'chain']) {
-    assert.match(job(name), /uses: actions\/checkout@v4\n\s+with:\n(?:\s+.*\n)*?\s+persist-credentials: false/)
+    assert.match(job(name), /uses: actions\/checkout@v7\n\s+with:\n(?:\s+.*\n)*?\s+persist-credentials: false/)
   }
 })
 

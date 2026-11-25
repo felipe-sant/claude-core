@@ -64,8 +64,8 @@ test('a ação do Claude é fixada por SHA, com o segredo certo e sem github_tok
 })
 
 test('o checkout baixa o histórico inteiro e não guarda credenciais', () => {
-  assert.match(job('agent'), /uses: actions\/checkout@v4\n\s+with:\n\s+fetch-depth: 0\n\s+persist-credentials: false/)
-  assert.match(job('select'), /uses: actions\/checkout@v4\n\s+with:\n\s+persist-credentials: false/)
+  assert.match(job('agent'), /uses: actions\/checkout@v7\n\s+with:\n\s+fetch-depth: 0\n\s+persist-credentials: false/)
+  assert.match(job('select'), /uses: actions\/checkout@v7\n\s+with:\n\s+persist-credentials: false/)
 })
 
 test('o contexto filtrado só da pr_issue e a foto de antes vêm antes da ação', () => {
@@ -83,6 +83,30 @@ test('o prompt usa o agent-prompt, a pr_issue e o link da execução', () => {
   assert.match(step, /agent-prompt\.md/)
   assert.match(step, /\$GITHUB_SERVER_URL\/\$GITHUB_REPOSITORY\/actions\/runs\/\$GITHUB_RUN_ID/)
   assert.match(step, /Link da execução: %s/)
+})
+
+const FAILURE_MESSAGE = 'O agente falhou antes de concluir: confira o limite de uso do Claude e o log do passo do agente.'
+
+test('um passo avisa a causa provável quando a etapa do agente falha ou é cancelada', () => {
+  const block = job('agent')
+  const step = stepOf(block, 'Aviso de falha do agente')
+  assert.ok(block.indexOf('id: claude') < block.indexOf('name: Aviso de falha do agente'))
+  assert.ok(block.indexOf('name: Aviso de falha do agente') < block.indexOf('name: Relatório da execução'))
+  assert.match(step, /if: always\(\) && \(steps\.claude\.outcome == 'failure' \|\| steps\.claude\.outcome == 'cancelled'\)/)
+  assert.doesNotMatch(step, /success|skipped/)
+})
+
+test('o aviso de falha vai como anotação de erro e no resumo, sem ler o texto do erro', () => {
+  const step = stepOf(job('agent'), 'Aviso de falha do agente')
+  assert.ok(step.includes(`echo "::error::${FAILURE_MESSAGE}"`))
+  assert.ok(step.includes(`echo "${FAILURE_MESSAGE}" >> "$GITHUB_STEP_SUMMARY"`))
+  assert.doesNotMatch(step, /execution_file|conclusion|\.outputs\./)
+})
+
+test('a classificação de tamanho não mostra o aviso de falha do agente', () => {
+  const sizeSet = readWorkflow('issue-size-set.yml')
+  assert.ok(!sizeSet.includes('limite de uso do Claude'))
+  assert.ok(!sizeSet.includes('Aviso de falha do agente'))
 })
 
 test('o git é limitado aos subcomandos necessários e o checkout só cria branch', () => {
@@ -104,6 +128,20 @@ test('as ferramentas liberadas cobrem leitura, edição, subagentes, skills, npm
     assert.ok(allowed.includes(rule), `faltou liberar: ${rule}`)
   }
   assert.ok(!allowed.includes('gh pr create'), 'o agente não pode abrir pull request')
+})
+
+test('o agente ganha só a chamada exata do script que grava o guia do Claude', () => {
+  const allowed = allowedOf(job('agent'))
+  assert.ok(allowed.includes('Bash(node .github/issue-agent/apply-claude-guide.js)'))
+  assert.ok(!allowed.includes('Bash(node .github/issue-agent/apply-claude-guide.js:*)'))
+  assert.ok(!allowed.includes('Bash(node:*)'))
+  assert.doesNotMatch(allowed, /(?:Edit|Write)\(/)
+  assert.doesNotMatch(allowed, /\.claude\/(?!CLAUDE\.md)/)
+})
+
+test('a montagem das instruções informa o arquivo do novo guia do Claude', () => {
+  assert.match(job('agent'), /Arquivo do novo guia do Claude: %s/)
+  assert.match(job('agent'), /\$CONTEXT_DIR\/claude-guide\.md/)
 })
 
 test('a edição de issue só pode pôr e tirar etiquetas', () => {
