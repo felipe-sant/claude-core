@@ -1,6 +1,6 @@
 # Troca o nome antigo claude-core por claude-kit em todo o repositório
 
-> Status: aprovada
+> Status: em-andamento
 > Tipo: funcionalidade
 > Tamanho: grande
 > Branch: chore/86-renomeia-claude-core-para-claude-kit
@@ -87,15 +87,16 @@ O conteúdo do registro continua igual: `files` e, quando houver, `settings.appl
 Por isso a T1 junta a ferramenta, os dois arquivos do hook e os dois testes. Esse foi o ajuste feito na divisão proposta: o Dev Back fica com as linhas do registro em `.githooks/check-sync.js` e `.githooks/pre-commit`, e o Dev Ops fica só com o prefixo da pasta temporária.
 
 **Quem roda `npm run sync` e quando:**
-- A T5 (Dev Doc) é a única que muda uma fonte da cópia gerada, a regra de feedback, e commita antes da T1. Enquanto a regra editada não está commitada, o hook recusa o commit da T1, porque a cópia gerada não bate com as fontes commitadas. A T5 roda `npm run sync` e commita a fonte com `.claude/rules/feedback-standard.md` e os demais gerados que o hook exigir nos caminhos.
-- Depois, a T1 (Dev Back) roda `npm run sync` e commita o registro novo e a remoção do antigo. T3 e T4 podem ser editadas durante a Fase 1, mas só são commitadas depois do commit da T1. Nenhuma outra tarefa commita arquivo gerado.
+- T1 (Dev Back) roda `npm run sync` e commita primeiro o registro novo e a remoção do antigo. Enquanto a regra de feedback estiver editada e não commitada, o hook recusa o commit da T1. Por isso, a edição da T5 só é feita, ou refeita, depois do commit da T1.
+- Na Fase 2, só a T5 (Dev Doc) muda uma fonte da cópia gerada, a regra de feedback. Ela roda `npm run sync` e commita a fonte com `.claude/rules/feedback-standard.md` e `.claude/claude-kit.lock.json` nos caminhos. Nenhuma outra tarefa commita arquivo gerado.
+- Histórico: tentamos commitar a T5 antes da T1, e o hook recusou, porque o lock gerado já refletia a T1, que ainda não estava commitada. O Dev Doc desfez a edição da regra e voltou a ordem T1 → T5.
 - O hook roda o sync a cada commit, de qualquer dev. Por isso, quem edita `bin/ai-sync.js` ou `.githooks/` mantém esses arquivos funcionando o tempo todo: uma versão quebrada faz o commit de todos ser recusado.
 
 ## Plano de execução
 
-- Fase 1 (sequencial): T5 → T1. A T5 commita primeiro, porque o hook recusa o commit da T1 enquanto a regra editada da T5 não estiver commitada. Durante a Fase 1, T3 e T4 podem ser editadas, mas só são commitadas depois da T1. Ordem combinada com a orchestrator depois da aprovação.
+- Fase 1 (sequencial): T1. Durante a Fase 1, T3 e T4 podem ser editadas, e a T4, que é só texto, já foi commitada. A regra da T5 só é editada depois do commit da T1.
   - Gate de fase: `npm run lint`, `npm test` e `node bin/ai-sync.js --check`.
-- Fase 2 (paralelo): T2 [P], T3 [P] e T4 [P]. Todas dependem só da T1 e não mexem nos mesmos arquivos entre si.
+- Fase 2 (paralelo): T2 [P], T3 [P], T4 [P] e T5 [P]. Todas dependem só da T1 e não mexem nos mesmos arquivos entre si.
   - Gate de fase: `npm run lint`, `npm test` e `node bin/ai-sync.js --check`. Em seguida, a busca do CA-14: `grep -rni claude-core . --exclude-dir=.git --exclude=.git --exclude-dir=node_modules --exclude-dir=.specs`, que só pode encontrar a migração em `bin/ai-sync.js` e o teste dela em `tests/ai-sync.test.js`.
 
 O projeto não tem typecheck nem formatador, só lint (oxlint mais a checagem de conteúdo) e testes com `node --test`. O gate de cada tarefa é `npm run lint` mais o teste da tarefa.
@@ -106,7 +107,7 @@ O projeto não tem typecheck nem formatador, só lint (oxlint mais a checagem de
 - O quê: a ferramenta grava o registro como `.claude/claude-kit.lock.json`, migra o antigo, o hook passa a conferir e adicionar o registro novo, e a cópia gerada é atualizada.
 - Onde: `bin/ai-sync.js` (caminho do registro, leitura do antigo, gravação e remoção), `tests/ai-sync.test.js` (citações do registro e testes novos da migração), `.githooks/check-sync.js` (só a lista de gerados), `.githooks/pre-commit` (só o caminho no `git add`), `tests/self-sync.test.js` (todas as citações do registro), `.claude/claude-kit.lock.json` (gerado) e a remoção de `.claude/claude-core.lock.json`.
 - Dev: Dev Back
-- Depende de: T5 (o hook só aceita o commit da T1 depois do commit da T5)
+- Depende de: nada
 - Reaproveita: `readJson`, `writeManifest` e os auxiliares de `tests/helpers.js` (`makeTarget`, `run`, `read`, `exists`).
 - Atende: RN-03, RN-04, RN-05, RN-07, RN-08, RN-09, RN-10; CA-03, CA-04, CA-05, CA-06, CA-07, CA-08, CA-09, CA-12 (parte do registro), CA-13, CA-15, CA-16, CA-17
 - Pronto quando: os testes novos de migração passam; não há mais citação do registro antigo nos hooks nem em `tests/self-sync.test.js`; `npm run sync` gera só o registro novo; o commit leva o registro novo e a remoção do antigo (o antigo removido com `git rm` e o caminho dele no commit); o gate passa.
@@ -152,13 +153,13 @@ O projeto não tem typecheck nem formatador, só lint (oxlint mais a checagem de
 - Teste: nenhum, é só texto.
 - Gate: `npm run lint` e `node --test tests/content.test.js tests/self-sync.test.js`
 - Modelo: economico
-- Status: pendente
+- Status: feita. Commit f966a91, do Dev Doc, com o README.md e o .claude/CLAUDE.md. O gate da tarefa (`npm run lint` e os testes de conteúdo e de sincronização) não rodou: segundo o relato, é texto puro, sem comportamento, e o gate completo roda depois da T5.
 
-### T5: Regra de feedback com o nome novo
+### T5 [P]: Regra de feedback com o nome novo
 - O quê: a regra de feedback passa a citar claude-kit, e a cópia gerada dela é atualizada.
-- Onde: `rules/feedback-standard.md` (fonte), mais o gerado `.claude/rules/feedback-standard.md` e os demais gerados que o hook exigir, atualizados com `npm run sync` e commitados com a fonte nos caminhos.
+- Onde: `rules/feedback-standard.md` (fonte), mais os gerados `.claude/rules/feedback-standard.md` e `.claude/claude-kit.lock.json`, atualizados com `npm run sync` e commitados com a fonte nos caminhos.
 - Dev: Dev Doc
-- Depende de: nada. Commita antes da T1 (Fase 1).
+- Depende de: T1 (a edição da regra só começa depois do commit da T1, senão o hook recusa o commit da T1)
 - Reaproveita: o texto atual da regra.
 - Atende: RN-01, RN-07; CA-01, CA-13
 - Pronto quando: a fonte e a cópia gerada citam claude-kit, o hook aceita o commit e o gate passa.
