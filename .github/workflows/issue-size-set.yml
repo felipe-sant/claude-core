@@ -1,4 +1,4 @@
-name: Agente de issues
+name: Issue Size Set
 
 on:
   issues:
@@ -23,50 +23,56 @@ jobs:
       pull-requests: read
     outputs:
       classify: ${{ steps.select.outputs.classify }}
-      pr_allowed: ${{ steps.select.outputs.pr_allowed }}
-      pr_issue: ${{ steps.select.outputs.pr_issue }}
       reason: ${{ steps.select.outputs.reason }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: 22
       - id: select
-        run: node .github/issue-agent/select-issues.js
+        run: node .github/issue-agent/select-issues.js size-set
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  agent:
-    name: Agente
+  classify:
+    name: Classificação
     needs: select
-    if: needs.select.outputs.classify != '' || needs.select.outputs.pr_issue != ''
+    if: needs.select.outputs.classify != ''
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
       issues: write
-      pull-requests: write
+      pull-requests: read
       id-token: write
     env:
       CLASSIFY: ${{ needs.select.outputs.classify }}
-      PR_ALLOWED: ${{ needs.select.outputs.pr_allowed }}
-      PR_ISSUE: ${{ needs.select.outputs.pr_issue }}
       CLASSIFICATION_MARK: Tamanho definido pelo agente de issues
       PULL_REQUEST_LINE: Aberto pelo agente de issues.
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-      - run: npm ci
-      - id: main_before
-        run: echo "sha=$(git ls-remote origin refs/heads/main | cut -f1)" >> "$GITHUB_OUTPUT"
+      - name: Foto de antes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CHECK_DIR: ${{ runner.temp }}/issue-check
+        run: |
+          mkdir -p "$CHECK_DIR"
+          git ls-remote origin refs/heads/main | cut -f1 > "$CHECK_DIR/main"
+          git ls-remote --heads origin | sort > "$CHECK_DIR/branches"
+          gh api --paginate "repos/$GITHUB_REPOSITORY/pulls?state=open" --jq "[.[] | select(.user.login == \"claude[bot]\" or ((.body // \"\") | contains(\"$PULL_REQUEST_LINE\")))] | length" | awk '{total += $1} END {print total + 0}' > "$CHECK_DIR/pulls"
+          read -r -a numbers <<< "${CLASSIFY//,/ }"
+          for number in "${numbers[@]}"; do
+            gh api "repos/$GITHUB_REPOSITORY/issues/$number" --jq '[.labels[].name | select(startswith("Size:") | not)] | sort | join(",")' > "$CHECK_DIR/labels-$number"
+          done
       - name: Contexto filtrado das issues
         run: |
-          read -r -a numbers <<< "${CLASSIFY//,/ } $PR_ISSUE"
+          read -r -a numbers <<< "${CLASSIFY//,/ }"
           node .github/issue-agent/issue-context.js "$CONTEXT_DIR" "${numbers[@]}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -78,8 +84,8 @@ jobs:
         run: |
           {
             echo "text<<PROMPT_END"
-            cat .github/issue-agent/prompt.md
-            printf '\n## Valores desta execução\n\n- classify: %s\n- pr_allowed: %s\n- pr_issue: %s\n- Pasta do contexto filtrado: %s\n- Link da execução: %s\n' "$CLASSIFY" "$PR_ALLOWED" "$PR_ISSUE" "$CONTEXT_DIR" "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            cat .github/issue-agent/size-set-prompt.md
+            printf '\n## Valores desta execução\n\n- classify: %s\n- Pasta do contexto filtrado: %s\n- Link da execução: %s\n' "$CLASSIFY" "$CONTEXT_DIR" "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
             echo "PROMPT_END"
           } >> "$GITHUB_OUTPUT"
       - id: claude
@@ -89,37 +95,64 @@ jobs:
           prompt: ${{ steps.prompt.outputs.text }}
           display_report: true
           claude_args: |
-            --max-turns 100
+            --max-turns 60
             --add-dir ${{ runner.temp }}/issue-agent
-            --allowedTools "Read,Glob,Grep,Edit,Write,Agent,Skill,Bash(git add:*),Bash(git commit:*),Bash(git push:*),Bash(git switch:*),Bash(git checkout -b:*),Bash(git status:*),Bash(git diff:*),Bash(git log:*),Bash(git branch:*),Bash(git show:*),Bash(git rev-parse:*),Bash(npm ci),Bash(npm run lint),Bash(npm test),Bash(npm run sync),Bash(node bin/ai-sync.js:*),Bash(gh issue comment:*),Bash(gh issue edit * --add-label *),Bash(gh issue edit * --remove-label *),Bash(gh pr create:*),Bash(gh pr list:*)"
+            --allowedTools "Read,Glob,Grep,Bash(gh issue comment:*),Bash(gh issue edit * --add-label *)"
             --disallowedTools 'Bash(*$*),Bash(*`*),Bash(*environ*),Bash(*/proc/*),Bash(*--body-file*),Bash(*--file*),Bash(*--template*),Bash(* -F*),Bash(* -T *),Bash(env:*),Bash(printenv:*),Bash(export:*),Bash(set:*),Bash(declare:*),Bash(cat *environ*),Bash(head *environ*),Bash(tail *environ*),Bash(echo *TOKEN*),Bash(printf *TOKEN*),Read(//proc/**),Bash(gh issue edit *--title*),Bash(gh issue edit *--body*),Bash(gh issue edit *--add-assignee*),Bash(gh issue edit *--remove-assignee*),Bash(gh issue edit *--add-project*),Bash(gh issue edit *--remove-project*),Bash(gh issue edit *--milestone*),Bash(gh pr merge:*),Bash(gh issue view:*),Bash(gh api:*),Bash(git push --force:*),Bash(git push -f:*),Bash(git push --force-with-lease:*),Bash(git push origin main:*),Bash(git push origin HEAD:main:*)'
             --permission-mode dontAsk
       - name: Conferência final
         if: always()
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          MAIN_BEFORE: ${{ steps.main_before.outputs.sha }}
+          CHECK_DIR: ${{ runner.temp }}/issue-check
           CLAUDE_OUTCOME: ${{ steps.claude.outcome }}
         run: |
           failures=0
           fail() { echo "::error::$1"; failures=$((failures + 1)); }
           main_after=$(git ls-remote origin refs/heads/main | cut -f1)
-          [ "$main_after" = "$MAIN_BEFORE" ] || fail "A branch principal mudou durante a execução."
-          read -r -a numbers <<< "${CLASSIFY//,/ } $PR_ISSUE"
+          [ "$main_after" = "$(cat "$CHECK_DIR/main")" ] || fail "A branch principal mudou durante a execução."
+          git ls-remote --heads origin | sort | cmp -s - "$CHECK_DIR/branches" || fail "A lista de branches mudou durante a execução."
+          open_agent_pulls=$(gh api --paginate "repos/$GITHUB_REPOSITORY/pulls?state=open" --jq "[.[] | select(.user.login == \"claude[bot]\" or ((.body // \"\") | contains(\"$PULL_REQUEST_LINE\")))] | length" | awk '{total += $1} END {print total + 0}')
+          echo "Pull requests do agente abertos: $open_agent_pulls"
+          [ "$open_agent_pulls" -le "$(cat "$CHECK_DIR/pulls")" ] || fail "A classificação abriu pull request."
+          read -r -a numbers <<< "${CLASSIFY//,/ }"
           for number in "${numbers[@]}"; do
             sizes=$(gh api "repos/$GITHUB_REPOSITORY/issues/$number" --jq '[.labels[].name | select(startswith("Size:"))] | length')
+            others=$(gh api "repos/$GITHUB_REPOSITORY/issues/$number" --jq '[.labels[].name | select(startswith("Size:") | not)] | sort | join(",")')
             marks=$(gh api --paginate "repos/$GITHUB_REPOSITORY/issues/$number/comments" --jq "[.[] | select(.user.login == \"claude[bot]\") | select(.body | contains(\"$CLASSIFICATION_MARK\"))] | length" | awk '{total += $1} END {print total + 0}')
             echo "Issue $number: etiquetas de tamanho=$sizes, comentários de classificação=$marks"
             [ "$marks" -le 1 ] || fail "A issue $number tem mais de um comentário de classificação."
             [ "$sizes" -le 1 ] || fail "A issue $number tem mais de uma etiqueta de tamanho."
-            if [ "$number" = "$PR_ISSUE" ] || [ "$CLAUDE_OUTCOME" = "success" ]; then
+            [ "$others" = "$(cat "$CHECK_DIR/labels-$number")" ] || fail "As etiquetas da issue $number que não são de tamanho mudaram."
+            if [ "$CLAUDE_OUTCOME" = "success" ]; then
               [ "$sizes" -eq 1 ] || fail "A issue $number deveria ter exatamente uma etiqueta de tamanho."
-            fi
-            if [ "$CLAUDE_OUTCOME" = "success" ] && [ "$number" != "$PR_ISSUE" ]; then
               [ "$marks" -eq 1 ] || fail "A issue $number ficou sem comentário de classificação."
             fi
           done
-          open_agent_pulls=$(gh api --paginate "repos/$GITHUB_REPOSITORY/pulls?state=open" --jq "[.[] | select(.user.login == \"claude[bot]\" or ((.body // \"\") | contains(\"$PULL_REQUEST_LINE\")))] | length" | awk '{total += $1} END {print total + 0}')
-          echo "Pull requests do agente abertos: $open_agent_pulls"
-          [ "$open_agent_pulls" -le 1 ] || fail "Há mais de um pull request do agente aberto."
           [ "$failures" -eq 0 ]
+
+  chain:
+    name: Encadeamento
+    needs: [select, classify]
+    if: ${{ !cancelled() && needs.select.result == 'success' && (needs.classify.result == 'success' || needs.classify.result == 'skipped') }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: read
+      pull-requests: read
+      actions: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - id: agent
+        run: node .github/issue-agent/select-issues.js agent
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - if: steps.agent.outputs.pr_issue != ''
+        run: gh workflow run issue-claude-agent.yml --repo "$GITHUB_REPOSITORY" --ref main
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

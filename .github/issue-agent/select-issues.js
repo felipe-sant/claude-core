@@ -41,34 +41,72 @@ function byOldest(first, second) {
   return new Date(first.createdAt) - new Date(second.createdAt) || first.number - second.number
 }
 
-function selectIssues({ issues, openPulls, branches, eventIssue }) {
-  const prAllowed = !openPulls.some(isAgentPull)
-  const scoped = eventIssue === null ? issues : issues.filter((issue) => issue.number === eventIssue)
-  const eligible = scoped.filter(isBaseEligible).sort(byOldest)
+const REQUESTED_ISSUE_PATTERN = /^[1-9][0-9]*$/
+const MODES = ['size-set', 'agent']
 
-  const classify = eligible
+function isQueuedSmall(issue, branches) {
+  return (
+    isBaseEligible(issue) &&
+    issue.labels.includes(SIZE_SMALL) &&
+    !SIZES_NOT_TREATED.some((size) => issue.labels.includes(size)) &&
+    !hasOwnBranch(issue, branches)
+  )
+}
+
+function selectSizeSet({ issues, eventIssue }) {
+  const scoped = eventIssue === null ? issues : issues.filter((issue) => issue.number === eventIssue)
+  const classify = scoped
+    .filter(isBaseEligible)
     .filter((issue) => !hasSizeLabel(issue) && !hasAgentClassification(issue))
+    .sort(byOldest)
     .slice(0, eventIssue === null ? MAX_CLASSIFY : 1)
     .map((issue) => issue.number)
-
-  const queued = eligible.filter((issue) => issue.labels.includes(SIZE_SMALL) && !SIZES_NOT_TREATED.some((size) => issue.labels.includes(size)) && !hasOwnBranch(issue, branches))
-  const prIssue = prAllowed && queued.length > 0 ? queued[0].number : ''
-
-  return { classify, prAllowed, prIssue, reason: buildReason({ classify, prAllowed, prIssue, queued }) }
+  const reason = classify.length > 0 ? `Classificar: ${classify.join(', ')}.` : 'Nenhuma issue para classificar.'
+  return { classify, reason }
 }
 
-function buildReason({ classify, prAllowed, prIssue, queued }) {
-  const parts = []
-  parts.push(classify.length > 0 ? `Classificar: ${classify.join(', ')}.` : 'Nenhuma issue para classificar.')
-  if (prIssue !== '') parts.push(`Pull request da issue ${prIssue}.`)
-  else if (queued.length > 0 && !prAllowed) parts.push('Há pull request do agente aberto: a fila das P espera.')
-  else parts.push('Nenhuma issue P na fila.')
-  return parts.join(' ')
+function refusalReason(issue, number, branches) {
+  if (!issue || issue.isPullRequest) return `A issue ${number} não foi encontrada entre as issues abertas: ela não existe, está fechada ou é um pull request.`
+  if (!COLLABORATOR_ASSOCIATIONS.includes(issue.authorAssociation)) return `A issue ${number} não foi aberta por dono, membro ou colaborador do repositório.`
+  if (issue.assignees.length > 0) return `A issue ${number} tem responsável.`
+  if (issue.linkedPullRequests > 0) return `A issue ${number} já tem pull request ligado.`
+  if (SIZES_NOT_TREATED.some((size) => issue.labels.includes(size))) return `A issue ${number} tem o tamanho Size: M ou Size: G.`
+  if (!issue.labels.includes(SIZE_SMALL)) return `A issue ${number} não tem o tamanho Size: P.`
+  if (hasOwnBranch(issue, branches)) return `A issue ${number} já tem branch própria.`
+  return ''
 }
 
-function writeOutputs(file, { classify, prAllowed, prIssue, reason }) {
-  const lines = [`classify=${classify.join(',')}`, `pr_allowed=${prAllowed}`, `pr_issue=${prIssue}`, `reason=${reason}`]
+function selectAgent({ issues, openPulls, branches, requested }) {
+  const requestedText = requested === null ? '' : requested.trim()
+  const agentPullOpen = openPulls.some(isAgentPull)
+
+  if (requestedText === '') {
+    if (agentPullOpen) return { prIssue: '', reason: 'Já há um pull request do agente aberto: a fila das P espera.' }
+    const queued = issues.filter((issue) => isQueuedSmall(issue, branches)).sort(byOldest)
+    if (queued.length === 0) return { prIssue: '', reason: 'Nenhuma issue P na fila.' }
+    return { prIssue: queued[0].number, reason: `Pull request da issue ${queued[0].number}.` }
+  }
+
+  if (!REQUESTED_ISSUE_PATTERN.test(requestedText)) return { prIssue: '', reason: 'O número informado não é válido: use só dígitos, como 76.' }
+  if (agentPullOpen) return { prIssue: '', reason: 'Já há um pull request do agente aberto: nenhuma issue é tratada agora.' }
+  const number = Number(requestedText)
+  const reason = refusalReason(issues.find((issue) => issue.number === number), number, branches)
+  if (reason !== '') return { prIssue: '', reason }
+  return { prIssue: number, reason: `Pull request da issue ${number}.` }
+}
+
+function parseMode(value) {
+  if (!MODES.includes(value)) throw new Error(`Informe o modo: ${MODES.join(' ou ')}.`)
+  return value
+}
+
+function writeOutputs(file, outputs) {
+  const lines = Object.entries(outputs).map(([name, value]) => `${name}=${value}`)
   fs.appendFileSync(file, `${lines.join('\n')}\n`)
+}
+
+function writeSummary(file, reason) {
+  fs.appendFileSync(file, `${reason}\n`)
 }
 
 async function request(token, url, options = {}) {
@@ -163,20 +201,26 @@ function readEventIssue() {
 }
 
 async function main() {
+  const mode = parseMode(process.argv[2])
   const token = process.env.GITHUB_TOKEN
   const repository = process.env.GITHUB_REPOSITORY
   if (!token) throw new Error('Falta a variável GITHUB_TOKEN.')
   if (!repository) throw new Error('Falta a variável GITHUB_REPOSITORY.')
 
-  const [issues, openPulls, branches] = await Promise.all([
-    fetchIssues(token, repository),
-    fetchOpenPulls(token, repository),
-    fetchBranches(token, repository)
-  ])
-  const result = selectIssues({ issues, openPulls, branches, eventIssue: readEventIssue() })
+  const issues = await fetchIssues(token, repository)
+  let result
+  if (mode === 'size-set') {
+    const selection = selectSizeSet({ issues, eventIssue: readEventIssue() })
+    result = { outputs: { classify: selection.classify.join(','), reason: selection.reason }, reason: selection.reason }
+  } else {
+    const [openPulls, branches] = await Promise.all([fetchOpenPulls(token, repository), fetchBranches(token, repository)])
+    const selection = selectAgent({ issues, openPulls, branches, requested: process.env.REQUESTED_ISSUE ?? null })
+    result = { outputs: { pr_issue: selection.prIssue, reason: selection.reason }, reason: selection.reason }
+  }
   console.log(result.reason)
-  if (process.env.GITHUB_OUTPUT) writeOutputs(process.env.GITHUB_OUTPUT, result)
-  else console.log(JSON.stringify(result))
+  if (process.env.GITHUB_OUTPUT) writeOutputs(process.env.GITHUB_OUTPUT, result.outputs)
+  else console.log(JSON.stringify(result.outputs))
+  if (process.env.GITHUB_STEP_SUMMARY) writeSummary(process.env.GITHUB_STEP_SUMMARY, result.reason)
 }
 
 if (require.main === module) {
@@ -186,4 +230,4 @@ if (require.main === module) {
   })
 }
 
-module.exports = { selectIssues, writeOutputs, normalizeAuthor, normalizeIssue, fetchIssues, MAX_CLASSIFY }
+module.exports = { selectSizeSet, selectAgent, parseMode, writeOutputs, writeSummary, normalizeAuthor, normalizeIssue, fetchIssues, MAX_CLASSIFY }
