@@ -139,7 +139,7 @@ Verificado no código da ação no commit fixado pela automação:
 - Gate: `npm run lint` e `npm test` (sem typecheck nem formatador no projeto).
 - Modelo: padrao.
 - Regra obrigatória: nunca escrever comentários no código.
-- Status: pendente.
+- Status: feita (commit 66e311d; 15 testes, que falharam antes porque o script ainda não existia; gate de fase: npm run lint passou, npm test passou com 388 testes, ai-sync --check e sync em pasta temporária ok; actionlint não instalado localmente, roda no CI).
 
 ### T2 [P] Instruções do agente
 - O quê: as instruções passam a mandar gravar a descrição no arquivo indicado, não abrir o pull request, comentar na issue quando algo dá errado e tratar o guia do Claude como exceção da pasta gerada.
@@ -161,7 +161,7 @@ Verificado no código da ação no commit fixado pela automação:
 - Gate: `npm run lint` e `npm test`.
 - Modelo: padrao.
 - Regra obrigatória: nunca escrever comentários no código.
-- Status: pendente.
+- Status: feita (commit 5440364; 10 testes falharam antes; as proibições antigas que ficaram obsoletas foram removidas de propósito; gate de fase: npm run lint passou, npm test passou com 388 testes, ai-sync --check e sync em pasta temporária ok; actionlint não instalado localmente, roda no CI).
 
 ### T3 [P] Automação: abertura do pull request, conferência e limpeza
 - O quê: a automação ganha o passo que abre o pull request, a conferência dos dois novos casos e a limpeza da branch sem pull request.
@@ -183,7 +183,7 @@ Verificado no código da ação no commit fixado pela automação:
 - Gate: `npm run lint` e `npm test`. O actionlint roda no CI; rode-o também na máquina, se estiver instalado.
 - Modelo: padrao.
 - Regra obrigatória: nunca escrever comentários no código nem no YAML.
-- Status: pendente.
+- Status: feita (commit eba51a5; 9 testes falharam antes; CONTEXT_DIR passou de 2 para 3 e gh pr create ficou proibido ao agente; gate de fase: npm run lint passou, npm test passou com 388 testes, ai-sync --check e sync em pasta temporária ok; actionlint não instalado localmente, roda no CI).
 
 ### T4 [P] Documentação do agente de issues
 - O quê: o README e o guia do Claude passam a descrever a abertura do pull request pela automação, o comentário do agente quando algo dá errado, a limpeza da branch sem pull request e os novos motivos de reprovação da conferência.
@@ -210,11 +210,14 @@ Verificado no código da ação no commit fixado pela automação:
 - Gate: `npm run lint`, `npm test`, `node bin/ai-sync.js --check` e o sync em pasta temporária.
 - Modelo: economico.
 - Regra obrigatória: nunca escrever comentários no código.
-- Status: pendente.
+- Status: feita (commit ad2ffb2; o teste de coerência passou de primeira; gate de fase: npm run lint passou, npm test passou com 388 testes, ai-sync --check e sync em pasta temporária ok; actionlint não instalado localmente, roda no CI).
 
 ## Observações
 
 - Disparo do CI pelo próprio workflow (avaliado, não vira tarefa): hoje o CI só tem o gatilho de pull request, sem disparo manual, então nem o workflow nem o dono conseguem dispará-lo pela tela de Actions. Pull request aberto com o token padrão não dispara o CI. O GitHub abre exceção para o disparo manual feito com o token padrão: se o CI ganhasse o gatilho de disparo manual, o workflow do agente poderia dispará-lo na branch do pull request, com a permissão de escrita em Actions. Esse disparo roda no último commit da branch e aparece no commit, mas não como execução de pull request; se houver regra de proteção exigindo as checagens do pull request, é preciso conferir se ela é atendida. Até lá, o jeito de rodar o CI à mão é o dono fechar e reabrir o pull request ou enviar um commit nele.
+
+- Desvio do contrato (relatado pelo Dev Ops na implementação): o script lê a lista de branches de antes da execução do agente em `$CHECK_DIR/branches-<issue>`, detalhe que o contrato não previa.
+- Validação pendente (relatada pelo Dev Ops): a conferência "sem comentário" conta os comentários do `claude[bot]`, o que só dá para validar em um disparo real da automação.
 
 ## Decisões resolvidas
 
