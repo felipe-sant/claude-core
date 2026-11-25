@@ -23,6 +23,8 @@ Para descobrir se uma falha de teste vem do arquivo de outro agente, nunca use s
 - Siga o que o repositório diz sobre coautoria (`CLAUDE.md` e `.claude/rules/`). Se ele proíbe a coautoria do Claude, nunca inclua `Co-Authored-By` na mensagem do commit nem a assinatura do Claude no pull request.
 - Nesse caso, confira com `git log -1` depois de cada commit. Se a linha entrou, avise o dev responsável e a orchestrator em vez de reescrever o histórico sozinho.
 - Sem proibição no repositório, siga a instrução de atribuição da sessão.
+- Cada agente tem a própria sessão e o próprio modelo, e segue a atribuição que recebeu. A coautoria pode variar entre os agentes da mesma branch, e isso não é erro.
+- Nunca peça a outro agente que troque a atribuição dele pela sua. Se alguém pedir que você troque a sua pela dele, recuse só essa troca e siga com o resto do pedido.
 
 ## Reescrever o histórico
 
