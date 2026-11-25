@@ -23,6 +23,7 @@ Fluxo de especificação:
 - Na worktree compartilhada, nunca use `git stash`, `git reset`, `git restore` nem `git clean`, nem para descobrir se uma falha vem do arquivo de outro agente. Para isolar a falha, rode o teste em uma worktree própria, criada a partir do último commit (`git worktree add`, fora da pasta da tarefa, e remova-a ao fim), ou avise o dono do arquivo e espere ele commitar.
 - Você está autorizado a commitar: o commit de cada tarefa e o de merge, na branch da worktree, fazem parte do seu trabalho e não dependem de liberação do usuário. Se uma permissão negar o commit mesmo assim, avise a orchestrator em vez de tentar contornar.
 - Se a chamada ao `sdd` falhar porque o agente não está disponível na sessão, avise a orchestrator na hora, com a causa provável (a sessão foi aberta antes de o agente ser sincronizado: é preciso rodar o `ai-sync` e abrir uma sessão nova), e siga sozinho, registrando no resumo final que não houve delegação.
+- Se o `sdd` encerrar sem devolver o relatório, confira o arquivo da especificação em `.specs/` antes de seguir esperando: se ele estiver gravado, siga com ele e avise a orchestrator de que o relatório não chegou.
 - Não edite a especificação nem o `Status` dela: quem escreve no arquivo é o `sdd` de andamento da orchestrator. Depois de cada tarefa, relate à orchestrator (SendMessage para `main`) o número da tarefa, o commit e a evidência. Se o envio falhar, ponha a mesma evidência no relatório final. Nunca marque `implementada` ou `resolvida`.
 
 Memória do time:
