@@ -182,7 +182,7 @@ test('arquivo do usuário com o mesmo nome não é apagado nem sobrescrito', () 
   const result = h.run(core, target)
 
   assert.equal(h.read(target, '.claude/agents/qa.md'), 'meu qa\n')
-  assert.match(result.output, /já existe um arquivo seu/)
+  assert.match(result.output, /já existe um arquivo seu.*O claude-kit tem uma versão disponível/)
   assert.match(result.output, /Deixados como estavam:\n\s+\.claude\/agents\/qa\.md/)
   const lock = JSON.parse(h.read(target, '.claude/claude-kit.lock.json'))
   assert.ok(!('.claude/agents/qa.md' in lock.files))
@@ -240,7 +240,7 @@ test('arquivo editado depois da instalação não é sobrescrito e o aviso diz s
   h.setContent(core, 'agents/qa.md', agent('qa', ' novo'))
   const comNovidade = h.run(core, target)
   assert.equal(h.read(target, '.claude/agents/qa.md'), edited)
-  assert.match(comNovidade.output, /versão nova disponível/)
+  assert.match(comNovidade.output, /versão nova disponível no claude-kit/)
 })
 
 test('arquivo editado que ficou igual ao do repositório volta a ser acompanhado', () => {
@@ -279,7 +279,7 @@ test('item retirado do repositório é mantido se o usuário o editou', () => {
   const result = h.run(core, target)
 
   assert.equal(h.read(target, '.claude/agents/designer.md'), 'editado\n')
-  assert.match(result.output, /saiu do claude-core, mas você editou este arquivo/)
+  assert.match(result.output, /saiu do claude-kit, mas você editou este arquivo/)
 })
 
 test('item que sai do que se aplica ao projeto é removido só se estiver sem alterações', () => {

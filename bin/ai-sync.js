@@ -254,7 +254,7 @@ function syncFiles() {
 
     if (!recorded) {
       report.kept.push(rel)
-      report.warnings.push(`${rel}: já existe um arquivo seu com esse nome; não mexi nele. O claude-core tem uma versão disponível.`)
+      report.warnings.push(`${rel}: já existe um arquivo seu com esse nome; não mexi nele. O claude-kit tem uma versão disponível.`)
       continue
     }
 
@@ -262,7 +262,7 @@ function syncFiles() {
     report.kept.push(rel)
     const newer = sourceHash !== recorded.hash
     report.warnings.push(
-      `${rel}: você editou este arquivo; não mexi nele.${newer ? ' Há uma versão nova disponível no claude-core.' : ''}`
+      `${rel}: você editou este arquivo; não mexi nele.${newer ? ' Há uma versão nova disponível no claude-kit.' : ''}`
     )
   }
 
@@ -276,7 +276,7 @@ function syncFiles() {
       report.removed.push(rel)
     } else {
       report.kept.push(rel)
-      report.warnings.push(`${rel}: saiu do claude-core, mas você editou este arquivo; não removi.`)
+      report.warnings.push(`${rel}: saiu do claude-kit, mas você editou este arquivo; não removi.`)
     }
   }
 }
