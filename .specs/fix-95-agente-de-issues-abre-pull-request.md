@@ -139,7 +139,7 @@ Verificado no código da ação no commit fixado pela automação:
 - Gate: `npm run lint` e `npm test` (sem typecheck nem formatador no projeto).
 - Modelo: padrao.
 - Regra obrigatória: nunca escrever comentários no código.
-- Status: feita (commit 66e311d; 15 testes, que falharam antes porque o script ainda não existia; gate de fase: npm run lint passou, npm test passou com 388 testes, ai-sync --check e sync em pasta temporária ok; actionlint não instalado localmente, roda no CI; correção da revisão no commit 4a34be4: a checagem passou a recusar o vínculo por URL completa, por GH-n e por repositório#n, com lint passando e 392 testes passando).
+- Status: feita (commit 66e311d; 15 testes, que falharam antes porque o script ainda não existia; gate de fase: npm run lint passou, npm test passou com 388 testes, ai-sync --check e sync em pasta temporária ok; actionlint não instalado localmente, roda no CI; correção da revisão no commit 4a34be4: a checagem passou a recusar o vínculo por URL completa, por GH-n e por repositório#n, com lint passando e 392 testes passando; nova correção no commit 1563c6f: a checagem deixou de recusar GH-n e continua recusando o link completo da issue e repositório#n, com lint passando e 393 testes passando).
 
 ### T2 [P] Instruções do agente
 - O quê: as instruções passam a mandar gravar a descrição no arquivo indicado, não abrir o pull request, comentar na issue quando algo dá errado e tratar o guia do Claude como exceção da pasta gerada.
