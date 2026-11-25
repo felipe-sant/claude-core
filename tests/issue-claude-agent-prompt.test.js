@@ -81,3 +81,15 @@ test('as instruções explicam as quebras de linha dentro do próprio texto do -
 test('as instruções citam heredoc entre o que não usar no corpo do pull request', () => {
   assert.match(prompt(), /sem arquivo, sem crase, sem cifrão e sem heredoc/)
 })
+
+test('as instruções pedem em Como foi verificado o que não foi testado', () => {
+  assert.match(prompt(), /o que não foi testado/)
+})
+
+test('as instruções proíbem caminhos de arquivo e código na descrição do pull request', () => {
+  assert.match(prompt(), /sem caminhos de arquivo nem código, em linguagem simples/)
+})
+
+test('as instruções não ensinam a escrever código com aspas ou negrito', () => {
+  assert.doesNotMatch(prompt(), /aspas ou negrito em vez de crase/)
+})
