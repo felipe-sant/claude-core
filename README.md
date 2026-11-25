@@ -265,7 +265,7 @@ gh workflow run issue-claude-agent.yml
 gh workflow run issue-claude-agent.yml -f issue=<número>
 ```
 
-O campo `issue` existe só na Issue Claude Agent e é opcional. Vazio, ela pega a P mais antiga que pode ser tratada; se não há nenhuma, termina com sucesso sem chamar o Claude e diz no resumo que a fila está vazia. Com o número de uma issue que não pode ser tratada, termina sem fazer nada e mostra o motivo no resumo e no registro da execução. O valor só pode ter dígitos; qualquer outra coisa é recusada como número inválido.
+O campo `issue` existe só na Issue Claude Agent e é opcional. Vazio, ela pega a P mais antiga que pode ser tratada; se não há nenhuma, termina com sucesso sem chamar o Claude e diz no resumo da execução que não há issue P na fila, ou que já há um pull request do agente aberto. Com o número de uma issue que não pode ser tratada, termina sem fazer nada e mostra o motivo no resumo e no registro da execução. O valor só pode ter dígitos; qualquer outra coisa é recusada como número inválido.
 
 ### Fila única e limites
 
