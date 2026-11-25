@@ -1,4 +1,5 @@
 const fs = require('node:fs')
+const { fetchWithRetry } = require('./fetch-with-retry')
 
 const MAX_CLASSIFY = 10
 const COLLABORATOR_ASSOCIATIONS = ['OWNER', 'MEMBER', 'COLLABORATOR']
@@ -112,7 +113,7 @@ function writeSummary(file, reason) {
 async function request(token, url, options = {}) {
   let response
   try {
-    response = await fetch(url, {
+    response = await fetchWithRetry(url, {
       ...options,
       headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' }
     })
@@ -230,4 +231,4 @@ if (require.main === module) {
   })
 }
 
-module.exports = { selectSizeSet, selectAgent, parseMode, writeOutputs, writeSummary, normalizeAuthor, normalizeIssue, fetchIssues, MAX_CLASSIFY }
+module.exports = { selectSizeSet, selectAgent, parseMode, writeOutputs, writeSummary, normalizeAuthor, normalizeIssue, fetchIssues, request, MAX_CLASSIFY }

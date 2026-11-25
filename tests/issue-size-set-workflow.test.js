@@ -131,3 +131,7 @@ test('o arquivo não tem comentários nem interpolação de texto livre', () => 
   assert.doesNotMatch(text, /\$\{\{ github\.event\.issue\.(title|body)/)
   assert.doesNotMatch(text, /\$\{\{ (inputs|github\.event)[^}]*\}\}/)
 })
+
+test('a Issue Size Set não autoriza nenhum bot na ação', () => {
+  assert.doesNotMatch(text, /allowed_bots/)
+})

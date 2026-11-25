@@ -153,3 +153,10 @@ test('o arquivo não tem comentários, interpolação de texto livre nem crase d
   const shellLines = text.split('\n').filter((line) => !line.trim().startsWith('--disallowedTools'))
   assert.doesNotMatch(shellLines.join('\n'), /'[^'\n]*`[^'\n]*'/)
 })
+
+test('só o bot do GitHub Actions é autorizado na ação, para o encadeamento e o agendamento', () => {
+  const block = job('agent')
+  assert.match(block, /^\s+allowed_bots: github-actions$/m)
+  assert.equal((text.match(/allowed_bots:/g) || []).length, 1)
+  assert.doesNotMatch(text, /allowed_bots: .*\*/)
+})
