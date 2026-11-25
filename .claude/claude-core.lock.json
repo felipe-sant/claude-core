@@ -41,7 +41,7 @@
       "version": "0.1.0"
     },
     ".claude/rules/feedback-standard.md": {
-      "hash": "ae1ad6f64d02683941812698e28198223ada44838e52a09218d86ca920d44dfb",
+      "hash": "4984a180d540faaba80d96728c23ad12ee25b29e2ac00a28ab544575077a089e",
       "version": "0.1.0"
     },
     ".claude/rules/git-standard.md": {
@@ -57,7 +57,7 @@
       "version": "0.1.0"
     },
     ".claude/rules/review-standard.md": {
-      "hash": "5b23361e1d45361a2a45ef7cbb62d2c0128e819caf975beb8738e00d078919ee",
+      "hash": "d7427ec7ac45c903e205c7f8216c4b7ae9f3de2570dc0eed2ef4e25002a03be3",
       "version": "0.1.0"
     },
     ".claude/rules/security-standard.md": {

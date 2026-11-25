@@ -269,7 +269,8 @@ test('problema no próprio time vira issue no claude-kit, sem dado do projeto', 
   assert.match(rule, /gh issue create --repo felipe-sant\/claude-kit --label bug/)
   assert.match(rule, /sem pedir confirmação/)
   assert.match(rule, /Nunca coloque na issue/)
-  assert.match(rule, /## O que aconteceu.*## Impacto.*## Causa provável.*## Sugestão/s)
+  assert.match(rule, /`issue-standard`/)
+  assert.doesNotMatch(rule, /## Impacto/)
   assert.match(rule, /relate o problema à orchestrator/)
   assert.match(teamSetup(), /`feedback-standard`/)
   assert.match(readme, /`feedback-standard`/)
@@ -338,4 +339,8 @@ test('as skills de abrir pull request e de revisão seguem o pull-request-standa
 
 test('não existe skill de criar issue', () => {
   assert.ok(!Object.keys(catalog.skills).some((name) => /issue/.test(name)))
+})
+
+test('o padrão de revisão aponta para o pull-request-standard na parte de comentários', () => {
+  assert.match(ruleText('review-standard'), /`pull-request-standard`/)
 })

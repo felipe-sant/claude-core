@@ -14,4 +14,4 @@ Vale ao revisar uma mudança e ao preparar a sua para ser revisada.
 - Cheque os padrões do projeto (código, testes, segurança, commits e branches).
 - Classifique cada achado: **bloqueia** (bug, regra errada, falha de segurança, teste faltando) ou **sugestão** (melhoria opcional). Diga o arquivo, o problema e o que mudaria.
 - Não aprove com achado que bloqueia em aberto. Quem corrige é quem escreveu, e a revisão recomeça no que mudou.
-- Seja específico e objetivo, e critique o código, não a pessoa.
+- Escreva os comentários como manda o `pull-request-standard`: específicos, objetivos e sobre o código, não sobre a pessoa.
