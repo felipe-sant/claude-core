@@ -1,6 +1,6 @@
 # Ajustes nas automações do agente de issues e do CI
 
-> Status: aprovada
+> Status: em-andamento
 > Tipo: bug
 > Tamanho: grande
 > Branch: fix/agente-de-issues-automacoes
@@ -170,7 +170,7 @@ Validação em execução real, passo do usuário, fora do gate:
 - Teste: unitário. Falha primeiro o teste novo que exige a marca 7 nas duas ações das quatro automações e nenhuma marca 4 delas, e os testes do checkout ajustados para `@v7`.
 - Gate: `npm test`, `npm run lint`, `node bin/ai-sync.js --check` e actionlint 1.7.12 baixado pelo mesmo script fixado no CI para a pasta temporária. Sem typecheck nem formatador no projeto.
 - Modelo: economico.
-- Status: pendente.
+- Status: feita (commit dfce969; vermelho antes: 5 testes falhando; gate ok: npm test com 477 passando e 0 falhando, lint ok, --check ok, actionlint 1.7.12 ok).
 
 ### T2: Libera ao agente de issues só a alteração do guia do Claude (#104)
 
