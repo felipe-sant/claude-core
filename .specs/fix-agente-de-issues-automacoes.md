@@ -43,7 +43,7 @@ Issues: #98, #104, #94 e #100 de felipe-sant/claude-kit, nesta ordem. Um commit 
 - #104, confirmado nesta especificação:
   - Na execução 45705884116, a única negação foi a edição do guia do Claude. O motivo registrado é "negado porque o Claude Code roda em modo sem perguntar". A lista de proibições da automação não cita a pasta de configuração, e a edição de arquivos já está liberada.
   - Ou seja, o bloqueio não é uma regra da automação: é uma proteção própria do Claude Code sobre a pasta de configuração, que pede confirmação para qualquer escrita nela. Sem ninguém para confirmar, ela vira negação.
-  - Experimento local com o Claude Code 2.1.332, em repositório descartável e no mesmo modo da automação: liberar a edição só do guia do Claude não destrava, em nenhuma das quatro formas de escrever o caminho. Também não destravam um gancho de pré-uso que aprova o arquivo nem o modo que aceita edições. A cópia para dentro da pasta por comando do terminal também é negada.
+  - Experimento local com o Claude Code 2.1.332, em repositório descartável e no mesmo modo da automação: liberar a edição só do guia do Claude não destrava, em nenhuma das quatro formas de escrever o caminho. Também não destravam um gancho de pré-uso que aprova o arquivo (confirmado que o gancho rodou e devolveu a aprovação, e a edição foi negada mesmo assim) nem o modo que aceita edições. A cópia para dentro da pasta por comando do terminal também é negada.
   - No mesmo experimento, um comando liberado que roda um script próprio grava o guia do Claude normalmente. É o mesmo caminho pelo qual a sincronização, já liberada ao agente, grava hoje os arquivos gerados dessa pasta.
 - #94: a conferência guarda o ponto da principal antes e o compara com o de depois; qualquer diferença reprova. Na classificação de tamanho, o código é baixado só com o último ponto da história, então uma conferência pela história local exigiria buscar a história; a consulta de comparação do GitHub responde sem isso.
 - #100: a conferência final já reprova com "A etapa do agente terminou sem sucesso", sem apontar causa.
@@ -78,9 +78,11 @@ O que fica liberado:
 O que continua bloqueado:
 
 - Os demais arquivos da pasta de configuração do time (agentes, regras, skills, registro da instalação): a proteção do Claude Code continua valendo para eles, e o comando novo só escreve no guia do Claude, em caminho fixo.
-- As configurações de permissão dessa pasta: continuam protegidas pelo Claude Code e o comando novo nunca as toca.
+- A edição à mão das configurações de permissão dessa pasta: continua protegida pelo Claude Code e o comando novo nunca as toca.
 - A lista de proibições não muda e continua igual nas duas automações.
 - A sincronização, já liberada, continua sendo o único caminho para os arquivos gerados.
+
+O que já existe hoje e esta tarefa não muda: como o agente pode alterar as fontes e rodar a sincronização, ele já consegue mudar indiretamente a configuração gerada da pasta, inclusive a de permissões, alterando o modelo de configuração de origem e sincronizando. Esse caminho passa pela revisão do pull request e fica como está.
 
 Por que não basta uma regra de permissão: o experimento mostrou que, no modo sem perguntar, nenhuma regra de liberação vence a proteção do Claude Code sobre essa pasta. "Proibição vence liberação" não se aplica, porque não há proibição a trocar.
 
@@ -170,7 +172,7 @@ Validação em execução real, passo do usuário, fora do gate:
 - Onde: script novo em `.github/issue-agent/` (por exemplo, `apply-claude-guide.js`); `--allowedTools` do passo `claude` em `.github/workflows/issue-claude-agent.yml`; `.github/issue-agent/agent-prompt.md`; `tests/issue-claude-agent-workflow.test.js`, `tests/issue-claude-agent-prompt.test.js` e teste novo do script em `tests/`.
 - Dev: dev-devops.
 - Depende de: T1 e da resposta à D-1.
-- Reaproveita: o padrão dos scripts de `.github/issue-agent/` (como `open-pull-request.js`) e dos testes deles; a pasta do contexto que o agente já escreve (`CONTEXT_DIR`, em `runner.temp`).
+- Reaproveita: o padrão dos scripts de `.github/issue-agent/` (como `open-pull-request.js`) e dos testes deles; a pasta do contexto que o agente já escreve (`runner.temp`/`issue-agent`). O `CONTEXT_DIR` não existe no ambiente do passo `claude`, então o script monta o caminho de origem a partir de `RUNNER_TEMP` (`$RUNNER_TEMP/issue-agent/<arquivo fixo>`), e as instruções citam o caminho completo do arquivo em "Valores desta execução", como já fazem com a descrição do pull request. A frase que `tests/issue-claude-agent-prompt.test.js` já exige ("O `.claude/CLAUDE.md` é o único arquivo do `.claude/` editado à mão") continua nas instruções.
 - Atende: RN-02, RN-03; CA-04, CA-05, CA-06, CA-07, CA-08.
 - Pronto quando: o script, sem argumentos, copia o arquivo preparado de nome fixo da pasta do contexto para `.claude/CLAUDE.md` e recusa arquivo ausente ou vazio, sem tocar no guia; o destino é fixo e nenhum outro arquivo é escrito; `--allowedTools` do agente ganha só a chamada exata do script; `--disallowedTools` não muda e segue igual nas duas automações; as instruções dizem como alterar o guia e que o resto da pasta segue gerado; gate passando; commit `Fix :bug: [#104] ...`.
 - Teste: unitário. Falham primeiro: o teste do script (copia o texto preparado para o guia; recusa ausente e vazio sem alterar o guia; nunca escreve fora do guia), o teste da automação que exige a chamada exata do script entre as liberadas e nenhuma liberação nova de edição na pasta, e o teste das instruções que exige o passo a passo da exceção.
@@ -183,7 +185,7 @@ Validação em execução real, passo do usuário, fora do gate:
 - O quê: troca a comparação de igualdade da principal por uma comparação pelo GitHub que aceita a principal igual ou à frente do ponto de antes, nas duas automações.
 - Onde: passo "Conferência final" de `.github/workflows/issue-claude-agent.yml` e de `.github/workflows/issue-size-set.yml`; `tests/issue-claude-agent-workflow.test.js` e `tests/issue-size-set-workflow.test.js`.
 - Dev: dev-devops.
-- Depende de: T2 (mesmos arquivos).
+- Depende de: T1 (mesmos arquivos; ordem no Plano de execução).
 - Reaproveita: a foto de antes que já grava o ponto da principal em `$CHECK_DIR/main`, a função `fail` e o padrão de gravar a saída do `gh api` em arquivo antes de ler.
 - Atende: RN-04, RN-05; CA-09, CA-10, CA-11, CA-12.
 - Pronto quando: as duas conferências consultam `repos/$GITHUB_REPOSITORY/compare/<antes>...<depois>`, gravam o `status` em arquivo e só aprovam `identical` ou `ahead`; qualquer outro valor reprova com mensagem nova que diga que a principal perdeu o ponto de antes; a frase "A branch principal mudou durante a execução" não existe mais; nenhuma checagem usa autor; a consulta não é encadeada com pipe; gate passando; commit `Fix :bug: [#94] ...`.
