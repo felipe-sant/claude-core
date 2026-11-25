@@ -33,6 +33,25 @@ test('a orchestrator só escreve o fechamento depois da entrega, com o link do p
   assert.match(text, /a sessão continua/i)
 })
 
+function deliveryComesBeforeClosing(text) {
+  const offer = text.search(/ofereça entregar o trabalho \(abrir o pull request ou fazer o merge\)/)
+  const closing = text.search(/escreva o fechamento da tarefa depois da entrega/)
+  return offer !== -1 && closing !== -1 && offer < closing
+}
+
+test('a oferta de entrega vem antes do fechamento e só a remoção da worktree depende do pedido do usuário', () => {
+  const text = teamSetup()
+  const swapped = text
+    .replace('ofereça entregar o trabalho (abrir o pull request ou fazer o merge)', 'XX')
+    .replace('escreva o fechamento da tarefa depois da entrega', 'ofereça entregar o trabalho (abrir o pull request ou fazer o merge)')
+    .replace('XX', 'escreva o fechamento da tarefa depois da entrega')
+
+  assert.ok(deliveryComesBeforeClosing(text))
+  assert.ok(!deliveryComesBeforeClosing(swapped))
+  assert.match(text, /Só remova a worktree se o usuário pedir/)
+  assert.doesNotMatch(text, /e só então remova a worktree, e apenas se o usuário pedir/)
+})
+
 test('o gate de cada tarefa inclui o typecheck e o de fase roda uma vez ao fim da fase', () => {
   for (const name of devs) {
     const text = body(name)

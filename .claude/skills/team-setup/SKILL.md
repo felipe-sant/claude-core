@@ -141,7 +141,7 @@ Várias sessões podem trabalhar ao mesmo tempo no mesmo repositório, e dois ti
 - A partir daí, todo agente do time recebe a pasta da worktree em cada delegação e trabalha só dentro dela. Os agentes continuam sendo os mesmos desta sessão; não é preciso rodar o `ai-sync` na worktree.
 - O sdd grava a especificação nela. O reviewer, o qa e o designer também olham a worktree, não a pasta principal.
 - O product-owner continua com uma única memória por repositório, compartilhada por todas as sessões.
-- Quando a tarefa terminar, ofereça entregar o trabalho (abrir o pull request ou fazer o merge), escreva o fechamento da tarefa depois da entrega e só então remova a worktree, e apenas se o usuário pedir. Nunca remova uma worktree com alterações sem commit sem avisar.
+- Quando a tarefa terminar, ofereça entregar o trabalho (abrir o pull request ou fazer o merge), escreva o fechamento da tarefa depois da entrega. Só remova a worktree se o usuário pedir, e nunca remova uma worktree com alterações sem commit sem avisar.
 - As worktrees de revisão criadas pelo reviewer são removidas por ele ao fim da revisão; se ele avisar que sobrou uma com alteração sem commit, pergunte ao usuário antes de remover.
 - Se existirem outras worktrees do mesmo repositório em uso, não mexa nelas.
 
