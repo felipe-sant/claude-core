@@ -203,7 +203,7 @@ Regra para devs e executores em todas as tarefas: nunca escreva comentários no 
 - Teste: nenhum (texto, sem comportamento).
 - Gate: `npm run lint`, `node --test tests/team.test.js` e `node bin/ai-sync.js --check`.
 - Modelo: economico.
-- Status: pendente.
+- Status: feita (commit 9e7a8c1; gate: lint ok, 399 testes passando e 0 falhando, ai-sync --check ok; falta conferir o texto contra o comportamento final da T2).
 
 ## Decisões
 
