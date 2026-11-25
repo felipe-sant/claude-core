@@ -140,7 +140,7 @@ O projeto não tem typecheck nem formatador, só lint (oxlint mais a checagem de
 - Teste: nenhum novo. A suíte de testes e o lint confirmam que nada quebrou.
 - Gate: `npm ci`, `npm run lint` e `node --test tests/self-sync.test.js`
 - Modelo: economico
-- Status: pendente
+- Status: feita. Commit cbbc407, do Dev Ops, com os dois arquivos de pacote, o plugin e a configuração do lint e o prefixo da pasta temporária do hook. Gate: `npm ci` ok, `npm run lint` ok, `npm test` com 357 testes passando e 0 falhando e `node bin/ai-sync.js --check` ok. A regra do lint continua reprovando comentário, agora como claude-kit(no-comments). Não há comportamento novo, então não houve teste falhando antes.
 
 ### T4 [P]: README e instruções do projeto com o nome novo
 - O quê: o README e as instruções do projeto passam a citar claude-kit, inclusive nos exemplos de comando e no nome do registro, e o README conta que o registro antigo é migrado sozinho.
