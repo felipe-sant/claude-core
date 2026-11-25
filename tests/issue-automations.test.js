@@ -82,7 +82,7 @@ test('a pasta do contexto é definida a partir de runner.temp em cada passo que 
     const uses = text.match(/"\$CONTEXT_DIR"|: %s\\n.*\$CONTEXT_DIR/g) || []
     const definitions = text.match(/CONTEXT_DIR: \$\{\{ runner\.temp \}\}\/issue-agent/g) || []
     assert.ok(uses.length > 0, name)
-    assert.equal(definitions.length, 2, name)
+    assert.equal(definitions.length, name === 'Issue Claude Agent' ? 3 : 2, name)
   }
 })
 
