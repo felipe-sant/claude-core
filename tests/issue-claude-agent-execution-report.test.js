@@ -115,7 +115,28 @@ test('grava só a versão filtrada e o resumo sem o segredo', () => {
   assert.doesNotMatch(fs.readFileSync(published, 'utf8'), /segredoDeTesteLongo1/)
   assert.doesNotMatch(fs.readFileSync(summaryFile, 'utf8'), /segredoDeTesteLongo1/)
   assert.match(fs.readFileSync(summaryFile, 'utf8'), /echo \*\*\*/)
-  assert.deepEqual(fs.readdirSync(path.join(outputDir, 'saida')), ['claude-execution-output.json'])
+  assert.deepEqual(fs.readdirSync(path.join(outputDir, 'saida')).sort(), ['claude-execution-output.json', 'report-data.json'])
+  fs.rmSync(outputDir, { recursive: true })
+  fs.rmSync(dir, { recursive: true })
+})
+
+test('os dados do relatório trazem os comandos barrados e se o limite de uso foi atingido', () => {
+  const { buildReportData } = require(scriptPath)
+  const limit = [{ type: 'result', is_error: true, result: 'Claude AI usage limit reached|1700000000' }]
+  assert.deepEqual(buildReportData(limit), { denied: [], limitReached: true })
+  const denied = [{ type: 'result', is_error: false, result: 'ok', permission_denials: [{ tool_name: 'Bash', tool_input: { command: 'ls' } }] }]
+  assert.deepEqual(buildReportData(denied), { denied: ['Bash: ls'], limitReached: false })
+  assert.deepEqual(buildReportData([]), { denied: [], limitReached: false })
+})
+
+test('a execução grava o arquivo de dados do relatório ao lado da saída filtrada', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'entrada-'))
+  const source = path.join(dir, 'entrada.json')
+  fs.writeFileSync(source, JSON.stringify([{ type: 'result', is_error: false, permission_denials: [{ tool_name: 'Agent', tool_input: {} }] }]))
+  const { result, outputDir } = runScript(source)
+  assert.equal(result.status, 0)
+  const data = JSON.parse(fs.readFileSync(path.join(outputDir, 'saida', 'report-data.json'), 'utf8'))
+  assert.deepEqual(data, { denied: ['Agent'], limitReached: false })
   fs.rmSync(outputDir, { recursive: true })
   fs.rmSync(dir, { recursive: true })
 })

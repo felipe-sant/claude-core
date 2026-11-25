@@ -166,3 +166,19 @@ test('devolve a resposta quando a API cria o pull request', async () => {
     globalThis.fetch = originalFetch
   }
 })
+
+test('grava a saída do passo em linhas chave=valor, sem quebra de linha no valor', () => {
+  const fs = require('node:fs')
+  const os = require('node:os')
+  const { recordOutputs } = require(scriptPath)
+  const file = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'saida-')), 'output')
+  recordOutputs(file, { pull_request_url: 'https://github.com/o/r/pull/3', failure_reason: 'linha um\nlinha dois' })
+  assert.equal(fs.readFileSync(file, 'utf8'), 'pull_request_url=https://github.com/o/r/pull/3\nfailure_reason=linha um linha dois\n')
+  fs.rmSync(path.dirname(file), { recursive: true })
+})
+
+test('sem arquivo de saída do passo não grava nada e não falha', () => {
+  const { recordOutputs } = require(scriptPath)
+  assert.doesNotThrow(() => recordOutputs('', { failure_reason: 'x' }))
+  assert.doesNotThrow(() => recordOutputs(undefined, { failure_reason: 'x' }))
+})

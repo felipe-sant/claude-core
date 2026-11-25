@@ -5,6 +5,8 @@ const MASK = '***'
 const MIN_SECRET_LENGTH = 8
 const SECRET_ENV_NAMES = ['CLAUDE_CODE_OAUTH_TOKEN', 'GITHUB_TOKEN', 'ACTION_TOKEN']
 const OUTPUT_NAME = 'claude-execution-output.json'
+const DATA_NAME = 'report-data.json'
+const LIMIT_PATTERN = /usage limit|limit reached|rate limit|limite de uso/i
 const TOKEN_PATTERNS = [
   /gh[pousr]_[A-Za-z0-9]{20,}/g,
   /github_pat_[A-Za-z0-9_]{20,}/g,
@@ -38,6 +40,15 @@ function deniedCommands(messages) {
     .map(describeDenial)
 }
 
+function limitWasReached(messages) {
+  if (!Array.isArray(messages)) return false
+  return messages.some((message) => message && message.type === 'result' && message.is_error === true && LIMIT_PATTERN.test(String(message.result || '')))
+}
+
+function buildReportData(messages) {
+  return { denied: deniedCommands(messages), limitReached: limitWasReached(messages) }
+}
+
 function buildSummary(commands) {
   const lines = ['## Comandos barrados', '']
   if (commands.length === 0) {
@@ -64,7 +75,9 @@ function main() {
   const redacted = redact(raw, secrets)
   fs.mkdirSync(outputDir, { recursive: true })
   fs.writeFileSync(path.join(outputDir, OUTPUT_NAME), redacted === '' ? '[]' : redacted)
-  const summary = buildSummary(deniedCommands(parseMessages(redacted)))
+  const data = buildReportData(parseMessages(redacted))
+  fs.writeFileSync(path.join(outputDir, DATA_NAME), JSON.stringify(data))
+  const summary = buildSummary(data.denied)
   if (process.env.GITHUB_STEP_SUMMARY) fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, summary)
   console.log(summary)
 }
@@ -73,4 +86,4 @@ if (require.main === module) {
   main()
 }
 
-module.exports = { redact, deniedCommands, buildSummary, describeDenial, OUTPUT_NAME }
+module.exports = { redact, deniedCommands, buildSummary, buildReportData, describeDenial, OUTPUT_NAME, DATA_NAME }
