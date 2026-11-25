@@ -153,7 +153,7 @@ O projeto não tem typecheck nem formatador, só lint (oxlint mais a checagem de
 - Teste: nenhum, é só texto.
 - Gate: `npm run lint` e `node --test tests/content.test.js tests/self-sync.test.js`
 - Modelo: economico
-- Status: feita. Commit f966a91, do Dev Doc, com o README.md e o .claude/CLAUDE.md. No commit, o gate da tarefa não rodou, porque é só texto. Depois, o Reviewer rodou o gate numa worktree própria, no commit c81b134: `npm ci`, `npm run lint`, `npm test` com 357 de 357 testes passando e `node bin/ai-sync.js --check`. Tudo passou.
+- Status: feita. Commit f966a91, do Dev Doc, com o README.md e o .claude/CLAUDE.md. No commit, o gate da tarefa não rodou, porque é só texto. Depois, o Reviewer rodou o gate numa worktree própria, no commit c81b134: `npm ci`, `npm run lint`, `npm test` com 357 de 357 testes passando e `node bin/ai-sync.js --check`. Tudo passou. Correção da revisão: o commit d2f2a53, do Dev Doc, tira o nome antigo da frase sobre a migração no README. Gate: `npm run lint` ok, `npm test` com 357 testes passando e 0 falhando e `node bin/ai-sync.js --check` ok.
 
 ### T5 [P]: Regra de feedback com o nome novo
 - O quê: a regra de feedback passa a citar claude-kit, e a cópia gerada dela é atualizada.
