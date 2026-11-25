@@ -319,3 +319,23 @@ test('o padrão de issues define título, seções de bug e de funcionalidade, e
   assert.match(rule, /agente de issues/)
   assert.match(rule, /`feedback-standard`/)
 })
+
+function skillText(name) {
+  return fs.readFileSync(path.join(repoRoot, catalog.skills[name].path, 'SKILL.md'), 'utf8')
+}
+
+test('as skills de abrir pull request e de revisão seguem o pull-request-standard sem repetir o texto dele', () => {
+  const create = skillText('create-pull-request')
+  const review = skillText('code-review')
+
+  assert.match(create, /`pull-request-standard`/)
+  assert.match(review, /`pull-request-standard`/)
+  assert.doesNotMatch(create, /O que muda/)
+  assert.doesNotMatch(create, /Como foi verificado/)
+  assert.doesNotMatch(create, /Observações/)
+  assert.doesNotMatch(review, /Seja objetivo e fale do código, não da pessoa/)
+})
+
+test('não existe skill de criar issue', () => {
+  assert.ok(!Object.keys(catalog.skills).some((name) => /issue/.test(name)))
+})

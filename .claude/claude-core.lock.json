@@ -73,7 +73,7 @@
       "version": "0.1.0"
     },
     ".claude/skills/code-review/SKILL.md": {
-      "hash": "73160f357028ec2c7c7d17123630e4cd0a9069539023c458e12a9c944bad872f",
+      "hash": "3b9f4d0b3f833328ceff57803d83df5416f1fcf1c4e7c204f1324e162b4f1fe7",
       "version": "0.1.0"
     },
     ".claude/skills/commit-message/SKILL.md": {
@@ -81,7 +81,7 @@
       "version": "0.1.0"
     },
     ".claude/skills/create-pull-request/SKILL.md": {
-      "hash": "2613fb741e6b6fa8696448c1f5db34c77a20818e68a1015baae6e6df42f12fd1",
+      "hash": "6ce900787a5c66ba61e44403403927d1fe0ec0d1a9e9c1ee40a53266687fd832",
       "version": "0.1.0"
     },
     ".claude/skills/documentation/SKILL.md": {
