@@ -85,6 +85,8 @@ O que continua bloqueado:
 
 O que já existe hoje e esta tarefa não muda: como o agente pode alterar as fontes e rodar a sincronização, ele já consegue mudar indiretamente a configuração gerada da pasta, inclusive a de permissões, alterando o modelo de configuração de origem e sincronizando. Esse caminho passa pela revisão do pull request e fica como está.
 
+Risco aceito pelo usuário, depois da revisão da T2: o agente de issues pode alterar um script do repositório e rodá-lo pelos comandos já liberados, passando por cima da lista de proibições. Esse risco já existia antes da T2 e fica como está.
+
 Por que não basta uma regra de permissão: o experimento mostrou que, no modo sem perguntar, nenhuma regra de liberação vence a proteção do Claude Code sobre essa pasta. "Proibição vence liberação" não se aplica, porque não há proibição a trocar.
 
 Este caminho exige mexer, além da automação, nas instruções do agente e num script novo da automação do agente de issues, o que vai além do "só workflows" combinado inicialmente. Caminho aprovado pelo usuário (D-1).
@@ -144,7 +146,7 @@ Este caminho exige mexer, além da automação, nas instruções do agente e num
 
 Todas as tarefas mexem na automação do agente de issues e nos mesmos testes, e o dev é um só. Por isso nenhuma é `[P]` e a ordem é a das issues.
 
-- Fase 1 (sequencial): T1 → T2 → T3 → T4.
+- Fase 1 (sequencial): T1 → T2 → T3 → T4 → T5.
 - Gate de fase, ao fim da fase e antes do reviewer: `npm run lint`, `npm test` (suíte inteira), `node bin/ai-sync.js --check` e o actionlint na versão fixada pelo CI. Não há build, typecheck nem formatador no projeto.
 
 Validação em execução real, passo do usuário, fora do gate:
@@ -212,6 +214,20 @@ Validação em execução real, passo do usuário, fora do gate:
 - Teste: unitário. Falham primeiro os testes que exigem o passo novo depois da etapa do agente e antes do relatório, a condição com `always()` que aceita só falha e cancelado (nunca sucesso nem pulado), a frase exata na anotação e no resumo, e a ausência da frase na classificação de tamanho.
 - Gate: o mesmo de T1.
 - Modelo: economico.
+- Status: feita (commit 8a5be25; vermelho antes: 2 falhas; gate ok: npm test com 504 passando e 0 falhando, lint ok, --check ok, actionlint ok; limite para a validação real: um cancelamento forçado ou um estouro de prazo pode não rodar os passos com `always()`).
+
+### T5: Reforça o comando do guia do Claude contra links simbólicos (#104)
+
+- O quê: o comando que copia o texto preparado para o guia do Claude recusa origem e destino que não sejam arquivo comum. É uma decisão do usuário, tomada depois da revisão da T2.
+- Onde: o script criado na T2 em `.github/issue-agent/` e o teste dele em `tests/`.
+- Dev: dev-devops.
+- Depende de: T2.
+- Reaproveita: o script e os testes da T2.
+- Atende: RN-02, RN-03; CA-04 a CA-08, como a T2.
+- Pronto quando: com origem ou destino que seja link simbólico ou não seja arquivo comum, o script recusa e não altera o guia nem outro arquivo; o caminho feliz da T2 continua igual; gate passando; commit novo `Fix :bug: [#104] ...`.
+- Teste: unitário. Falham primeiro: o teste com a origem sendo link simbólico e o teste com o destino sendo link simbólico, os dois sem alterar o guia.
+- Gate: o mesmo de T1.
+- Modelo: padrao.
 - Status: pendente.
 
 ## Dúvidas
