@@ -116,3 +116,33 @@ test('quando o guia ainda não existe, cria o arquivo', () => {
   applyGuide(source, novo)
   assert.equal(fs.readFileSync(novo, 'utf8'), 'guia novo\n')
 })
+
+test('recusa quando a pasta do texto preparado é um link simbólico', () => {
+  const { dir, source, target } = workspace()
+  fs.writeFileSync(path.join(source, GUIDE_FILE), 'guia novo\n')
+  const link = path.join(dir, 'link-issue-agent')
+  fs.symlinkSync(source, link)
+  assert.throws(() => applyGuide(link, target), /pasta comum/)
+  assert.equal(fs.readFileSync(target, 'utf8'), 'guia antigo\n')
+})
+
+test('recusa quando a pasta do guia é um link simbólico e não grava na pasta apontada', () => {
+  const { dir, source } = workspace()
+  const realFolder = path.join(dir, 'pasta-real')
+  fs.mkdirSync(realFolder)
+  fs.writeFileSync(path.join(realFolder, 'CLAUDE.md'), 'intocado\n')
+  const linkFolder = path.join(dir, 'link-claude')
+  fs.symlinkSync(realFolder, linkFolder)
+  fs.writeFileSync(path.join(source, GUIDE_FILE), 'guia novo\n')
+  assert.throws(() => applyGuide(source, path.join(linkFolder, 'CLAUDE.md')), /pasta comum/)
+  assert.equal(fs.readFileSync(path.join(realFolder, 'CLAUDE.md'), 'utf8'), 'intocado\n')
+})
+
+test('recusa quando o guia é uma pasta e não mexe nela', () => {
+  const { dir, source } = workspace()
+  const folderTarget = path.join(dir, 'guia-pasta')
+  fs.mkdirSync(folderTarget)
+  fs.writeFileSync(path.join(source, GUIDE_FILE), 'guia novo\n')
+  assert.throws(() => applyGuide(source, folderTarget), /arquivo comum/)
+  assert.deepEqual(fs.readdirSync(folderTarget), [])
+})

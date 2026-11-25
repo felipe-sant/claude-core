@@ -15,7 +15,14 @@ function statWithoutFollowing(file) {
   }
 }
 
+function requireRealFolder(folder) {
+  const stat = statWithoutFollowing(folder)
+  if (stat && !stat.isDirectory()) throw new Refusal(`A pasta ${path.basename(folder)} precisa ser uma pasta comum.`)
+}
+
 function applyGuide(contextDir, targetFile) {
+  requireRealFolder(contextDir)
+  requireRealFolder(path.dirname(targetFile))
   const sourceFile = path.join(contextDir, GUIDE_FILE)
   const sourceStat = statWithoutFollowing(sourceFile)
   if (!sourceStat) throw new Refusal('O agente não gravou o arquivo do novo guia do Claude.')
