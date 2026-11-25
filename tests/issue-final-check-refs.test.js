@@ -80,6 +80,7 @@ function runSizeSetCheck({ mainBefore, mainAfter, headsBefore, headsAfter, compa
       'case "$2" in',
       '  repos/*/compare/*)',
       '    range="${2##*/compare/}"',
+      `    echo "$range" >> "${path.join(dir, 'compare-calls')}"`,
       `    node -e 'const m = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8")); const s = m[process.argv[2]]; if (!s) process.exit(1); console.log(s)' "${path.join(dir, 'compare.json')}" "$range"`,
       '    ;;',
       '  *) echo 0 ;;',
@@ -89,7 +90,7 @@ function runSizeSetCheck({ mainBefore, mainAfter, headsBefore, headsAfter, compa
     { mode: 0o755 }
   )
   const script = runScript(sizeSetStep)
-  const result = spawnSync('bash', ['-e', '-c', script], {
+  const result = spawnSync('bash', ['-e', '-o', 'pipefail', '-c', script], {
     encoding: 'utf8',
     env: {
       PATH: `${bin}:${process.env.PATH}`,
@@ -102,6 +103,8 @@ function runSizeSetCheck({ mainBefore, mainAfter, headsBefore, headsAfter, compa
       GH_TOKEN: EMPTY_STATE
     }
   })
+  const callsFile = path.join(dir, 'compare-calls')
+  result.compareCalls = fs.existsSync(callsFile) ? fs.readFileSync(callsFile, 'utf8').split('\n').filter((line) => line !== '') : []
   return result
 }
 
@@ -149,4 +152,22 @@ test('uma branch que existia perde o ponto de antes: reprova citando a branch', 
   const result = runSizeSetCheck({ ...base, headsAfter: [['a1', 'main'], ['b2', 'fix/1-x']], compare: { 'b1...b2': 'diverged' } })
   assert.notEqual(result.status, 0)
   assert.match(result.stdout, /::error::A branch fix\/1-x perdeu o ponto em que estava antes da execução/)
+})
+
+test('a consulta da comparação de uma branch falha: reprova citando a branch', () => {
+  const result = runSizeSetCheck({ ...base, headsAfter: [['a1', 'main'], ['b2', 'fix/1-x']], compare: {} })
+  assert.notEqual(result.status, 0)
+  assert.match(result.stdout, /::error::A branch fix\/1-x perdeu o ponto em que estava antes da execução, ou a comparação com o GitHub falhou/)
+})
+
+test('uma branch que ficou para trás: reprova citando a branch', () => {
+  const result = runSizeSetCheck({ ...base, headsAfter: [['a1', 'main'], ['b0', 'fix/1-x']], compare: { 'b1...b0': 'behind' } })
+  assert.notEqual(result.status, 0)
+  assert.match(result.stdout, /::error::A branch fix\/1-x perdeu o ponto/)
+})
+
+test('a principal é comparada uma vez só e fica fora da conferência das branches', () => {
+  const result = runSizeSetCheck({ ...base, mainAfter: 'a2', headsAfter: [['a2', 'main'], ['b1', 'fix/1-x']], compare: { 'a1...a2': 'ahead' } })
+  assert.equal(result.status, 0, result.stdout + result.stderr)
+  assert.deepEqual(result.compareCalls, ['a1...a2'])
 })
