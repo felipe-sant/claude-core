@@ -241,10 +241,11 @@ Na dúvida entre P e M, o tamanho é M. Mudar automações, fluxos do GitHub, pe
 ### Issue Size Set
 
 - Faz: põe uma única etiqueta de tamanho na issue e deixa um único comentário com o motivo e o link da execução.
+- Só classifica issue de dono, membro ou colaborador, sem tamanho, sem responsável e sem pull request ligado.
 - Nunca faz: criar branch, commit ou pull request, nem alterar arquivos do repositório.
 - Roda quando uma issue é aberta ou reaberta (trata só essa issue), todo dia às 02:28 de Brasília (05:28 UTC) e quando disparada à mão. O minuto quebrado evita o pico de horas cheias do GitHub, que atrasa ou descarta execuções agendadas.
 - Na varredura diária e no disparo manual, classifica no máximo 10 issues sem tamanho por execução, das mais antigas para as mais novas; o resto fica para a próxima.
-- Ao terminar, confere se há uma P esperando e nenhum pull request do agente aberto e, só nesse caso, dispara a Issue Claude Agent. Isso vale mesmo que não tenha classificado nada.
+- Ao terminar, confere se há uma P esperando e nenhum pull request do agente aberto e, só nesse caso, dispara a Issue Claude Agent. Isso vale mesmo que não tenha classificado nada. Se a classificação falhar, ela não dispara a Issue Claude Agent.
 
 ### Issue Claude Agent
 
