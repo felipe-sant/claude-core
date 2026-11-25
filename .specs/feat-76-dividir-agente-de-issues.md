@@ -260,8 +260,8 @@ Decisão recomendada: o trabalho `chain` da Issue Size Set dispara a Issue Claud
 
 O projeto não tem build, typecheck nem formatador; o CI roda `npm run lint`, `npm test` e o actionlint.
 
-- Fase 1 (paralelo): T1 [P], T2 [P], T3 [P], T4 [P] (Dev Ops, delegáveis ao executor) e T7 [P] (Dev Doc). Cada uma edita arquivos diferentes e depende só do contrato acima.
-- Fase 2 (paralelo, assim que a T2 terminar, sem esperar o resto da Fase 1): T5 [P] e T6 [P] (Dev Ops).
+- Fase 1 (paralelo): T1 [P], T2 [P], T3 [P], T4 [P] (Dev Ops, delegáveis ao executor) e T7 [P] (Dev Doc). Cada uma edita arquivos diferentes e depende só do contrato acima. Concluída.
+- Fase 2 (paralelo, assim que a T2 terminar, sem esperar o resto da Fase 1): T5 [P] e T6 [P] (Dev Ops). Em andamento.
 - Gate de fase (fim das Fases 1 e 2): `npm run lint`, `npm test`, `node bin/ai-sync.js --check`, o actionlint em todos os workflows e o sync em pasta temporária (`T=$(mktemp -d) && node bin/ai-sync.js "$T" && ls -R "$T/.claude"; rm -rf "$T"`).
 - Fase 3 (sequencial): T8 (remove a antiga, depende de T1 a T6).
 - Gate de fase: o mesmo.
@@ -289,7 +289,7 @@ Actionlint local: use o binário já baixado em `/tmp/claude-1000/-home-felipe-p
 - Pronto quando: os testes de hoje são só movidos, sem afrouxar, menos estes três, que mudam por desenho e o relato deve citar com o motivo: "pull request do agente aberto bloqueia pr_issue e mantém classify" vira dois testes, um por modo, porque a saída `pr_allowed` cai e cada modo tem as próprias saídas (RN-06, CA-05, CA-10); "evento com P na fila devolve só ela em pr_issue" vira "o modo size-set nunca devolve pr_issue" e "o modo agent ignora o evento issues" (mudança da RN-20 da #64, ver "O que muda"; CA-10, CA-12); "writeOutputs grava as quatro saídas" vira um teste por modo, com duas saídas cada (contrato do Desenho). Os novos passam, o script não tem comentários e o gate passa.
 - Gate: `npm run lint`, `node --test tests/issue-agent-select.test.js tests/issue-size-set-select.test.js tests/issue-claude-agent-select.test.js` e `node bin/ai-sync.js --check`.
 - Modelo: padrao.
-- Status: pendente.
+- Status: feita. Commit 0f13d1a. Antes falhou "writeOutputs grava as saídas de qualquer modo no arquivo". Agora são 61 testes nos três arquivos e 287 na suíte; `npm run lint` e `node bin/ai-sync.js --check` passaram. Testes trocados de propósito pela especificação: a saída `pr_allowed` deixou de existir e a separação passou a ser por modo.
 
 ### T2 [P] Auxiliar dos testes das automações
 - O quê: o arquivo auxiliar com a leitura do workflow, `jobBlock`, `topLevel` e a lista das proibições obrigatórias, tirados do teste de hoje.
@@ -305,7 +305,7 @@ Actionlint local: use o binário já baixado em `/tmp/claude-1000/-home-felipe-p
 - Pronto quando: o arquivo existe, não tem comentários, não termina em `.test.js` e o gate passa.
 - Gate: `npm run lint`, `npm test` e `node bin/ai-sync.js --check`.
 - Modelo: economico.
-- Status: pendente.
+- Status: feita. Commit 2d4e431. Estrutura de teste, sem teste próprio. Gate passou.
 
 ### T3 [P] Instruções da Issue Size Set
 - O quê: o prompt da Issue Size Set com as guardas do contrato e o teste que confere cada uma.
@@ -322,7 +322,7 @@ Actionlint local: use o binário já baixado em `/tmp/claude-1000/-home-felipe-p
 - Pronto quando: cada guarda de hoje que vale para classificar está no teste novo e o gate passa.
 - Gate: `npm run lint`, `node --test tests/issue-size-set-prompt.test.js` e `node bin/ai-sync.js --check`.
 - Modelo: padrao.
-- Status: pendente.
+- Status: feita. Commit 0a6d66d. Antes falhou por falta do arquivo de instruções da Issue Size Set (ENOENT). Agora são 19 testes.
 
 ### T4 [P] Instruções da Issue Claude Agent
 - O quê: o prompt da Issue Claude Agent com as guardas do contrato e o teste que confere cada uma.
@@ -339,7 +339,7 @@ Actionlint local: use o binário já baixado em `/tmp/claude-1000/-home-felipe-p
 - Pronto quando: cada guarda de hoje que vale para o pull request está no teste novo e o gate passa.
 - Gate: `npm run lint`, `node --test tests/issue-claude-agent-prompt.test.js` e `node bin/ai-sync.js --check`.
 - Modelo: padrao.
-- Status: pendente.
+- Status: feita. Commit d2af3e3. Antes falhou por falta do arquivo de instruções da Issue Claude Agent (ENOENT). Agora são 44 testes.
 
 ### T5 [P] Automação Issue Size Set
 - O quê: a automação Issue Size Set com seleção, classificação, encadeamento e conferência final do contrato.
@@ -356,7 +356,7 @@ Actionlint local: use o binário já baixado em `/tmp/claude-1000/-home-felipe-p
 - Pronto quando: os testes passam, o actionlint não aponta nada e o gate passa.
 - Gate: `npm run lint`, `node --test tests/issue-size-set-workflow.test.js`, `node bin/ai-sync.js --check` e o actionlint.
 - Modelo: padrao.
-- Status: pendente.
+- Status: em-andamento.
 
 ### T6 [P] Automação Issue Claude Agent
 - O quê: a automação Issue Claude Agent com o campo opcional, a seleção, o agente e a conferência final do contrato.
@@ -373,7 +373,7 @@ Actionlint local: use o binário já baixado em `/tmp/claude-1000/-home-felipe-p
 - Pronto quando: os testes passam, o actionlint não aponta nada e o gate passa.
 - Gate: `npm run lint`, `node --test tests/issue-claude-agent-workflow.test.js`, `node bin/ai-sync.js --check` e o actionlint.
 - Modelo: padrao.
-- Status: pendente.
+- Status: em-andamento.
 
 ### T7 [P] README e linha da estrutura no guia do Claude
 - O quê: trocar a seção "Agente de issues" do README por uma que explica as duas automações e atualizar a linha da tabela "Estrutura" do README e do guia do Claude.
@@ -392,7 +392,7 @@ Actionlint local: use o binário já baixado em `/tmp/claude-1000/-home-felipe-p
 - Pronto quando: o README cobre o CA-08, o `.claude/CLAUDE.md` tem só a linha atualizada, nenhuma regra nova foi criada e o gate passa.
 - Gate: `npm run lint` e `npm test`.
 - Modelo: economico.
-- Status: feita. Commit 4ca9425. Gate: `npm run lint` passou e `npm test` com 257 pass e 0 fail. Só o README e o `.claude/CLAUDE.md` entraram no commit.
+- Status: feita. Commit 4ca9425. Gate: `npm run lint` passou e `npm test` com 257 pass e 0 fail. Só o README e o `.claude/CLAUDE.md` entraram no commit. Ajuste pedido pelo Reviewer no commit c5fdc57, aprovado.
 
 ### T8 Remover a automação antiga
 - O quê: apagar a automação e o prompt antigos com os testes deles, e acrescentar o teste que confere o conjunto das duas.
