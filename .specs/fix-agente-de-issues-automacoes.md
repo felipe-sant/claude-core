@@ -172,7 +172,7 @@ Validação em execução real, passo do usuário, fora do gate:
 - Teste: unitário. Falha primeiro o teste novo que exige a marca 7 nas duas ações das quatro automações e nenhuma marca 4 delas, e os testes do checkout ajustados para `@v7`.
 - Gate: `npm test`, `npm run lint`, `node bin/ai-sync.js --check` e actionlint 1.7.12 baixado pelo mesmo script fixado no CI para a pasta temporária. Sem typecheck nem formatador no projeto.
 - Modelo: economico.
-- Status: feita (commit dfce969; vermelho antes: 5 testes falhando; gate ok: npm test com 477 passando e 0 falhando, lint ok, --check ok, actionlint 1.7.12 ok).
+- Status: feita (commit dfce969; vermelho antes: 5 testes falhando; gate ok: npm test com 477 passando e 0 falhando, lint ok, --check ok, actionlint 1.7.12 ok; aprovada pelo reviewer).
 
 ### T2: Libera ao agente de issues só a alteração do guia do Claude (#104)
 
@@ -186,7 +186,7 @@ Validação em execução real, passo do usuário, fora do gate:
 - Teste: unitário. Falham primeiro: o teste do script (copia o texto preparado para o guia; recusa ausente e vazio sem alterar o guia; nunca escreve fora do guia), o teste da automação que exige a chamada exata do script entre as liberadas e nenhuma liberação nova de edição na pasta, e o teste das instruções que exige o passo a passo da exceção.
 - Gate: o mesmo de T1.
 - Modelo: padrao.
-- Status: feita (commit eed5911; vermelho antes: 7 falhas, o módulo do script inexistente, a permissão exata do script, a montagem das instruções com o arquivo do guia e 4 guardas novas das instruções; gate ok: npm test com 490 passando e 0 falhando, lint ok, --check ok, actionlint 1.7.12 ok; a conferir na validação real: a pasta temporária da execução chega ao comando do agente no GitHub).
+- Status: feita (commit eed5911; vermelho antes: 7 falhas, o módulo do script inexistente, a permissão exata do script, a montagem das instruções com o arquivo do guia e 4 guardas novas das instruções; gate ok: npm test com 490 passando e 0 falhando, lint ok, --check ok, actionlint 1.7.12 ok; a conferir na validação real: a pasta temporária da execução chega ao comando do agente no GitHub; aprovada pelo reviewer).
 
 ### T3: Aceita a principal e as branches avançarem durante a execução (#94)
 
@@ -200,7 +200,7 @@ Validação em execução real, passo do usuário, fora do gate:
 - Teste: unitário. Falham primeiro os testes das duas automações que exigem a comparação pelo GitHub, a aceitação de `identical` e `ahead`, a mensagem nova e a ausência da mensagem antiga, e os da classificação que exigem a comparação por branch, a mensagem com o nome da branch e a ausência da frase da lista de branches.
 - Gate: o mesmo de T1.
 - Modelo: padrao.
-- Status: feita (commit f0ef012, com a lista de branches; vermelho antes: 10 falhas no teste novo de conferência; gate ok: npm test com 501 passando e 0 falhando, lint ok, --check ok, actionlint 1.7.12 ok; limite: a conferência do agente de issues é verificada só pelo texto do script, e a execução fica para a validação real, passo 3).
+- Status: feita (commit f0ef012, com a lista de branches; vermelho antes: 9 falhas no teste novo de conferência, conferido pelo reviewer, e os 2 testes que já passavam antes ("nada muda" e "comparação falha") eram esperados, porque o código antigo já reprovava nesses casos; gate ok: npm test com 501 passando e 0 falhando, lint ok, --check ok, actionlint 1.7.12 ok; limite: a conferência do agente de issues é verificada só pelo texto do script, e a execução fica para a validação real, passo 3; aprovada pelo reviewer).
 
 ### T4: Mostra a causa provável quando a etapa do agente falha (#100)
 
