@@ -1,6 +1,6 @@
 # claude-core
 
-Ferramenta que roda em outros repositórios para configurar o Claude Code e o sistema de desenvolvimento da melhor forma, com um comando. Ela leva para cada projeto o time de agentes, os padrões de desenvolvimento e as skills que servem a ele, escolhendo sozinha o que é de cada stack.
+Ferramenta que roda em outros repositórios para configurar o Claude Code e o sistema de desenvolvimento da melhor forma, com um comando. Ela leva para cada projeto o time de agentes, os padrões de desenvolvimento e as skills que servem a ele, escolhendo automaticamente o que é de cada stack.
 
 ## Em resumo
 
