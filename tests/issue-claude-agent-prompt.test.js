@@ -99,3 +99,12 @@ test('as instruções não mandam abrir o pull request nem usar arquivo no gh', 
 test('as instruções não mandam escrever o vínculo na descrição', () => {
   assert.doesNotMatch(prompt(), /a linha `Closes #<número>`/)
 })
+
+test('as instruções não mandam o agente abrir o pull request', () => {
+  assert.doesNotMatch(prompt(), /Antes de abrir o pull request|Só abra com/)
+  assert.ok(prompt().includes('Antes de enviar a branch, rode'))
+})
+
+test('as instruções mandam comentar na issue o que houve uma única vez', () => {
+  assert.equal(prompt().split('comente na issue o que houve').length - 1 + prompt().split('Comente na issue o que houve').length - 1, 1)
+})

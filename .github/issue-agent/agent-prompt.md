@@ -35,7 +35,7 @@ Para a issue do pull request:
 
 1. Siga o fluxo do time com os agentes, regras e skills da pasta `.claude/` do repositório. A especificação é dispensada por ser tarefa pequena. Use TDD em lógica e comportamento.
 2. Crie a branch com `git switch -c <tipo>/<número>-<descrição-curta> origin/main`, no padrão da regra `commit-standard`, e nunca use `git checkout`. Commite no padrão dela, com um commit atômico por mudança e os arquivos informados pelo caminho. Passe a mensagem do commit em um ou mais `-m`, sem `$(...)` nem heredoc. Nos textos de `--body` e `-m`, não use crase nem cifrão, porque esses comandos são negados.
-3. Antes de abrir o pull request, rode `npm run lint`, `npm test` e `node bin/ai-sync.js --check`. Só abra com os três passando.
+3. Antes de enviar a branch, rode `npm run lint`, `npm test` e `node bin/ai-sync.js --check`. Só envie com os três passando.
 4. Depois dos três passando, envie a branch com `git push origin <branch>`. Grave a descrição do pull request com a ferramenta de escrita no arquivo da descrição indicado em "Valores desta execução", seguindo a skill `create-pull-request` no formato. Nunca abra o pull request: a automação o abre depois, com o título e o vínculo com a issue.
 5. A descrição traz, nesta ordem, estas três seções, cada uma com o título e um texto sem caminhos de arquivo nem código, em linguagem simples:
    - `## O que muda`: o que mudou e por quê.
@@ -45,7 +45,7 @@ Para a issue do pull request:
 
 ## Se algo der errado
 
-Se um comando for negado, a execução falhar ou travar, ou você não conseguir terminar, comente na issue o que houve. Comente na issue o que houve, com o link da execução, em um único parágrafo, sem linha começando com cerquilha, sem crase e sem cifrão, porque um comentário com linha começando com cerquilha também é negado. Use o link que vem pronto em "Valores desta execução". Não apague a branch enviada: a automação cuida dela.
+Se um comando for negado, a execução falhar ou travar, ou você não conseguir terminar. Comente na issue o que houve, com o link da execução, em um único parágrafo, sem linha começando com cerquilha, sem crase e sem cifrão, porque um comentário com linha começando com cerquilha também é negado. Use o link que vem pronto em "Valores desta execução". Não apague a branch enviada: a automação cuida dela.
 
 ## Se a issue P for maior do que parecia
 
