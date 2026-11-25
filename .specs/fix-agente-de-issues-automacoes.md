@@ -1,6 +1,6 @@
 # Ajustes nas automações do agente de issues e do CI
 
-> Status: em-andamento
+> Status: resolvida
 > Tipo: bug
 > Tamanho: grande
 > Branch: fix/agente-de-issues-automacoes
@@ -149,6 +149,12 @@ Todas as tarefas mexem na automação do agente de issues e nos mesmos testes, e
 - Fase 1 (sequencial): T1 → T2 → T3 → T4 → T5.
 - Gate de fase, ao fim da fase e antes do reviewer: `npm run lint`, `npm test` (suíte inteira), `node bin/ai-sync.js --check` e o actionlint na versão fixada pelo CI. Não há build, typecheck nem formatador no projeto.
 
+Resultado da fase:
+
+- Gate de fase no commit 1a0e641: lint ok, npm test com 515 de 515, --check ok e sincronização em pasta temporária ok. O actionlint fica para o CI, porque o reviewer não teve permissão para rodá-lo.
+- Reviewer: aprovou o lote inteiro, T1 a T5 com os ajustes da revisão, sem achado em aberto.
+- QA: aprovou tudo o que dá para validar localmente, inclusive o reforço das pastas (803d51d). Ficam para a validação real do usuário (passos 1 a 6 abaixo) os CA-02, CA-04, CA-05 e CA-13, e a confirmação real dos CA-09 a CA-12 e CA-17 a CA-20.
+
 Validação em execução real, passo do usuário, fora do gate:
 
 1. Depois do pull request aberto, conferir na verificação de pull request que lint, testes e checagem das automações passam sem o aviso de Node.js 20.
@@ -201,7 +207,7 @@ Validação em execução real, passo do usuário, fora do gate:
 - Teste: unitário. Falham primeiro os testes das duas automações que exigem a comparação pelo GitHub, a aceitação de `identical` e `ahead`, a mensagem nova e a ausência da mensagem antiga, e os da classificação que exigem a comparação por branch, a mensagem com o nome da branch e a ausência da frase da lista de branches.
 - Gate: o mesmo de T1.
 - Modelo: padrao.
-- Melhorias de teste pedidas pelo usuário, sugeridas pelo reviewer: feitas no commit 347fca7, com o `pipefail` e 3 testes novos, que passaram de primeira; gate ok: npm test com 512 passando, lint ok, --check ok, actionlint ok; aguardam revisão do reviewer.
+- Melhorias de teste pedidas pelo usuário, sugeridas pelo reviewer: feitas no commit 347fca7, com o `pipefail` e 3 testes novos, que passaram de primeira; gate ok: npm test com 512 passando, lint ok, --check ok, actionlint ok; aprovadas pelo reviewer.
 - Status: feita (commit f0ef012, com a lista de branches; vermelho antes: 9 falhas no teste novo de conferência, conferido pelo reviewer, e os 2 testes que já passavam antes ("nada muda" e "comparação falha") eram esperados, porque o código antigo já reprovava nesses casos; gate ok: npm test com 501 passando e 0 falhando, lint ok, --check ok, actionlint 1.7.12 ok; limite: a conferência do agente de issues é verificada só pelo texto do script, e a execução fica para a validação real, passo 3; aprovada pelo reviewer).
 
 ### T4: Mostra a causa provável quando a etapa do agente falha (#100)
@@ -230,8 +236,8 @@ Validação em execução real, passo do usuário, fora do gate:
 - Teste: unitário. Falham primeiro: o teste com a origem sendo link simbólico e o teste com o destino sendo link simbólico, os dois sem alterar o guia.
 - Gate: o mesmo de T1.
 - Modelo: padrao.
-- Status: feita (commit 64021f6; vermelho antes: 4 falhas; gate ok: npm test com 509 passando, lint ok, --check ok, actionlint ok; falta a revisão do reviewer).
-- Extensão do reforço às pastas, pedida pelo usuário depois da sugestão do reviewer: feita no commit 803d51d. A pasta do texto preparado e a do guia são recusadas quando são link simbólico, e entrou um teste para o destino que é uma pasta. Vermelho antes: 2 falhas; gate ok: npm test com 515 passando, lint ok, --check ok, actionlint ok; aguarda revisão do reviewer.
+- Status: feita (commit 64021f6; vermelho antes: 4 falhas; gate ok: npm test com 509 passando, lint ok, --check ok, actionlint ok; aprovada pelo reviewer).
+- Extensão do reforço às pastas, pedida pelo usuário depois da sugestão do reviewer: feita no commit 803d51d. A pasta do texto preparado e a do guia são recusadas quando são link simbólico, e entrou um teste para o destino que é uma pasta. Vermelho antes: 2 falhas; gate ok: npm test com 515 passando, lint ok, --check ok, actionlint ok; aprovada pelo reviewer.
 
 ## Dúvidas
 
