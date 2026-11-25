@@ -292,7 +292,9 @@ test('o padrão de pull request e comentários define as seções, o fechamento 
   const rule = ruleText('pull-request-standard')
 
   assertGeneralRuleInAllProfiles('pull-request-standard')
-  assert.match(rule, /O que muda.*Como foi verificado.*Observações/s)
+  assert.match(rule, /## O que muda.*## Como foi verificado.*## Observações/s)
+  assert.doesNotMatch(rule, /\*\*O que muda\*\*/)
+  assert.match(rule, /o que foi rodado, o resultado e o que não foi testado/)
   assert.match(rule, /Closes #/)
   assert.match(rule, /linguagem simples/)
   assert.match(rule, /sem caminhos/)

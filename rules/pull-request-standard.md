@@ -5,8 +5,15 @@ Vale ao abrir um pull request e ao escrever qualquer comentário em pull request
 ## Descrição do pull request
 
 - O título segue o `commit-standard`.
-- A descrição tem, nesta ordem, as seções **O que muda**, **Como foi verificado** e **Observações**.
-- O que muda diz o resultado para quem usa, não a lista de arquivos. Como foi verificado diz o que foi rodado e o que não foi testado. Observações traz decisões, riscos e o que o revisor deve olhar com atenção.
+- A descrição tem, nesta ordem, estes títulos de nível 2:
+
+```
+## O que muda
+## Como foi verificado
+## Observações
+```
+
+- O que muda diz o resultado para quem usa, não a lista de arquivos. Como foi verificado diz o que foi rodado, o resultado e o que não foi testado. Observações traz decisões, riscos e o que o revisor deve olhar com atenção.
 - Escreva em linguagem simples, sem caminhos de arquivo nem código.
 - Quando o pull request conclui uma issue, inclua `Closes #<número>`.
 
