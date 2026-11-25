@@ -68,3 +68,15 @@ test('o comando barrado vai entre crases sem quebrar o texto nem mencionar ningu
   const message = buildEndMessage({ ...base, denied: ['Bash: echo `x` @alguem'] })
   assert.ok(message.includes("`Bash: echo 'x' @alguem`"))
 })
+
+test('o comando barrado muito longo é cortado em 200 caracteres com reticências', () => {
+  const long = `Bash: ${'a'.repeat(500)}`
+  const message = buildEndMessage({ ...base, denied: [long] })
+  assert.ok(message.includes(`\`${long.slice(0, 200)}…\``))
+  assert.ok(!message.includes('a'.repeat(250)))
+  assert.ok(message.length < 600)
+})
+
+test('o comando barrado curto não ganha reticências', () => {
+  assert.ok(buildEndMessage({ ...base, denied: ['Bash: ls'] }).includes('`Bash: ls`'))
+})

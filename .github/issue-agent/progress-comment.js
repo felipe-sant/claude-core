@@ -7,9 +7,14 @@ const COMMENT_ID_FILE = 'progress-comment-id'
 const AGENT_COMMENTED_FILE = 'agent-commented'
 const REPORT_DATA_FILE = 'report-data.json'
 const MAX_LISTED_COMMANDS = 3
+const MAX_COMMAND_LENGTH = 200
+
+function truncate(text) {
+  return text.length > MAX_COMMAND_LENGTH ? `${text.slice(0, MAX_COMMAND_LENGTH)}…` : text
+}
 
 function formatCommand(command) {
-  return `\`${command.replace(/`/g, "'").replace(/\s+/g, ' ')}\``
+  return `\`${truncate(command.replace(/`/g, "'").replace(/\s+/g, ' '))}\``
 }
 
 function listCommands(commands) {
