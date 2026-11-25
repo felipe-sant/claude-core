@@ -1,7 +1,8 @@
 # O agente de issues pode ter até 5 pull requests abertos ao mesmo tempo
 
-> Status: em-andamento
+> Status: implementada
 > Aprovada pelo usuário em 2026-11-25.
+> Aprovada pelo Reviewer no commit 5e6783e, sem achado em aberto; gate de fase: lint ok, 432 testes passando, ai-sync --check ok e actionlint sem erro.
 > Tipo: funcionalidade
 > Tamanho: grande
 > Branch: feat/101-agente-de-issues-varios-pull-requests
