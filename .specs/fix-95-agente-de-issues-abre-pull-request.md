@@ -1,6 +1,6 @@
 # O agente de issues não consegue abrir o pull request no formato pedido e termina sem avisar
 
-> Status: aprovada
+> Status: em-andamento
 > Tipo: bug
 > Tamanho: media
 > Branch: fix/95-agente-de-issues-abre-pull-request
