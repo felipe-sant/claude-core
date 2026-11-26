@@ -1,18 +1,40 @@
 {
-  "name": "claude-kit",
+  "name": "@felipe-sant/claude-kit",
   "version": "0.1.0",
   "description": "Time de agentes reutilizável para Claude Code",
-  "private": true,
-  "bin": {
-    "ai-sync": "./bin/ai-sync.js"
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/felipe-sant/claude-kit.git"
   },
+  "publishConfig": {
+    "access": "public"
+  },
+  "bin": {
+    "ai-sync": "bin/ai-sync.js"
+  },
+  "files": [
+    "bin",
+    "catalog.json",
+    "agents",
+    "rules",
+    "skills",
+    "stacks",
+    "templates",
+    "profiles"
+  ],
   "scripts": {
     "test": "node --test \"tests/**/*.test.js\"",
     "lint": "oxlint --deny-warnings . && node lint/content.js",
     "sync": "node bin/ai-sync.js . --profile tooling",
+    "sync:version": "rm -f .claude/claude-kit.lock.json && npm run sync",
+    "changeset": "changeset",
+    "changeset:version": "changeset version && npm install --package-lock-only --ignore-scripts && npm run sync:version",
     "prepare": "git rev-parse --git-dir >/dev/null 2>&1 && git config core.hooksPath .githooks || true"
   },
   "devDependencies": {
+    "@changesets/changelog-github": "1.0.1",
+    "@changesets/cli": "3.0.3",
     "oxlint": "1.94.0"
   },
   "engines": {
