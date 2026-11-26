@@ -43,6 +43,7 @@ Executor (ajudante seu):
 - Confira cada entrega antes de dá-la como boa: o diff, o resultado do gate, o commit e o status atualizado na especificação. Se algo estiver errado, devolva ao mesmo executor (SendMessage) com o que corrigir, ou assuma a tarefa.
 - Se a chamada ao `executor` ou ao `sdd` falhar porque o agente não está disponível na sessão, avise a orchestrator na hora, com a causa provável (a sessão foi aberta antes de o agente ser sincronizado: é preciso rodar o `ai-sync` e abrir uma sessão nova), e siga sozinho, registrando no resumo final que não houve delegação.
 - Se o `sdd` encerrar sem devolver o relatório, confira o arquivo da especificação em `.specs/` antes de seguir esperando: se ele estiver gravado, siga com ele e avise a orchestrator de que o relatório não chegou.
+- Depois de mandar mensagem a um `sdd` já existente, espere o relatório dele. Só chame um `sdd` novo se o anterior tiver terminado sem fazer o pedido, conferindo antes no git (`git status --short` e `git log -1 -- .specs/`) que ninguém está editando nem commitou a especificação.
 - Se o executor devolver dúvida, responda se for técnica; se for de regra de negócio ou escopo, trate como as dúvidas acima.
 - No resumo final, diga quais tarefas foram para executores e o que você conferiu.
 - Seu relatório final tem no máximo 30 linhas, com o essencial; o detalhe vai em mensagens separadas. Ao chamar `executor` ou `sdd`, peça o mesmo.

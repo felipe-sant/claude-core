@@ -182,6 +182,13 @@ test('o sdd sempre devolve o relatório e os devs conferem a especificação qua
   }
 })
 
+test('os devs esperam o relatório do sdd antes de chamar outro e o sdd relê a especificação antes de editar', () => {
+  assert.match(body('sdd'), /Antes de editar, confira se o arquivo da especificação mudou desde a sua última leitura/)
+  for (const name of devs) {
+    assert.match(body(name), /Depois de mandar mensagem a um `sdd` já existente, espere o relatório dele/, name)
+  }
+})
+
 test('o README documenta a permissão de commit, a coautoria por repositório e o .env', () => {
   const readme = fs.readFileSync(path.join(repoRoot, 'README.md'), 'utf8')
 
