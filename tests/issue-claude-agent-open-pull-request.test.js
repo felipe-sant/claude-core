@@ -182,3 +182,86 @@ test('sem arquivo de saída do passo não grava nada e não falha', () => {
   assert.doesNotThrow(() => recordOutputs('', { failure_reason: 'x' }))
   assert.doesNotThrow(() => recordOutputs(undefined, { failure_reason: 'x' }))
 })
+
+test('branch sem nota de mudança não abre pull request', () => {
+  const { checkChangesetNote } = require(scriptPath)
+  const problem = checkChangesetNote([{ filename: 'README.md', status: 'modified' }], 'fix/95-algo')
+  assert.equal(problem, 'A branch fix/95-algo não traz a nota de mudança.')
+})
+
+test('aceita branch com nota de mudança adicionada, inclusive a vazia', () => {
+  const { checkChangesetNote } = require(scriptPath)
+  assert.equal(checkChangesetNote([{ filename: '.changeset/corrige-algo.md', status: 'added' }], 'fix/95-algo'), '')
+  assert.equal(checkChangesetNote([{ filename: 'a.js', status: 'modified' }, { filename: '.changeset/vazia.md', status: 'added' }], 'fix/95-algo'), '')
+})
+
+test('o README da pasta de notas sozinho não conta como nota', () => {
+  const { checkChangesetNote } = require(scriptPath)
+  assert.notEqual(checkChangesetNote([{ filename: '.changeset/README.md', status: 'added' }], 'fix/95-algo'), '')
+})
+
+test('nota fora da pasta de notas, em subpasta, de outro tipo ou só modificada não conta', () => {
+  const { checkChangesetNote } = require(scriptPath)
+  for (const file of [
+    { filename: 'docs/nota.md', status: 'added' },
+    { filename: '.changeset/sub/nota.md', status: 'added' },
+    { filename: '.changeset/config.json', status: 'added' },
+    { filename: '.changeset/antiga.md', status: 'modified' },
+    { filename: '.changeset/removida.md', status: 'removed' }
+  ]) {
+    assert.notEqual(checkChangesetNote([file], 'fix/95-algo'), '', file.filename)
+  }
+})
+
+async function runMainWithBranchFiles(files) {
+  const fs = require('node:fs')
+  const os = require('node:os')
+  const { main } = require(scriptPath)
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'abertura-'))
+  fs.writeFileSync(path.join(dir, 'branches-95'), 'main\n')
+  fs.writeFileSync(path.join(dir, 'pull-request-body.md'), validDescription)
+  const saved = { argv: process.argv, token: process.env.GITHUB_TOKEN, repository: process.env.GITHUB_REPOSITORY, check: process.env.CHECK_DIR, output: process.env.GITHUB_OUTPUT }
+  process.argv = ['node', 'open-pull-request.js', dir, '95']
+  process.env.GITHUB_TOKEN = 'token'
+  process.env.GITHUB_REPOSITORY = 'dono/repo'
+  process.env.CHECK_DIR = dir
+  delete process.env.GITHUB_OUTPUT
+  const calls = []
+  const answers = {
+    '/branches?': [{ name: 'main' }, { name: 'fix/95-algo' }],
+    '/issues/95': { title: 'Algo', labels: [{ name: 'Size: P' }] },
+    '/compare/': { ahead_by: 1, files },
+    '/pulls?state=open': [],
+    '/repos/dono/repo': { default_branch: 'main' }
+  }
+  globalThis.fetch = async (url, options = {}) => {
+    calls.push({ url, method: options.method || 'GET' })
+    if (options.method === 'POST') return { ok: true, status: 201, json: async () => ({ html_url: 'https://github.com/dono/repo/pull/1' }) }
+    const key = Object.keys(answers).find((part) => url.includes(part))
+    return { ok: true, status: 200, json: async () => answers[key] }
+  }
+  try {
+    const outcome = await main().then(() => null, (error) => error)
+    return { outcome, calls }
+  } finally {
+    globalThis.fetch = originalFetch
+    process.argv = saved.argv
+    for (const [name, value] of [['GITHUB_TOKEN', saved.token], ['GITHUB_REPOSITORY', saved.repository], ['CHECK_DIR', saved.check], ['GITHUB_OUTPUT', saved.output]]) {
+      if (value === undefined) delete process.env[name]
+      else process.env[name] = value
+    }
+    fs.rmSync(dir, { recursive: true })
+  }
+}
+
+test('no fluxo principal, branch sem nota de mudança não cria pull request', async () => {
+  const { outcome, calls } = await runMainWithBranchFiles([{ filename: 'README.md', status: 'modified' }])
+  assert.match(outcome.message, /A branch fix\/95-algo não traz a nota de mudança\./)
+  assert.equal(calls.some((call) => call.method === 'POST'), false)
+})
+
+test('no fluxo principal, branch com nota de mudança cria o pull request', async () => {
+  const { outcome, calls } = await runMainWithBranchFiles([{ filename: '.changeset/algo.md', status: 'added' }])
+  assert.equal(outcome, null)
+  assert.equal(calls.filter((call) => call.method === 'POST').length, 1)
+})

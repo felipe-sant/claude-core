@@ -19,6 +19,8 @@ const guards = {
   'nunca ler variáveis de ambiente': 'nunca leia variáveis de ambiente',
   'workflows e automações são sempre M': 'Mudar workflows, a pasta `.github`, automações, permissões ou segredos é sempre M',
   'apagar arquivo é M': 'Apagar arquivo também é M, porque você não pode apagar',
+  'mudança major pela regra de versão é M': 'Mudança major pela regra de versão é sempre M',
+  'casos de major': 'remove ou renomeia um agente, uma regra ou uma skill, muda o fluxo do time ou quebra uma opção do `ai-sync`',
   'você só define o tamanho': 'Você só define o tamanho',
   'sem branch, commit nem pull request': 'Nunca crie branch, commit nem pull request, nunca altere arquivos e nunca chame outros agentes',
   'comandos a partir da raiz, sem cd e sem substituição': 'Rode os comandos a partir da raiz do repositório, sem `cd` e sem `$(...)`',
