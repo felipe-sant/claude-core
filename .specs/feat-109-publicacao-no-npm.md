@@ -30,11 +30,16 @@ Hoje cada repositório usa o claude-kit a partir de um clone local, sem versão.
 - RN-14: Os scripts novos não têm dependências de execução e têm testes. As ferramentas de notas de mudança entram só como dependências de desenvolvimento. Fonte: usuário (issue #109).
 - RN-15: O README e as instruções do projeto para os agentes explicam como instalar e atualizar pelo npm, como escrever a nota de mudança, a regra de versão e os passos do dono. Fonte: usuário (issue #109).
 - RN-16: As checagens que o CI já roda (lint, testes e checagem das automações) continuam passando. A cópia do time que o próprio `ai-sync` gera neste repositório nunca é editada à mão. Fonte: usuário (issue #109) e garantia do repositório.
+- RN-17: O pull request de versão não ganha token de app nem exceção na regra da `main`. Antes do merge dele, depois da última atualização automática, o dono fecha e reabre o pull request para o CI rodar. Isso fica nos passos do dono. Fonte: usuário (decisão sobre a dúvida U1).
+- RN-18: A 1.0.0 é publicada à mão pelo dono a partir da branch do pull request de versão, antes do merge dele, sem nenhum outro pull request entrar na `main` no meio. O trusted publishing é ligado depois, logo antes da primeira versão automática, e a automação cria a tag e o Release da 1.0.0 sem publicar de novo. Fonte: usuário (decisão sobre a dúvida U2, opção A).
+- RN-19: A checagem "Changeset" passa a ser obrigatória na regra da `main`. O dono faz essa mudança depois do merge desta tarefa. Fonte: usuário (decisão sobre a dúvida U3).
+- RN-20: O pacote usa a licença MIT, com titular Luiz Felipe e ano 2026, e a descrição do pacote informa essa licença. Fonte: usuário (decisão sobre a dúvida U4).
+- RN-21: Os títulos de seção que a ferramenta de notas escreve sozinha em inglês no CHANGELOG e na lista do pull request de versão ficam como estão. Só o parágrafo fixo da descrição do pull request de versão é traduzido. Fonte: usuário (decisão sobre a dúvida U5).
 
 ## Critérios de aceite
 
 - CA-01: QUANDO alguém confere o pacote que vai para o npm ENTÃO o sistema DEVE mostrar o nome `@felipe-sant/claude-kit`, o acesso público e o comando `ai-sync`. Cobre RN-01.
-- CA-02: QUANDO alguém lista os arquivos que o pacote leva ENTÃO o sistema DEVE mostrar só o comando, o catálogo, os agentes, as regras, as skills, as stacks, os modelos de configuração, os perfis e os arquivos que o npm sempre inclui (descrição do pacote e README), e nenhum teste, lint, automação do GitHub, agente de issues, especificação, nota de mudança, script de versão ou cópia gerada do time. Cobre RN-12.
+- CA-02: QUANDO alguém lista os arquivos que o pacote leva ENTÃO o sistema DEVE mostrar só o comando, o catálogo, os agentes, as regras, as skills, as stacks, os modelos de configuração, os perfis e os arquivos que o npm sempre inclui (descrição do pacote, README e licença), e nenhum teste, lint, automação do GitHub, agente de issues, especificação, nota de mudança, script de versão ou cópia gerada do time. Cobre RN-12 e RN-20.
 - CA-03: QUANDO um repositório instala o pacote empacotado e roda o `ai-sync` pelo `npx` ENTÃO o sistema DEVE instalar o time como hoje e registrar a versão do pacote em cada arquivo instalado. Cobre RN-01 e RN-13.
 - CA-04: QUANDO o repositório que instalou o pacote já tem um arquivo próprio com o mesmo nome de um arquivo do time ENTÃO o sistema DEVE manter esse arquivo como estava e avisar que há conflito. Cobre RN-13.
 - CA-05: QUANDO um pull request para a `main` não traz nota de mudança ENTÃO o sistema DEVE reprovar a checagem de nota de mudança. Cobre RN-03 e RN-04.
@@ -56,6 +61,8 @@ Hoje cada repositório usa o claude-kit a partir de um clone local, sem versão.
 - CA-21: QUANDO a branch do agente de issues não traz nota de mudança ENTÃO o sistema NÃO DEVE abrir o pull request e DEVE registrar o motivo na issue, como já faz nas outras recusas. Cobre RN-04 e RN-09.
 - CA-22: QUANDO alguém lê o README e as instruções do projeto ENTÃO o sistema DEVE explicar como instalar e atualizar pelo npm, como escrever a nota de mudança (com tipo ou vazia), a regra de versão e os passos do dono. Cobre RN-08, RN-11 e RN-15.
 - CA-23: QUANDO a suíte, o lint, a checagem do catálogo e a checagem das automações rodam depois da mudança ENTÃO o sistema DEVE aprovar todas. Cobre RN-14 e RN-16.
+- CA-24: QUANDO alguém confere o repositório e a descrição do pacote ENTÃO o sistema DEVE ter o arquivo de licença MIT com o titular Luiz Felipe e o ano 2026, e a descrição do pacote DEVE informar a licença MIT. Cobre RN-20.
+- CA-25: QUANDO alguém lê os passos do dono no README ENTÃO eles DEVEM trazer, na ordem, tornar a checagem "Changeset" obrigatória depois do merge desta tarefa, a publicação da 1.0.0 à mão antes do merge do pull request de versão e o fechar e reabrir do pull request de versão antes de cada merge dele. Cobre RN-17, RN-18 e RN-19.
 
 ## Critérios de sucesso
 
@@ -71,7 +78,7 @@ Hoje cada repositório usa o claude-kit a partir de um clone local, sem versão.
 - Mudanças no `ai-sync` além do que o empacotamento exigir. Hoje ele acha o conteúdo a partir da pasta do próprio comando, o que já funciona dentro do pacote instalado (ver Desenho). Uma mudança só entra se o teste de instalação provar que é necessária.
 - Mudar a classificação de tamanho das issues ou o fluxo do time.
 - Uma regra da nota de mudança para os repositórios consumidores: a regra vale só para este repositório e fica no README e nas instruções do projeto, nunca nas regras copiadas pelo `ai-sync`.
-- Traduzir os títulos de seção que a ferramenta de notas escreve sozinha no CHANGELOG e na lista do pull request de versão (ver Dúvidas).
+- Traduzir os títulos de seção que a ferramenta de notas escreve sozinha no CHANGELOG e na lista do pull request de versão: por decisão do usuário, eles ficam em inglês (RN-21).
 
 ## Desenho
 
@@ -79,7 +86,8 @@ Hoje cada repositório usa o claude-kit a partir de um clone local, sem versão.
 
 | Peça | O que faz | Dono |
 | --- | --- | --- |
-| Descrição do pacote (`package.json` e `package-lock.json`) | Nome, acesso, arquivos levados, scripts de versão, dependências de desenvolvimento | Dev Ops 1 (só ele edita) |
+| Descrição do pacote (`package.json` e `package-lock.json`) | Nome, acesso, licença, arquivos levados, scripts de versão, dependências de desenvolvimento | Dev Ops 1 (só ele edita) |
+| `LICENSE` | Texto da licença MIT, titular Luiz Felipe, ano 2026 | Dev Ops 1 |
 | `.changeset/config.json` e `.changeset/README.md` | Configuração da ferramenta de notas de mudança e explicação curta | Dev Ops 1 |
 | Nota major inicial em `.changeset/` | Gera a 1.0.0 no primeiro pull request de versão | Dev Ops 1 |
 | `.github/workflows/changeset-check.yml` | Reprova pull request sem nota | Dev Ops 1 |
@@ -119,7 +127,7 @@ O hook roda dentro do workflow de versão: o `npm ci` roda o `prepare`, que liga
 
 ### `ai-sync` dentro do pacote instalado
 
-Em `bin/ai-sync.js`, `root = path.resolve(__dirname, '..')` aponta para a raiz do pacote em `node_modules/@felipe-sant/claude-kit`. A pasta alvo padrão é a pasta atual (`process.cwd()`). O comando lê `catalog.json`, `profiles/`, `package.json` (para a versão) e os caminhos do catálogo (`agents/`, `rules/`, `skills/`, `stacks/`, `templates/`). Logo o campo `files` é: `bin`, `catalog.json`, `agents`, `rules`, `skills`, `stacks`, `templates` e `profiles`. O npm inclui sozinho o `package.json` e o `README.md`. O `.claude/` fica fora do pacote. O `bin/ai-sync.js` já é executável e começa com `#!/usr/bin/env node`. O campo `bin` deve ficar na forma que o npm não corrige sozinho (`bin/ai-sync.js`, sem `./`), para o `npm publish` não avisar.
+Em `bin/ai-sync.js`, `root = path.resolve(__dirname, '..')` aponta para a raiz do pacote em `node_modules/@felipe-sant/claude-kit`. A pasta alvo padrão é a pasta atual (`process.cwd()`). O comando lê `catalog.json`, `profiles/`, `package.json` (para a versão) e os caminhos do catálogo (`agents/`, `rules/`, `skills/`, `stacks/`, `templates/`). Logo o campo `files` é: `bin`, `catalog.json`, `agents`, `rules`, `skills`, `stacks`, `templates` e `profiles`. O npm inclui sozinho o `package.json`, o `README.md` e o `LICENSE`, que por isso não entra no `files`. O `.claude/` fica fora do pacote. O `bin/ai-sync.js` já é executável e começa com `#!/usr/bin/env node`. O campo `bin` deve ficar na forma que o npm não corrige sozinho (`bin/ai-sync.js`, sem `./`), para o `npm publish` não avisar.
 
 ### Pull request de versão (`version.yml`)
 
@@ -146,6 +154,7 @@ Em `bin/ai-sync.js`, `root = path.resolve(__dirname, '..')` aponta para a raiz d
 ### Checagem de nota (`changeset-check.yml`)
 
 - Dispara em `pull_request` para a `main`. Job `Changeset` com `if: github.head_ref != 'changeset-release/main'`, checkout com `fetch-depth: 0`, setup-node 22, `npm ci` e `npx changeset status --since=origin/main`. Permissão `contents: read`.
+- Com a checagem obrigatória (RN-19), o pull request de versão continua podendo entrar: quando o dono o fecha e reabre (RN-17), o workflow roda, o job é pulado pelo `if`, e o GitHub conta job pulado assim como aprovado na checagem obrigatória.
 
 ### Agente de issues
 
@@ -157,10 +166,11 @@ Em `bin/ai-sync.js`, `root = path.resolve(__dirname, '..')` aponta para a raiz d
 1. Ter conta no npm e ser dono do escopo `@felipe-sant` (usuário ou organização `felipe-sant`), com verificação em dois fatores.
 2. No GitHub, em Settings > Actions > General, manter ligada a opção "Allow GitHub Actions to create and approve pull requests". Hoje ela já está ligada (`can_approve_pull_request_reviews: true`, conferido em 2026-11-25).
 3. Fazer o merge do pull request desta tarefa. A versão continua 0.1.0 e nada é publicado (CA-14). A automação abre o pull request de versão com a 1.0.0.
-4. Publicar a 1.0.0 à mão a partir da branch do pull request de versão (`changeset-release/main`): `git switch changeset-release/main`, `npm ci`, `npm pack --dry-run` para conferir a lista e `npm publish --access public`. Essa versão sai sem prova de origem. Entre esta publicação e o merge do passo 5, nenhum outro pull request entra na `main`: uma nota patch transformaria o pull request de versão em 1.0.1 e a 1.0.0 ficaria sem tag, e qualquer outra mudança deixaria a `main` diferente do que foi publicado.
-5. Fazer o merge do pull request de versão. A automação cria a tag `v1.0.0` e o Release e não publica de novo (CA-13). Se valer a opção (a) da Dúvida U1, fechar e reabrir o pull request de versão logo antes do merge, depois da última atualização automática dele, porque cada atualização traz um commit novo sem checagens.
-6. Na página do pacote no npm, ligar o trusted publishing com o dono `felipe-sant`, o repositório `claude-kit` e o workflow `release.yml` (só o nome do arquivo), logo antes do merge do primeiro pull request de versão que deve publicar sozinho (a 1.0.1 ou a seguinte). A ligação expira se a primeira publicação por ela não acontecer em 2 dias. Fazer a ligação nesse momento evita a expiração.
-7. Colocar a checagem `Changeset` entre as obrigatórias da regra da `main`, se a Dúvida U3 for aceita.
+4. Colocar a checagem `Changeset` entre as obrigatórias da regra da `main` (RN-19). Só depois do passo 3, porque antes disso a checagem não existe na `main`.
+5. Publicar a 1.0.0 à mão a partir da branch do pull request de versão (`changeset-release/main`): `git switch changeset-release/main`, `npm ci`, `npm pack --dry-run` para conferir a lista e `npm publish --access public` (RN-18). Essa versão sai sem prova de origem. Entre esta publicação e o merge do passo 6, nenhum outro pull request entra na `main`: uma nota patch transformaria o pull request de versão em 1.0.1 e a 1.0.0 ficaria sem tag, e qualquer outra mudança deixaria a `main` diferente do que foi publicado.
+6. Fechar e reabrir o pull request de versão, esperar o CI passar e fazer o merge (RN-17). A automação cria a tag `v1.0.0` e o Release e não publica de novo (CA-13).
+7. Na página do pacote no npm, ligar o trusted publishing com o dono `felipe-sant`, o repositório `claude-kit` e o workflow `release.yml` (só o nome do arquivo), logo antes do merge do primeiro pull request de versão que deve publicar sozinho (a 1.0.1 ou a seguinte). A ligação expira se a primeira publicação por ela não acontecer em 2 dias. Fazer a ligação nesse momento evita a expiração.
+8. Em todo pull request de versão seguinte, logo antes do merge e depois da última atualização automática dele, fechar e reabrir o pull request e esperar o CI passar (RN-17). Cada atualização automática traz um commit novo sem checagens, porque o pull request é aberto com o token padrão do GitHub, que não dispara o CI.
 
 ## Plano de execução
 
@@ -191,10 +201,11 @@ Regra para todos os que implementarem: nunca escrever comentários em código, n
 - Onde:
   - `package.json`:
     - `name` passa a `@felipe-sant/claude-kit`, e `private` sai.
-    - Entram `publishConfig.access: public`, o campo `repository` com o repositório no GitHub, `bin` com `ai-sync: bin/ai-sync.js` e `files` com a lista do Desenho.
+    - Entram `publishConfig.access: public`, o campo `repository` com o repositório no GitHub, `license: MIT`, `bin` com `ai-sync: bin/ai-sync.js` e `files` com a lista do Desenho.
     - Entram os scripts `changeset`, `changeset:version` e `sync:version` do contrato, e `@changesets/cli` e `@changesets/changelog-github` em `devDependencies`, sem `dependencies`.
     - A versão fica 0.1.0, e `engines` fica `>=22`.
   - `package-lock.json`: gerado pelo `npm install`.
+  - `LICENSE`: texto padrão da licença MIT, com `Copyright (c) 2026 Luiz Felipe`.
   - `.changeset/config.json`:
     - `changelog: ["@changesets/changelog-github", { "repo": "felipe-sant/claude-kit" }]`.
     - `commit: false`, `access: public`, `baseBranch: main`, `fixed`, `linked` e `ignore` vazios, e `updateInternalDependencies: patch`.
@@ -204,9 +215,10 @@ Regra para todos os que implementarem: nunca escrever comentários em código, n
 - Dev: Dev Ops 1.
 - Depende de: nada.
 - Reaproveita: `.changeset/config.json` do portfolio (trocando a base para `main` e o acesso para público), `tests/helpers.js` (`tempDir`, `cleanup`, `run`) e o `makeHookedRepo` de `tests/self-sync.test.js` como modelo.
-- Atende: RN-01, RN-02, RN-03, RN-07, RN-12, RN-14; CA-01, CA-09 (parte local), CA-23.
+- Atende: RN-01, RN-02, RN-03, RN-07, RN-12, RN-14, RN-20; CA-01, CA-09 (parte local), CA-23, CA-24.
 - Pronto quando:
   - Os testes novos passam.
+  - O teste do contrato confere que a descrição do pacote informa `license: MIT` e que o `LICENSE` existe com o texto MIT, o ano 2026 e o titular Luiz Felipe.
   - Todo arquivo `.changeset/*.md`, menos o README, segue o contrato: nota vazia ou cabeçalho com só `"@felipe-sant/claude-kit": patch|minor|major` e corpo não vazio. O teste confere o formato, não a existência da nota major, porque ela some quando o pull request de versão é aplicado.
   - Numa cópia do repositório com a versão trocada, `npm run sync:version` deixa todas as entradas do registro com a versão nova, e o teste de sincronização passa na cópia.
   - Nessa mesma cópia com o hook ligado, um commit sem caminhos com a versão trocada e o `.claude/` regenerado é aceito.
@@ -214,6 +226,7 @@ Regra para todos os que implementarem: nunca escrever comentários em código, n
   - O gate passa.
 - Teste: unitário e integração.
   - Primeiro deve falhar "o pacote se chama @felipe-sant/claude-kit, é público e leva só os arquivos do ai-sync" (hoje o nome é outro e `private` é verdadeiro).
+  - Depois deve falhar "o pacote usa a licença MIT de Luiz Felipe, de 2026" (hoje não há licença).
   - Depois deve falhar "trocar a versão e rodar o sync:version deixa o registro do .claude com a versão nova" (hoje o script não existe).
   - Depois vêm os casos do validador de nota: vazia aceita nas duas formas, tipo inválido recusado, outro pacote recusado, corpo vazio recusado e README ignorado.
 - Gate: `node --test tests/package-contract.test.js tests/version-sync.test.js`, `npm run lint` e `node bin/ai-sync.js --check`. Sem typecheck nem formatador no projeto.
@@ -229,7 +242,7 @@ Regra para todos os que implementarem: nunca escrever comentários em código, n
 - Reaproveita: `tests/helpers.js` (`tempDir`, `cleanup`, `read`, `write`) e o catálogo para listar os caminhos esperados.
 - Atende: RN-01, RN-12, RN-13; CA-02, CA-03, CA-04.
 - Pronto quando:
-  - `npm pack --dry-run --json` lista o `bin/ai-sync.js`, o `catalog.json`, todo `path` do catálogo e os perfis.
+  - `npm pack --dry-run --json` lista o `bin/ai-sync.js`, o `catalog.json`, todo `path` do catálogo, os perfis e o `LICENSE`.
   - A lista não traz nada sob `tests/`, `lint/`, `.github/`, `.specs/`, `.claude/`, `.changeset/`, `scripts/` nem `.githooks/`.
   - O tarball instalado sem rede (`npm install <tgz> --offline --no-audit --no-fund`) numa pasta temporária com `package.json` próprio roda `npx --no-install ai-sync`. O comando sai com código 0, cria o `.claude/` com o registro na versão do pacote e mantém intacto um arquivo do usuário criado antes no caminho de uma regra do catálogo.
   - `npx --no-install ai-sync --check` também passa.
@@ -376,7 +389,7 @@ Regra para todos os que implementarem: nunca escrever comentários em código, n
   - A regra de versão (RN-08).
   - Os passos do dono do Desenho.
   - O `.changeset/README.md` do portfolio como tom.
-- Atende: RN-08, RN-11, RN-15; CA-22.
+- Atende: RN-08, RN-11, RN-15, RN-17, RN-18, RN-19; CA-22, CA-25.
 - Pronto quando:
   - "Usar em um repositório" mostra:
     - `npm install --save-dev @felipe-sant/claude-kit` e `npx ai-sync`;
@@ -387,7 +400,7 @@ Regra para todos os que implementarem: nunca escrever comentários em código, n
     - a nota de mudança (`npm run changeset`, ou `npm run changeset -- --empty`), com exemplo;
     - a regra de versão;
     - o fluxo do pull request de versão e da publicação;
-    - os passos do dono na ordem.
+    - os passos do dono na ordem do Desenho, incluindo tornar a checagem `Changeset` obrigatória depois do merge desta tarefa e fechar e reabrir o pull request de versão antes de cada merge dele.
   - A tabela de estrutura cita `.changeset/`, `scripts/` e os três workflows novos.
   - Os testes que leem o README continuam passando.
   - O gate passa.
@@ -418,23 +431,7 @@ Regra para todos os que implementarem: nunca escrever comentários em código, n
 
 ## Dúvidas
 
-Do usuário:
-
-- U1 (bloqueia o merge do pull request de versão, não a implementação): o pull request de versão é aberto pela automação com o token padrão do GitHub. Pull request aberto assim não dispara o CI, e a regra da `main` exige as checagens "Lint" e "Testes", sem exceção para ninguém. Sem as checagens, o pull request de versão pode ficar sem poder entrar.
-  - Evidência: o pull request #105, aberto pela automação, teve as checagens, mas recebeu commits depois de aberto, o que não prova o caso.
-  - Opções:
-    - (a) o dono fecha e reabre o pull request de versão para disparar o CI, como passo documentado;
-    - (b) um token de app ou pessoal só para a automação de versão (segredo novo no repositório, mas não do npm);
-    - (c) a automação de versão dispara o CI à mão na branch de versão, o que exige mudar o `ci.yml`;
-    - (d) uma exceção na regra da `main`.
-  - Proposta: (a), sem segredo novo. O dono fecha e reabre o pull request logo antes do merge, depois da última atualização automática dele.
-- U2: a publicação da 1.0.0. A especificação segue a opção A.
-  - Opção A (proposta): o dono publica à mão a partir da branch do pull request de versão antes do merge, sem deixar outro pull request entrar no meio, e faz o merge. O trusted publishing é ligado depois, logo antes da primeira versão automática. A automação cria a tag e o Release e pula a publicação, porque a versão já está no npm.
-  - Opção B: o dono faz o merge primeiro. A publicação automática falha por falta do trusted publishing e não cria a tag. O dono publica à mão a partir da `main`, liga o trusted publishing e roda a automação de novo, que cria a tag e o Release e pula a publicação.
-  - A opção A evita uma execução vermelha.
-- U3: colocar a checagem "Changeset" entre as obrigatórias da regra da `main`? Sem isso, ela reprova, mas não impede o merge. Com isso, o pull request de versão depende de U1, porque ela fica de fora só quando roda.
-- U4: o pacote será público e o repositório não tem licença. Qual licença usar? Isso não bloqueia: sem licença, o npm só avisa.
-- U5: a ferramenta de notas escreve em inglês os títulos de seção do CHANGELOG e da lista do pull request de versão ("Major Changes", "Patch Changes", "Releases"). Isso é aceitável, ou esses títulos também devem ser traduzidos? A especificação traduz só o parágrafo fixo do pull request de versão.
+Do usuário: nenhuma. As dúvidas U1 a U5 foram decididas e viraram as regras RN-17 a RN-21.
 
 Do product-owner:
 
