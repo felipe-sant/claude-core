@@ -35,13 +35,26 @@ Para a issue do pull request:
 
 1. Siga o fluxo do time com os agentes, regras e skills da pasta `.claude/` do repositório. A especificação é dispensada por ser tarefa pequena. Use TDD em lógica e comportamento.
 2. Crie a branch com `git switch -c <tipo>/<número>-<descrição-curta> origin/main`, no padrão da regra `commit-standard`, e nunca use `git checkout`. Commite no padrão dela, com um commit atômico por mudança e os arquivos informados pelo caminho. Passe a mensagem do commit em um ou mais `-m`, sem `$(...)` nem heredoc. Nos textos de `--body` e `-m`, não use crase nem cifrão, porque esses comandos são negados.
-3. Antes de enviar a branch, rode `npm run lint`, `npm test` e `node bin/ai-sync.js --check`. Só envie com os três passando.
-4. Depois dos três passando, envie a branch com `git push origin <branch>`. Grave a descrição do pull request com a ferramenta de escrita no arquivo da descrição indicado em "Valores desta execução", seguindo a skill `create-pull-request` no formato. Nunca abra o pull request: a automação o abre depois, com o título e o vínculo com a issue.
-5. A descrição traz, nesta ordem, estas três seções, cada uma com o título e um texto sem caminhos de arquivo nem código, em linguagem simples:
+3. Todo pull request traz uma nota de mudança, escolhida pela regra de versão:
+   - major: remove ou renomeia um agente, uma regra ou uma skill, muda o fluxo do time ou quebra uma opção do `ai-sync`.
+   - minor: novo agente, regra, skill, stack ou opção.
+   - patch: ajuste de texto, correção ou mudança que não quebra nada.
+
+   Mudança major pela regra de versão nunca é P: se perceber durante a execução que a mudança é major, siga a seção "Se a issue P for maior do que parecia" e não crie nota.
+
+   Grave a nota de mudança com a ferramenta de escrita no arquivo `.changeset/<nome-da-branch-com-hífen>.md`, em que o nome da branch tem a barra trocada por hífen:
+   - patch para correção ou ajuste que não quebra nada.
+   - minor para um item ou uma opção nova pequena, e a issue continua P.
+   - nota vazia para documentação, CI ou testes.
+
+   Nas notas patch e minor, o arquivo começa com uma linha de três hifens, depois a linha `"@felipe-sant/claude-kit": patch` (ou `minor`), depois outra linha de três hifens, uma linha em branco e uma ou duas linhas em português simples, sem caminho de arquivo nem código, que dizem o que mudou para quem usa o time. Na nota vazia, o arquivo tem só as duas linhas de três hifens, uma em seguida da outra, sem nada entre elas. Inclua a nota de mudança no commit pelo caminho e nunca rode `npx changeset`.
+4. Antes de enviar a branch, rode `npm run lint`, `npm test` e `node bin/ai-sync.js --check`. Só envie com os três passando.
+5. Depois dos três passando, envie a branch com `git push origin <branch>`. Grave a descrição do pull request com a ferramenta de escrita no arquivo da descrição indicado em "Valores desta execução", seguindo a skill `create-pull-request` no formato. Nunca abra o pull request: a automação o abre depois, com o título e o vínculo com a issue.
+6. A descrição traz, nesta ordem, estas três seções, cada uma com o título e um texto sem caminhos de arquivo nem código, em linguagem simples:
    - `## O que muda`: o que mudou e por quê.
    - `## Como foi verificado`: o que foi rodado, o resultado e o que não foi testado.
    - `## Observações`: o que ficou de fora, riscos e o que o revisor deve olhar com atenção.
-6. Não escreva o vínculo `Closes` nem a linha fixa do agente, que a automação acrescenta.
+7. Não escreva o vínculo `Closes` nem a linha fixa do agente, que a automação acrescenta.
 
 ## Se algo der errado
 
@@ -49,7 +62,7 @@ Se um comando for negado, a execução falhar ou travar, ou você não conseguir
 
 ## Se a issue P for maior do que parecia
 
-Pare, apague a branch local, não envie branch nem abra pull request. Comente na issue o motivo, sem a marca de classificação, e troque `Size: P` por `Size: M`. Nunca deixe comentário com a marca de classificação. Use o link da execução que vem pronto em "Valores desta execução" e nunca leia variáveis de ambiente.
+Isso vale também quando a mudança se mostra major pela regra de versão. Pare, apague a branch local, não envie branch nem abra pull request. Comente na issue o motivo, sem a marca de classificação, e troque `Size: P` por `Size: M`. Nunca deixe comentário com a marca de classificação. Use o link da execução que vem pronto em "Valores desta execução" e nunca leia variáveis de ambiente.
 
 ## Limites
 

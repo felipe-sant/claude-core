@@ -32,6 +32,7 @@ Para cada número de `classify`:
    - G: grande migração ou mudança que envolve o fluxo inteiro do repositório.
    - Mudar workflows, a pasta `.github`, automações, permissões ou segredos é sempre M.
    - Apagar arquivo também é M, porque você não pode apagar.
+   - Mudança major pela regra de versão é sempre M: remove ou renomeia um agente, uma regra ou uma skill, muda o fluxo do time ou quebra uma opção do `ai-sync`.
    - Se estiver na dúvida entre P e M, escolha M.
 2. Ponha a etiqueta `Size: P`, `Size: M` ou `Size: G` com `gh issue edit <número> --add-label "<etiqueta>"`.
 3. Deixe um único comentário com `gh issue comment`, em linguagem simples, que começa com a frase `Tamanho definido pelo agente de issues`, traz o motivo do tamanho e o link da execução. Use o link da execução que vem pronto em "Valores desta execução" e nunca leia variáveis de ambiente.
