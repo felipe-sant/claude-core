@@ -43,11 +43,33 @@ function lockVersions(repo) {
   return [...new Set(Object.values(lock.files).map((entry) => entry.version))]
 }
 
+function generatedFiles(repo) {
+  const files = ['.claude/claude-kit.lock.json', '.claude/settings.json']
+  for (const folder of ['agents', 'rules', 'skills']) {
+    const walk = (dir) => fs.readdirSync(path.join(repo, dir), { withFileTypes: true }).flatMap((entry) => (entry.isDirectory() ? walk(path.join(dir, entry.name)) : [path.join(dir, entry.name)]))
+    files.push(...walk(path.join('.claude', folder)))
+  }
+  return files.sort()
+}
+
 test('trocar a versão e rodar o sync:version deixa o registro do .claude com a versão nova', () => {
   const repo = makeRepoWithNewVersion()
   const result = spawnSync('npm', ['run', 'sync:version'], { cwd: repo, encoding: 'utf8', env: cleanEnv() })
   assert.equal(result.status, 0, result.stdout + result.stderr)
   assert.deepEqual(lockVersions(repo), [newVersion])
+})
+
+test('o .claude depois do sync:version é igual ao de uma sincronização em pasta vazia', () => {
+  const repo = makeRepoWithNewVersion()
+  const result = spawnSync('npm', ['run', 'sync:version'], { cwd: repo, encoding: 'utf8', env: cleanEnv() })
+  assert.equal(result.status, 0, result.stdout + result.stderr)
+  const fresh = h.tempDir('fresh')
+  const synced = h.run(repo, fresh, '--profile', 'tooling')
+  assert.equal(synced.status, 0, synced.output)
+  assert.deepEqual(generatedFiles(repo), generatedFiles(fresh))
+  for (const rel of generatedFiles(fresh)) {
+    assert.equal(h.read(repo, rel), h.read(fresh, rel), `${rel} difere de uma sincronização em pasta vazia`)
+  }
 })
 
 test('o sync sozinho mantém a versão antiga no registro', () => {

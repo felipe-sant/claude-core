@@ -1,8 +1,11 @@
-const { test } = require('node:test')
+const { test, afterEach } = require('node:test')
 const assert = require('node:assert/strict')
 const fs = require('node:fs')
 const path = require('node:path')
-const { isValidChangesetNote } = require('../scripts/changeset-note')
+const { isValidChangesetNote, listChangesetNoteFiles } = require('../scripts/changeset-note')
+const h = require('./helpers')
+
+afterEach(h.cleanup)
 
 const root = path.resolve(__dirname, '..')
 const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'))
@@ -31,7 +34,7 @@ test('o pacote usa a licença MIT de Luiz Felipe, de 2026', () => {
 test('os scripts de versão do contrato existem e os antigos seguem iguais', () => {
   assert.equal(pkg.scripts.changeset, 'changeset')
   assert.equal(pkg.scripts['changeset:version'], 'changeset version && npm install --package-lock-only --ignore-scripts && npm run sync:version')
-  assert.equal(pkg.scripts['sync:version'], 'rm -f .claude/claude-kit.lock.json && npm run sync')
+  assert.equal(pkg.scripts['sync:version'], 'node -e "require(\'fs\').rmSync(\'.claude/claude-kit.lock.json\',{force:true})" && npm run sync')
   assert.equal(pkg.scripts.sync, 'node bin/ai-sync.js . --profile tooling')
 })
 
@@ -45,10 +48,15 @@ test('a configuração do changeset aponta para a main e para o pacote público'
 
 test('todas as notas de mudança do repositório seguem o contrato', () => {
   const dir = path.join(root, '.changeset')
-  const notes = fs.readdirSync(dir).filter((name) => name.endsWith('.md') && name !== 'README.md')
-  for (const name of notes) {
+  for (const name of listChangesetNoteFiles(dir)) {
     assert.ok(isValidChangesetNote(fs.readFileSync(path.join(dir, name), 'utf8')), `${name} não segue o contrato`)
   }
+})
+
+test('a lista de notas ignora o README e arquivos que não são markdown', () => {
+  const dir = h.tempDir('changeset')
+  for (const name of ['README.md', 'config.json', 'corrige-x.md', 'nota-vazia.md']) h.write(path.join(dir, name), 'x')
+  assert.deepEqual(listChangesetNoteFiles(dir).sort(), ['corrige-x.md', 'nota-vazia.md'])
 })
 
 test('nota vazia é aceita nas duas formas', () => {
