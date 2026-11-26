@@ -1,11 +1,11 @@
 # Publicar o claude-kit no npm com versões automáticas
 
-> Status: em-andamento
+> Status: implementada
 > Tipo: funcionalidade
 > Tamanho: grande
 > Branch: feat/109-publicacao-no-npm
 > Criada em: 2026-11-25
-> Revisão: o Reviewer aprovou T1 a T9 e o encaixe entre elas, sem achado bloqueante. O QA não achou falha bloqueante. O usuário decidiu aplicar todas as sugestões antes do pull request (T10 a T13).
+> Revisão: o Reviewer aprovou T1 a T9 e o encaixe entre elas, sem achado bloqueante. O QA não achou falha bloqueante. O usuário decidiu aplicar todas as sugestões antes do pull request (T10 a T13). O Reviewer aprovou a Fase 4 sem achado em aberto.
 
 Issue: #109 de felipe-sant/claude-kit. Pedido por: Dev Ops 1.
 
@@ -539,6 +539,13 @@ Revisão: o Reviewer aprovou T1 a T9 e o encaixe entre elas, sem achado bloquean
 QA: sem falha bloqueante. CA-07 a CA-09, CA-11 a CA-21 e CA-26 a CA-29 ficam sem cobertura de QA até a primeira execução real no GitHub.
 
 Sugestões aplicadas por decisão do usuário: T10 a T13.
+
+Revisão da Fase 4: o Reviewer aprovou T10 a T13 sem achado em aberto.
+- O bloqueio da T13 foi corrigido no commit eb3a675: o README marca o uso sem instalar como "a confirmar depois da primeira publicação".
+- A sugestão da T12 foi aplicada no commit 9757a4c: o teste isola a saída de resultados do GitHub (`GITHUB_OUTPUT`).
+- O Reviewer refez a prova do vermelho da T10 e da T12.
+- Observação aceita: o caso da T11 que compara com uma sincronização em pasta vazia passou de primeira. Ele protege contra regressão, mas não tem prova de TDD.
+- Gate final no commit 9757a4c: 624 testes, lint ok, `ai-sync --check` ok, `npm pack --dry-run` com 44 arquivos e `changeset status` ok. O merge simulado com a `origin/main` não deu conflito.
 
 Registros aceitos, sem mudança de código:
 - O formato da nota é garantido pela suíte de testes, que roda em todo pull request, inclusive nos do agente de issues. Por isso T5 e T7 não precisam reaproveitar o validador da nota.
