@@ -22,7 +22,7 @@ Todo o texto dos agentes, das regras e da documentação é em **português**. N
 | `lint/` | Regra do oxlint contra comentários e a checagem do formato de agentes, regras, skills e perfis. |
 | `tests/` | Testes do `ai-sync` e do formato do conteúdo, com `node --test`. |
 | `.github/workflows/ci.yml` | Roda `npm run lint` e `npm test` em todo PR. |
-| `.github/workflows/issue-size-set.yml`, `.github/workflows/issue-claude-agent.yml` e `.github/issue-agent/` | Automações do agente de issues: a Issue Size Set classifica as issues por tamanho (P, M, G) e a Issue Claude Agent resolve só as P e abre o PR por um passo próprio, depois do agente, e o agente comenta na issue quando algo dá errado. Documentadas no `README.md`. |
+| `.github/workflows/issue-size-set.yml`, `.github/workflows/issue-claude-agent.yml` e `.github/issue-agent/` | Automações do agente de issues: a Issue Size Set classifica as issues por tamanho (P, M, G) e a Issue Claude Agent resolve só as P e abre o PR por um passo próprio, depois do agente, e o agente comenta na issue quando algo dá errado. Documentadas na issue #113 até a wiki existir. |
 | `.changeset/` | Notas de mudança (uma por pull request) e a configuração da ferramenta de versões. |
 | `scripts/` | Scripts das automações de versão e publicação, em JS puro e sem dependências. |
 | `.github/workflows/changeset-check.yml`, `.github/workflows/version.yml` e `.github/workflows/release.yml` | Reprova o PR sem nota de mudança, abre o pull request de versão e, no merge dele, cria a tag e o Release e publica no npm. |

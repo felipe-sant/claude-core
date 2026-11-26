@@ -20,7 +20,7 @@ npm install --save-dev @felipe-sant/claude-kit@latest
 npx ai-sync
 ```
 
-O `ai-sync` nunca sobrescreve nem apaga o que você editou ou criou.
+Sem `--force`, o `ai-sync` nunca sobrescreve nem apaga o que você editou ou criou.
 
 ## Opções
 
@@ -34,8 +34,8 @@ O `ai-sync` nunca sobrescreve nem apaga o que você editou ou criou.
 Perfis (`--profile`), todos com as nove regras gerais e as skills gerais:
 
 - `default`: o time completo.
-- `frontend`: devs de tela e fullstack, com `designer`.
-- `backend`: devs de API, banco e devops, sem `designer`.
+- `frontend`: `dev-frontend`, `dev-fullstack` e `dev-doc`, com `designer`.
+- `backend`: `dev-backend`, `dev-fullstack`, `dev-database`, `dev-devops` e `dev-doc`, sem `designer`.
 - `tooling`: para repositórios de ferramentas, scripts e conteúdo, sem telas nem banco.
 
 ## O time
@@ -49,11 +49,11 @@ Perfis (`--profile`), todos com as nove regras gerais e as skills gerais:
 - `qa`: valida a entrega.
 - `designer`: visual e experiência de uso.
 
-Regras (9 gerais e 4 por stack), copiadas para `.claude/rules/`: `commit-standard`, `code-standard`, `testing-standard`, `security-standard`, `review-standard`, `git-standard`, `feedback-standard`, `pull-request-standard` e `issue-standard`. A `pull-request-standard` define a descrição do pull request com "O que muda", "Como foi verificado" e "Observações". Problema nas instruções do próprio time vira issue no `felipe-sant/claude-kit`, pelo `feedback-standard`.
+Regras (9 gerais e 4 de stack, uma por stack), copiadas para `.claude/rules/`: `commit-standard`, `code-standard`, `testing-standard`, `security-standard`, `review-standard`, `git-standard`, `feedback-standard`, `pull-request-standard` e `issue-standard`. A `pull-request-standard` define a descrição do pull request com "O que muda", "Como foi verificado" e "Observações". Problema nas instruções do próprio time vira issue no `felipe-sant/claude-kit`, pelo `feedback-standard`.
 
 ### Subagentes ou time de agentes
 
-Por padrão o time roda com subagentes. O time de agentes é opcional e experimental: ligue com `node bin/ai-sync.js --teams` (no repositório, `npx ai-sync --teams`) e desligue com `--no-teams`. O `ai-sync` nunca o liga sozinho.
+Por padrão o time roda com subagentes. O time de agentes é opcional e experimental: ligue com `npx ai-sync --teams` (no clone do `claude-kit`, `node bin/ai-sync.js --teams`) e desligue com `--no-teams`. O `ai-sync` nunca o liga sozinho.
 
 ### Commits, coautoria e `.env`
 
@@ -73,4 +73,4 @@ Todo pull request traz uma nota de mudança (changeset) em `.changeset/`, com no
 
 Para testar uma mudança em outro repositório antes de publicar: `node bin/ai-sync.js /caminho/do/repo`.
 
-O resto da documentação está na [wiki do repositório](https://github.com/felipe-sant/claude-kit/wiki).
+A documentação detalhada está sendo levada para a wiki do repositório: acompanhe na [issue #113](https://github.com/felipe-sant/claude-kit/issues/113).
