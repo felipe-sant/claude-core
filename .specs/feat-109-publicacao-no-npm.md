@@ -1,6 +1,6 @@
 # Publicar o claude-kit no npm com versões automáticas
 
-> Status: aprovada
+> Status: em-andamento
 > Tipo: funcionalidade
 > Tamanho: grande
 > Branch: feat/109-publicacao-no-npm
@@ -238,7 +238,7 @@ Regra para todos os que implementarem: nunca escrever comentários em código, n
   - Depois vêm os casos do validador de nota: vazia aceita nas duas formas, tipo inválido recusado, outro pacote recusado, corpo vazio recusado e README ignorado.
 - Gate: `node --test tests/package-contract.test.js tests/version-sync.test.js`, `npm run lint` e `node bin/ai-sync.js --check`. Sem typecheck nem formatador no projeto.
 - Modelo: padrao.
-- Status: pendente.
+- Status: feita (commit a649493, Dev Ops 1; gate: 14 testes novos, suíte completa com 539 passando, lint ok, `ai-sync --check` ok, `npm pack --dry-run` com 44 arquivos, `changeset status` ok).
 
 ### T2 [P] Empacotamento e instalação pelo npx
 
