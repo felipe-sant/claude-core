@@ -117,7 +117,7 @@ Corrige a mensagem do ai-sync quando a pasta não existe.
 
 - Nota vazia: exatamente o que `changeset add --empty` gera. A conferência com `@changesets/cli` 3 deu os bytes `---\n\n---\n\n\n` (cabeçalho com uma linha em branco e sem corpo). O validador da T1 aceita também `---\n---\n` com ou sem linhas em branco depois, e nenhum outro conteúdo.
 - O `.changeset/README.md` não é nota.
-- Scripts do `package.json` que a T1 cria e que os outros usam pelo nome: `changeset` (`changeset`), `changeset:version` (`changeset version && npm install --package-lock-only --ignore-scripts && npm run sync:version`) e `sync:version` (`rm -f .claude/claude-kit.lock.json && npm run sync`). Os scripts `test`, `lint`, `sync` e `prepare` ficam como estão: o teste de sincronização confere `sync` e `prepare` literalmente.
+- Scripts do `package.json` que a T1 cria e que os outros usam pelo nome: `changeset` (`changeset`), `changeset:version` (`changeset version && npm install --package-lock-only --ignore-scripts && npm run sync:version`) e `sync:version` (`node -e "require('fs').rmSync('.claude/claude-kit.lock.json',{force:true})" && npm run sync`; na T1 era `rm -f`, e a T11 trocou por `node` para funcionar também no Windows). Os scripts `test`, `lint`, `sync` e `prepare` ficam como estão: o teste de sincronização confere `sync` e `prepare` literalmente.
 - Branch do pull request de versão: `changeset-release/main`, o padrão do `changesets/action` para a base `main`.
 - Saídas do script de release para o workflow: `tag` (`vX.Y.Z`), `release` (`true` ou `false`), `publish` (`true` ou `false`) e `notes-file` (caminho do arquivo com as notas, só quando `release=true`).
 
@@ -475,7 +475,7 @@ Regra para todos os que implementarem: nunca escrever comentários em código, n
 - Teste: unitário, sobre o texto do workflow. Primeiro deve falhar "pull request de fork com a branch de versão passa pela checagem de nota".
 - Gate: `node --test tests/changeset-check-workflow.test.js tests/workflow-actions-version.test.js`, `npm run lint` e o actionlint do Plano de execução.
 - Modelo: economico.
-- Status: pendente.
+- Status: feita (commit 37b4eb2, Dev Ops 1; vermelho: "o pull request de versão fica fora da checagem de nota só quando vem do próprio repositório" falhou com a condição só pelo nome; depois 13 testes e actionlint ok; gate após T10 e T11: 624 testes, lint ok, `ai-sync --check` ok).
 
 ### T11 [P] Validador da nota, teste da versão e sync:version no Windows
 
@@ -494,7 +494,7 @@ Regra para todos os que implementarem: nunca escrever comentários em código, n
 - Teste: unitário e integração. Primeiro deve falhar "o validador ignora o README da pasta de notas"; depois, "o sync:version deixa o .claude igual a uma sincronização numa pasta vazia" (quando a comparação atual não cobre isso) e "o sync:version não usa comando de shell do Linux".
 - Gate: `node --test tests/package-contract.test.js tests/version-sync.test.js tests/self-sync.test.js`, `npm run lint` e `node bin/ai-sync.js --check`. Sem typecheck nem formatador no projeto.
 - Modelo: padrao.
-- Status: pendente.
+- Status: feita (commit a6d83fe, Dev Ops 1; vermelho: 3 casos do teste do contrato, entre eles TypeError em `listChangesetNoteFiles`; o caso novo de sincronização em pasta vazia passou de primeira, por reforçar um comportamento já correto; gate após T10 e T11: 624 testes, lint ok, `ai-sync --check` ok).
 
 ### T12 [P] Prova de que o agente sem nota não cria pull request
 
