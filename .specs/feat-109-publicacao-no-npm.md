@@ -29,7 +29,7 @@ Hoje cada repositório usa o claude-kit a partir de um clone local, sem versão.
 - RN-13: O `ai-sync` instalado pelo npm continua sem apagar nem sobrescrever arquivo do usuário. Fonte: usuário (issue #109) e garantia do repositório.
 - RN-14: Os scripts novos não têm dependências de execução e têm testes. As ferramentas de notas de mudança entram só como dependências de desenvolvimento. Fonte: usuário (issue #109).
 - RN-15: O README e as instruções do projeto para os agentes explicam como instalar e atualizar pelo npm, como escrever a nota de mudança, a regra de versão e os passos do dono. Fonte: usuário (issue #109).
-- RN-16: As checagens que o CI já roda (lint, testes e checagem das automações) continuam passando. A pasta gerada `.claude/` nunca é editada à mão. Fonte: usuário (issue #109) e garantia do repositório.
+- RN-16: As checagens que o CI já roda (lint, testes e checagem das automações) continuam passando. A cópia do time que o próprio `ai-sync` gera neste repositório nunca é editada à mão. Fonte: usuário (issue #109) e garantia do repositório.
 
 ## Critérios de aceite
 
@@ -124,7 +124,7 @@ Em `bin/ai-sync.js`, `root = path.resolve(__dirname, '..')` aponta para a raiz d
 ### Pull request de versão (`version.yml`)
 
 - Dispara em `push` na `main` e por `workflow_dispatch`. Permissões: `contents: write` e `pull-requests: write`. Concorrência sem cancelar.
-- Passos: checkout com `fetch-depth: 0`, setup-node 22 com cache, `npm ci`, `changesets/action` fixado por SHA (como a ação do Claude), com `version: npm run changeset:version`, `commit` e `title` iguais a "Chore :see_no_evil: Atualiza versão e CHANGELOG" e `GITHUB_TOKEN` no ambiente (o `@changesets/changelog-github` precisa dele), sem `publish`.
+- Passos: checkout com `fetch-depth: 0`, setup-node 22 com cache, `npm ci`, `changesets/action@v2` fixado por SHA (como a ação do Claude), com as entradas `version-script: npm run changeset:version`, `commit-message` e `pr-title` iguais a "Chore :see_no_evil: Atualiza versão e CHANGELOG", `github-token` e `GITHUB_TOKEN` no ambiente (o `@changesets/changelog-github` precisa dele), sem `publish`.
 - Depois, só se a ação devolver `pr-number`: um passo lê o corpo do pull request, roda `node scripts/prepare-version-pr-body.js <arquivo>` e só chama `gh pr edit --body-file` quando o corpo mudou. É o mesmo padrão do portfolio, em JS puro. Nada de `${{ }}` dentro de `run`: os valores passam por `env`.
 - Texto em português no lugar do parágrafo padrão em inglês ("This PR was opened by the ... this PR will be updated."): "Pull request de versão aberto pela automação de notas de mudança. Ao fazer o merge na `main`, a automação publica a versão no npm e cria a tag e o Release. Enquanto houver notas novas na `main`, este pull request é atualizado."
 
@@ -157,9 +157,9 @@ Em `bin/ai-sync.js`, `root = path.resolve(__dirname, '..')` aponta para a raiz d
 1. Ter conta no npm e ser dono do escopo `@felipe-sant` (usuário ou organização `felipe-sant`), com verificação em dois fatores.
 2. No GitHub, em Settings > Actions > General, manter ligada a opção "Allow GitHub Actions to create and approve pull requests". Hoje ela já está ligada (`can_approve_pull_request_reviews: true`, conferido em 2026-11-25).
 3. Fazer o merge do pull request desta tarefa. A versão continua 0.1.0 e nada é publicado (CA-14). A automação abre o pull request de versão com a 1.0.0.
-4. Publicar a 1.0.0 à mão a partir da branch do pull request de versão (`changeset-release/main`): `git switch changeset-release/main`, `npm ci`, `npm pack --dry-run` para conferir a lista e `npm publish --access public`. Essa versão sai sem prova de origem.
-5. Na página do pacote no npm, ligar o trusted publishing com o dono `felipe-sant`, o repositório `claude-kit` e o workflow `release.yml` (só o nome do arquivo). A configuração expira se a primeira publicação por ela não acontecer em 2 dias. Conferir na página do npm o que vale depois de uma publicação manual, e refazer a ligação se ela expirar.
-6. Fazer o merge do pull request de versão. A automação cria a tag `v1.0.0` e o Release e não publica de novo (CA-13).
+4. Publicar a 1.0.0 à mão a partir da branch do pull request de versão (`changeset-release/main`): `git switch changeset-release/main`, `npm ci`, `npm pack --dry-run` para conferir a lista e `npm publish --access public`. Essa versão sai sem prova de origem. Entre esta publicação e o merge do passo 5, nenhum outro pull request entra na `main`: uma nota patch transformaria o pull request de versão em 1.0.1 e a 1.0.0 ficaria sem tag, e qualquer outra mudança deixaria a `main` diferente do que foi publicado.
+5. Fazer o merge do pull request de versão. A automação cria a tag `v1.0.0` e o Release e não publica de novo (CA-13). Se valer a opção (a) da Dúvida U1, fechar e reabrir o pull request de versão logo antes do merge, depois da última atualização automática dele, porque cada atualização traz um commit novo sem checagens.
+6. Na página do pacote no npm, ligar o trusted publishing com o dono `felipe-sant`, o repositório `claude-kit` e o workflow `release.yml` (só o nome do arquivo), logo antes do merge do primeiro pull request de versão que deve publicar sozinho (a 1.0.1 ou a seguinte). A ligação expira se a primeira publicação por ela não acontecer em 2 dias. Fazer a ligação nesse momento evita a expiração.
 7. Colocar a checagem `Changeset` entre as obrigatórias da regra da `main`, se a Dúvida U3 for aceita.
 
 ## Plano de execução
@@ -257,11 +257,12 @@ Regra para todos os que implementarem: nunca escrever comentários em código, n
   - O script de corpo grava `changed=true|false` no `GITHUB_OUTPUT` e reescreve o arquivo, e recusa a chamada sem arquivo com mensagem em português.
   - O workflow:
     - dispara em `push` na `main`;
-    - usa o `changesets/action` fixado por SHA, com `npm run changeset:version` e o título e o commit do RN-05;
+    - usa o `changesets/action@v2` fixado por SHA, com `version-script: npm run changeset:version` e `commit-message` e `pr-title` do RN-05; o dev confere os nomes das entradas e da saída `pr-number` no `action.yml` do SHA fixado;
     - passa o `GITHUB_TOKEN` no ambiente;
     - só troca o corpo quando há `pr-number` e quando o corpo mudou;
     - não interpola `${{ }}` em `run`;
     - usa checkout e setup-node na versão 7.
+  - O dev confere, no código da ação do SHA fixado, que só notas vazias não abrem pull request de versão (CA-10). Se abrirem, relata ao Dev Ops 1 antes de seguir.
   - O actionlint passa.
   - O gate passa.
 - Teste: unitário. Primeiro deve falhar "troca o parágrafo padrão em inglês pelo texto em português". Depois vêm o corpo sem o parágrafo e os testes do workflow.
@@ -426,9 +427,9 @@ Do usuário:
     - (b) um token de app ou pessoal só para a automação de versão (segredo novo no repositório, mas não do npm);
     - (c) a automação de versão dispara o CI à mão na branch de versão, o que exige mudar o `ci.yml`;
     - (d) uma exceção na regra da `main`.
-  - Proposta: (a), sem segredo novo.
+  - Proposta: (a), sem segredo novo. O dono fecha e reabre o pull request logo antes do merge, depois da última atualização automática dele.
 - U2: a publicação da 1.0.0. A especificação segue a opção A.
-  - Opção A (proposta): o dono publica à mão a partir da branch do pull request de versão antes do merge. Depois liga o trusted publishing e faz o merge. A automação cria a tag e o Release e pula a publicação, porque a versão já está no npm.
+  - Opção A (proposta): o dono publica à mão a partir da branch do pull request de versão antes do merge, sem deixar outro pull request entrar no meio, e faz o merge. O trusted publishing é ligado depois, logo antes da primeira versão automática. A automação cria a tag e o Release e pula a publicação, porque a versão já está no npm.
   - Opção B: o dono faz o merge primeiro. A publicação automática falha por falta do trusted publishing e não cria a tag. O dono publica à mão a partir da `main`, liga o trusted publishing e roda a automação de novo, que cria a tag e o Release e pula a publicação.
   - A opção A evita uma execução vermelha.
 - U3: colocar a checagem "Changeset" entre as obrigatórias da regra da `main`? Sem isso, ela reprova, mas não impede o merge. Com isso, o pull request de versão depende de U1, porque ela fica de fora só quando roda.
