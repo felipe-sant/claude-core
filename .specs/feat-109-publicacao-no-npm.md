@@ -1,6 +1,6 @@
 # Publicar o claude-kit no npm com versões automáticas
 
-> Status: em-revisao
+> Status: aprovada
 > Tipo: funcionalidade
 > Tamanho: grande
 > Branch: feat/109-publicacao-no-npm
@@ -28,7 +28,7 @@ Hoje cada repositório usa o claude-kit a partir de um clone local, sem versão.
 - RN-12: O pacote leva só o que o `ai-sync` usa para funcionar. Testes, lint, automações do GitHub, o agente de issues, as especificações e os scripts de versão ficam de fora. Fonte: usuário (issue #109).
 - RN-13: O `ai-sync` instalado pelo npm continua sem apagar nem sobrescrever arquivo do usuário. Fonte: usuário (issue #109) e garantia do repositório.
 - RN-14: Os scripts novos não têm dependências de execução e têm testes. As ferramentas de notas de mudança entram só como dependências de desenvolvimento. Fonte: usuário (issue #109).
-- RN-15: O README e as instruções do projeto para os agentes explicam como instalar e atualizar pelo npm, como escrever a nota de mudança, a regra de versão e os passos do dono. Fonte: usuário (issue #109).
+- RN-15: O README e as instruções do projeto para os agentes explicam como instalar e atualizar pelo npm, como escrever a nota de mudança, a regra de versão e os passos do dono. As instruções do projeto para os agentes trazem a regra direta "Todo PR traz uma nota de mudança (changeset), criada no mesmo PR: patch, minor ou major pela regra de versão, ou vazia para documentação, textos (como o README), CI e testes." Assim o agente cria a nota sempre, sem o usuário precisar lembrar. Fonte: usuário (issue #109 e aprovação da especificação).
 - RN-16: As checagens que o CI já roda (lint, testes e checagem das automações) continuam passando. A cópia do time que o próprio `ai-sync` gera neste repositório nunca é editada à mão. Fonte: usuário (issue #109) e garantia do repositório.
 - RN-17: O pull request de versão não ganha token de app nem exceção na regra da `main`. Antes do merge dele, depois da última atualização automática, o dono fecha e reabre o pull request para o CI rodar. Isso fica nos passos do dono. Fonte: usuário (decisão sobre a dúvida U1).
 - RN-18: A 1.0.0 é publicada à mão pelo dono a partir da branch do pull request de versão, antes do merge dele, sem nenhum outro pull request entrar na `main` no meio. O trusted publishing é ligado depois, logo antes da primeira versão automática, e a automação cria a tag e o Release da 1.0.0 sem publicar de novo. Fonte: usuário (decisão sobre a dúvida U2, opção A).
@@ -60,7 +60,7 @@ Hoje cada repositório usa o claude-kit a partir de um clone local, sem versão.
 - CA-19: QUANDO o agente de issues abre um pull request de correção ou de ajuste que não quebra nada ENTÃO o pull request DEVE trazer uma nota de mudança patch em português simples. Cobre RN-09.
 - CA-20: QUANDO o agente de issues abre um pull request só de documentação, CI ou testes ENTÃO o pull request DEVE trazer uma nota vazia. Cobre RN-09.
 - CA-21: QUANDO a branch do agente de issues não traz nota de mudança ENTÃO o sistema NÃO DEVE abrir o pull request e DEVE registrar o motivo na issue, como já faz nas outras recusas. Cobre RN-04 e RN-09.
-- CA-22: QUANDO alguém lê o README e as instruções do projeto ENTÃO o sistema DEVE explicar como instalar e atualizar pelo npm, como escrever a nota de mudança (com tipo ou vazia), a regra de versão e os passos do dono. Cobre RN-08, RN-11 e RN-15.
+- CA-22: QUANDO alguém lê o README e as instruções do projeto ENTÃO o sistema DEVE explicar como instalar e atualizar pelo npm, como escrever a nota de mudança (com tipo ou vazia), a regra de versão e os passos do dono, e as instruções do projeto DEVEM trazer, com esse sentido, a regra direta "Todo PR traz uma nota de mudança (changeset), criada no mesmo PR: patch, minor ou major pela regra de versão, ou vazia para documentação, textos (como o README), CI e testes." Cobre RN-08, RN-11 e RN-15.
 - CA-23: QUANDO a suíte, o lint, a checagem do catálogo e a checagem das automações rodam depois da mudança ENTÃO o sistema DEVE aprovar todas. Cobre RN-14 e RN-16.
 - CA-24: QUANDO alguém confere o repositório e a descrição do pacote ENTÃO o sistema DEVE ter o arquivo de licença MIT com o titular Luiz Felipe e o ano 2026, e a descrição do pacote DEVE informar a licença MIT. Cobre RN-20.
 - CA-25: QUANDO alguém lê os passos do dono no README ENTÃO eles DEVEM trazer, na ordem, tornar a checagem "Changeset" obrigatória depois do merge desta tarefa, a publicação da 1.0.0 à mão antes do merge do pull request de versão e o fechar e reabrir do pull request de versão antes de cada merge dele. Cobre RN-17, RN-18 e RN-19.
@@ -441,7 +441,8 @@ Regra para todos os que implementarem: nunca escrever comentários em código, n
 - Atende: RN-03, RN-08, RN-15; CA-22.
 - Pronto quando:
   - A tabela cita `.changeset/`, `scripts/` e os workflows de nota, versão e release.
-  - "Regras ao editar" diz que todo pull request traz uma nota (com tipo ou vazia) no formato do contrato e qual tipo usar pela regra de versão.
+  - "Regras ao editar" traz a regra direta, com este texto: "Todo PR traz uma nota de mudança (changeset), criada no mesmo PR: patch, minor ou major pela regra de versão, ou vazia para documentação, textos (como o README), CI e testes."
+  - A mesma seção diz o formato da nota pelo contrato e qual tipo usar pela regra de versão.
   - O texto diz que o pull request de versão é da automação e regenera o `.claude/`.
   - "Verificar uma mudança" cita `npm pack --dry-run`.
   - A menção a `npm run sync` continua (o teste de sincronização confere).
