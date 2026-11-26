@@ -14,7 +14,7 @@ concurrency:
 jobs:
   changeset:
     name: Changeset
-    if: github.head_ref != 'changeset-release/main'
+    if: github.head_ref != 'changeset-release/main' || github.event.pull_request.head.repo.full_name != github.repository
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7

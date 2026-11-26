@@ -6,8 +6,11 @@ const h = require('./helpers')
 
 const readWorkflow = () => fs.readFileSync(path.join(h.repoRoot, '.github', 'workflows', 'changeset-check.yml'), 'utf8')
 
-test('o pull request de versão fica fora da checagem de nota', () => {
-  assert.match(readWorkflow(), /^ {4}if: github\.head_ref != 'changeset-release\/main'$/m)
+test('o pull request de versão fica fora da checagem de nota só quando vem do próprio repositório', () => {
+  assert.match(
+    readWorkflow(),
+    /^ {4}if: github\.head_ref != 'changeset-release\/main' \|\| github\.event\.pull_request\.head\.repo\.full_name != github\.repository$/m
+  )
 })
 
 test('a checagem roda em pull request para a main e só nela', () => {
