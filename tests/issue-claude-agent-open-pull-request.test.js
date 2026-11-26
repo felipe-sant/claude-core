@@ -212,3 +212,55 @@ test('nota fora da pasta de notas, em subpasta, de outro tipo ou só modificada 
     assert.notEqual(checkChangesetNote([file], 'fix/95-algo'), '', file.filename)
   }
 })
+
+async function runMainWithBranchFiles(files) {
+  const fs = require('node:fs')
+  const os = require('node:os')
+  const { main } = require(scriptPath)
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'abertura-'))
+  fs.writeFileSync(path.join(dir, 'branches-95'), 'main\n')
+  fs.writeFileSync(path.join(dir, 'pull-request-body.md'), validDescription)
+  const saved = { argv: process.argv, token: process.env.GITHUB_TOKEN, repository: process.env.GITHUB_REPOSITORY, check: process.env.CHECK_DIR }
+  process.argv = ['node', 'open-pull-request.js', dir, '95']
+  process.env.GITHUB_TOKEN = 'token'
+  process.env.GITHUB_REPOSITORY = 'dono/repo'
+  process.env.CHECK_DIR = dir
+  const calls = []
+  const answers = {
+    '/branches?': [{ name: 'main' }, { name: 'fix/95-algo' }],
+    '/issues/95': { title: 'Algo', labels: [{ name: 'Size: P' }] },
+    '/compare/': { ahead_by: 1, files },
+    '/pulls?state=open': [],
+    '/repos/dono/repo': { default_branch: 'main' }
+  }
+  globalThis.fetch = async (url, options = {}) => {
+    calls.push({ url, method: options.method || 'GET' })
+    if (options.method === 'POST') return { ok: true, status: 201, json: async () => ({ html_url: 'https://github.com/dono/repo/pull/1' }) }
+    const key = Object.keys(answers).find((part) => url.includes(part))
+    return { ok: true, status: 200, json: async () => answers[key] }
+  }
+  try {
+    const outcome = await main().then(() => null, (error) => error)
+    return { outcome, calls }
+  } finally {
+    globalThis.fetch = originalFetch
+    process.argv = saved.argv
+    for (const [name, value] of [['GITHUB_TOKEN', saved.token], ['GITHUB_REPOSITORY', saved.repository], ['CHECK_DIR', saved.check]]) {
+      if (value === undefined) delete process.env[name]
+      else process.env[name] = value
+    }
+    fs.rmSync(dir, { recursive: true })
+  }
+}
+
+test('no fluxo principal, branch sem nota de mudança não cria pull request', async () => {
+  const { outcome, calls } = await runMainWithBranchFiles([{ filename: 'README.md', status: 'modified' }])
+  assert.match(outcome.message, /A branch fix\/95-algo não traz a nota de mudança\./)
+  assert.equal(calls.some((call) => call.method === 'POST'), false)
+})
+
+test('no fluxo principal, branch com nota de mudança cria o pull request', async () => {
+  const { outcome, calls } = await runMainWithBranchFiles([{ filename: '.changeset/algo.md', status: 'added' }])
+  assert.equal(outcome, null)
+  assert.equal(calls.filter((call) => call.method === 'POST').length, 1)
+})

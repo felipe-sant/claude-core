@@ -182,4 +182,4 @@ if (require.main === module) {
   })
 }
 
-module.exports = { recordOutputs, createPullRequest, findIssueBranch, validateDescription, buildBody, buildTitle, checkSize, hasChangesetNote, checkChangesetNote, DESCRIPTION_FILE, PULL_REQUEST_LINE }
+module.exports = { main, recordOutputs, createPullRequest, findIssueBranch, validateDescription, buildBody, buildTitle, checkSize, hasChangesetNote, checkChangesetNote, DESCRIPTION_FILE, PULL_REQUEST_LINE }
