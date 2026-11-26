@@ -220,11 +220,12 @@ async function runMainWithBranchFiles(files) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'abertura-'))
   fs.writeFileSync(path.join(dir, 'branches-95'), 'main\n')
   fs.writeFileSync(path.join(dir, 'pull-request-body.md'), validDescription)
-  const saved = { argv: process.argv, token: process.env.GITHUB_TOKEN, repository: process.env.GITHUB_REPOSITORY, check: process.env.CHECK_DIR }
+  const saved = { argv: process.argv, token: process.env.GITHUB_TOKEN, repository: process.env.GITHUB_REPOSITORY, check: process.env.CHECK_DIR, output: process.env.GITHUB_OUTPUT }
   process.argv = ['node', 'open-pull-request.js', dir, '95']
   process.env.GITHUB_TOKEN = 'token'
   process.env.GITHUB_REPOSITORY = 'dono/repo'
   process.env.CHECK_DIR = dir
+  delete process.env.GITHUB_OUTPUT
   const calls = []
   const answers = {
     '/branches?': [{ name: 'main' }, { name: 'fix/95-algo' }],
@@ -245,7 +246,7 @@ async function runMainWithBranchFiles(files) {
   } finally {
     globalThis.fetch = originalFetch
     process.argv = saved.argv
-    for (const [name, value] of [['GITHUB_TOKEN', saved.token], ['GITHUB_REPOSITORY', saved.repository], ['CHECK_DIR', saved.check]]) {
+    for (const [name, value] of [['GITHUB_TOKEN', saved.token], ['GITHUB_REPOSITORY', saved.repository], ['CHECK_DIR', saved.check], ['GITHUB_OUTPUT', saved.output]]) {
       if (value === undefined) delete process.env[name]
       else process.env[name] = value
     }
