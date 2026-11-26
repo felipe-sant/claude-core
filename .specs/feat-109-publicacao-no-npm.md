@@ -130,6 +130,8 @@ Por isso o `changeset:version` termina com o `sync:version`, que apaga o registr
 
 O hook roda dentro do workflow de versão: o `npm ci` roda o `prepare`, que liga o `core.hooksPath`. O commit que o `changesets/action` faz por git passa pelo `.githooks/pre-commit` e precisa ser aceito.
 
+Correção registrada na T3: o `changesets/action` commita pela API do GitHub, e não por git. Por isso o hook de pre-commit não roda no commit do pull request de versão, e o `.claude/` regenerado pelo `sync:version` entra pelo estado da árvore. O parágrafo acima vale como hipótese original.
+
 ### `ai-sync` dentro do pacote instalado
 
 Em `bin/ai-sync.js`, `root = path.resolve(__dirname, '..')` aponta para a raiz do pacote em `node_modules/@felipe-sant/claude-kit`. A pasta alvo padrão é a pasta atual (`process.cwd()`). O comando lê `catalog.json`, `profiles/`, `package.json` (para a versão) e os caminhos do catálogo (`agents/`, `rules/`, `skills/`, `stacks/`, `templates/`). Logo o campo `files` é: `bin`, `catalog.json`, `agents`, `rules`, `skills`, `stacks`, `templates` e `profiles`. O npm inclui sozinho o `package.json`, o `README.md` e o `LICENSE`, que por isso não entra no `files`. O `.claude/` fica fora do pacote. O `bin/ai-sync.js` já é executável e começa com `#!/usr/bin/env node`. O campo `bin` deve ficar na forma que o npm não corrige sozinho (`bin/ai-sync.js`, sem `./`), para o `npm publish` não avisar.
@@ -259,7 +261,7 @@ Regra para todos os que implementarem: nunca escrever comentários em código, n
   - Se a T1 já fixou o `files` e ele passa de primeira, registrar que ele foi conferido contra um `files` vazio, que leva tudo.
 - Gate: `node --test tests/package-install.test.js`, `npm run lint` e `npm pack --dry-run`.
 - Modelo: padrao.
-- Status: pendente.
+- Status: feita (commit b7470cf, Dev Ops 1; o teste de instalação passou de primeira, como a especificação previa, e a falha foi provada contra um `files` vazio; gate: testes, lint e actionlint 1.7.12 ok).
 
 ### T3 [P] Pull request de versão
 
@@ -288,7 +290,7 @@ Regra para todos os que implementarem: nunca escrever comentários em código, n
 - Teste: unitário. Primeiro deve falhar "troca o parágrafo padrão em inglês pelo texto em português". Depois vêm o corpo sem o parágrafo e os testes do workflow.
 - Gate: `node --test tests/version-pr-body.test.js tests/version-workflow.test.js tests/workflow-actions-version.test.js`, `npm run lint` e o actionlint do Plano de execução.
 - Modelo: padrao.
-- Status: pendente.
+- Status: feita (commit a319961, Dev Ops 1; vermelho: `version-pr-body` e `version-workflow` sem scripts; depois 21 testes; gate: testes, lint e actionlint 1.7.12 ok). CA-10 confirmado no código da ação: só notas vazias não abrem pull request de versão. A ação commita pela API do GitHub, então o hook de pre-commit não roda no commit do pull request de versão, e o `.claude/` regenerado entra pelo estado da árvore.
 
 ### T4 [P] Release: publicação, tag e Release
 
@@ -322,7 +324,7 @@ Regra para todos os que implementarem: nunca escrever comentários em código, n
   - Depois vêm os testes do workflow.
 - Gate: `node --test tests/release-scripts.test.js tests/release-workflow.test.js tests/workflow-actions-version.test.js`, `npm run lint` e o actionlint do Plano de execução.
 - Modelo: padrao.
-- Status: pendente.
+- Status: feita (commit f137626, Dev Ops 1; vermelho: `release-scripts` e `release-workflow` sem scripts; depois 30 testes; gate: testes, lint e actionlint 1.7.12 ok).
 
 ### T5 [P] Checagem de nota de mudança no pull request
 
@@ -341,7 +343,7 @@ Regra para todos os que implementarem: nunca escrever comentários em código, n
 - Teste: unitário, sobre o texto do workflow. Primeiro deve falhar "o pull request de versão fica fora da checagem de nota".
 - Gate: `node --test tests/changeset-check-workflow.test.js tests/workflow-actions-version.test.js`, `npm run lint` e o actionlint do Plano de execução.
 - Modelo: economico.
-- Status: pendente.
+- Status: feita (commit 10ef12f, Dev Ops 1 por executor; 13 testes; o teste falhando primeiro não foi relatado; gate: testes, lint e actionlint 1.7.12 ok).
 
 ### T6 [P] Agente de issues cria a nota de mudança e trata o major
 
