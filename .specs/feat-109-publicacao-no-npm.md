@@ -377,7 +377,7 @@ Regra para todos os que implementarem: nunca escrever comentários em código, n
   - Depois a guarda do Size Set "mudança major pela regra de versão é M".
 - Gate: `node --test tests/issue-claude-agent-prompt.test.js tests/issue-claude-agent-workflow.test.js tests/issue-size-set-prompt.test.js tests/issue-size-set-workflow.test.js` e `npm run lint`. Sem typecheck nem formatador no projeto.
 - Modelo: padrao.
-- Status: pendente.
+- Status: feita (commit dd2fbf8, Dev Ops 2; vermelho: 17 guardas novas falhando; gate: 570 testes ok, lint ok, `ai-sync --check` ok).
 
 ### T7 [P] Abertura do pull request do agente confere a nota
 
@@ -398,7 +398,7 @@ Regra para todos os que implementarem: nunca escrever comentários em código, n
 - Teste: unitário. Primeiro deve falhar "branch sem nota de mudança não abre pull request". Depois vêm: nota vazia aceita, README sozinho recusado, nota fora de `.changeset/` recusada.
 - Gate: `node --test tests/issue-claude-agent-open-pull-request.test.js` e `npm run lint`.
 - Modelo: padrao.
-- Status: pendente.
+- Status: feita (commit 96dcebc, Dev Ops 2; vermelho: 4 testes com "checkChangesetNote is not a function"; gate: 553 testes ok, lint ok, `ai-sync --check` ok).
 
 ### T8 [P] README: instalar pelo npm, nota de mudança e passos do dono
 
