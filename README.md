@@ -28,8 +28,6 @@ Depois, abra o Claude no repositório e transforme a sessão na orquestradora do
 /team-setup
 ```
 
-A própria sessão principal vira a `orchestrator` ao carregar a skill `team-setup`; não é preciso abrir o Claude com `--agent`.
-
 Para atualizar, suba a versão e rode o `ai-sync` de novo:
 
 ```
@@ -63,7 +61,6 @@ Sem `--profile`, o `ai-sync` detecta as stacks do projeto e aplica o que vale pa
 - A detecção lê o `package.json` e o `composer.json` na raiz e nas pastas de primeiro nível (menos as ocultas, `node_modules`, `vendor`, `dist`, `build` e `coverage`). Um repositório com painel e API reconhece as duas stacks.
 - Se nada for reconhecido, aplica só o que vale para qualquer projeto e avisa.
 - Os padrões e as skills de uma stack não chegam a projetos de outra.
-- Além dos arquivos, o `ai-sync` libera em `.claude/settings.local.json` a pasta de worktrees das tarefas (`<repositório>-worktrees`, ao lado do repositório) e mantém `.claude/team-memory/` e `.claude/settings.local.json` fora do git.
 
 ### Perfis
 
@@ -99,7 +96,7 @@ O modelo `templates/settings.base.json` vai para `.claude/settings.json`, o arqu
 | `env.CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY` | `1` | Sem a pesquisa de satisfação no meio do trabalho. |
 
 - Sem `.claude/settings.json`, o arquivo é criado com o modelo. Com ele, só o que falta é acrescentado: o que você definiu nunca muda, e o que difere do recomendado aparece em "Sugerido e não aplicado". Listas existentes ficam como estão.
-- O que você apagar depois não volta, e um `settings.json` apagado não é recriado. O registro do que foi acrescentado fica no `claude-kit.lock.json`. Se o registro for apagado e recriado, configurações iguais às do modelo passam a constar como do kit.
+- O que você apagar depois não volta, e um `settings.json` apagado não é recriado. O registro do que foi acrescentado fica no `claude-kit.lock.json`.
 - Arquivo com JSON inválido não é tocado, e a ferramenta avisa. Tirar uma chave do modelo não a remove de quem já a recebeu: apague-a à mão.
 - O modelo não concede permissões amplas, não define `model` e não define hooks. A única permissão nova, a da pasta de worktrees, vai para o `.claude/settings.local.json`, que fica fora do git.
 
@@ -214,8 +211,6 @@ Ficam em `.claude/skills/<nome>/SKILL.md`. O Claude as usa sozinho quando o pedi
 
 Por stack: `react-component` (React) e `nestjs-module` (NestJS), ambas com teste primeiro.
 
-Regras e skills que você editar no projeto não são sobrescritas pela próxima sincronização.
-
 ## Contribuir com o claude-kit
 
 Esta parte é para quem mantém o `claude-kit`. O repositório não tem aplicação nem build: é conteúdo (markdown e JSON) mais o `ai-sync`, um script Node sem dependências de execução.
@@ -258,8 +253,9 @@ Instale as dependências uma vez com `npm ci`.
 - `node bin/ai-sync.js --check`: consistência do catálogo e dos perfis.
 - `npm pack --dry-run`: lista o que o pacote leva para o npm (só o que o `ai-sync` usa).
 - `npm run sync`: aplica o `claude-kit` neste repositório e atualiza o `.claude/`.
+- Para testar uma mudança em outro repositório antes de publicar, rode o `ai-sync` pelo clone: `node bin/ai-sync.js /caminho/do/repo`.
 
-O hook de pre-commit (`.githooks/pre-commit`, ligado pelo `npm ci`) roda o `npm run sync` a cada commit. No commit sem caminhos, inclui o `.claude/` no commit; no commit por caminhos, recusa o commit se os arquivos gerados não estiverem atualizados e incluídos nos caminhos, orientando a rodar `npm run sync`. Se outro agente tem fontes alteradas e não commitadas na mesma pasta, espere ele commitar ou use uma worktree isolada. Um teste também reprova a cópia desatualizada. O GitHub roda lint e testes em todo PR.
+O hook de pre-commit regenera o `.claude/` a cada commit, e o GitHub roda lint e testes em todo PR. Os detalhes estão em `.claude/CLAUDE.md`.
 
 ### Nota de mudança
 
@@ -293,7 +289,7 @@ A nota vazia tem só os dois `---`, sem tipo e sem texto. O CI reprova o pull re
 2. O merge do pull request de versão cria a tag `vX.Y.Z`, cria o Release com a seção daquela versão do CHANGELOG e publica a versão no npm. Versão que já tem tag não é publicada de novo, e versão abaixo da 1.0.0 não é publicada.
 3. A publicação usa o trusted publishing do npm: não há token guardado no repositório, e as versões automáticas saem com prova de origem. Se a publicação falha, a tag não é criada e rodar a automação de novo tenta publicar outra vez.
 
-O pull request de versão é aberto com o token padrão do GitHub, que não dispara o CI. Antes de cada merge dele, depois da última atualização automática, feche e reabra o pull request e espere o CI passar.
+O pull request de versão é aberto com o token padrão do GitHub, que não dispara o CI. Antes de cada merge dele, depois da última atualização automática, feche e reabra o pull request e espere o CI passar. O mesmo vale para o pull request que o agente de issues abre.
 
 ### Passos do dono do repositório
 
@@ -326,9 +322,8 @@ Na dúvida entre P e M, é M. Mudar automações, fluxos do GitHub, permissões 
 
 - Roda encadeada pela Issue Size Set, todo dia às 02:47 de Brasília e à mão. Cada execução trata uma única issue, a P mais antiga que puder ser tratada.
 - Só trata issue P sem pull request ligado, sem branch própria, sem responsável e sem dependência aberta. Pode haver até 5 pull requests do agente abertos; com 5 ou mais, a execução termina sem chamar o Claude.
-- Se o corpo da issue diz "depende de #n" (também "do" e "da", e várias issues na mesma frase) e a #n está aberta, a issue espera fora da fila. Só o corpo conta; citações em código, de outro repositório, da própria issue ou de pull request aberto são ignoradas.
-- A automação comenta na issue que o agente começou e, no fim, edita esse comentário com o link do pull request ou o motivo de não ter aberto. Se o agente comentou na issue, o comentário de acompanhamento é apagado para ficar só o dele. A saída completa do agente fica como artefato `saida-do-agente` por 7 dias, com os segredos trocados por `***`.
-- Se termina com branch enviada e sem pull request, a automação apaga a branch para a issue voltar à fila. Cada execução termina com uma conferência que falha de forma visível se algo saiu do permitido.
+- Issue que diz "depende de #n" com a #n ainda aberta espera fora da fila.
+- A automação comenta na issue que o agente começou e, no fim, atualiza o comentário com o link do pull request ou o motivo de não ter aberto.
 - Nunca fazem merge, nunca enviam nada direto para a `main`, nunca definem prioridade e nunca editam à mão o `.claude/`, exceto o `.claude/CLAUDE.md`.
 
 Disparo à mão: em Actions, escolha "Issue Size Set" ou "Issue Claude Agent" e clique em Run workflow, ou:
@@ -341,17 +336,13 @@ gh workflow run issue-claude-agent.yml -f issue=<número>
 
 O campo `issue` existe só na Issue Claude Agent e aceita apenas dígitos. Vazio, ela pega a P mais antiga que pode ser tratada. Com o número de uma issue que não pode ser tratada, ou com o limite de 5 atingido, termina sem fazer nada e o resumo da execução diz o motivo.
 
-Pull request do agente fechado sem merge não volta para a fila. Para liberar a issue: apague a linha `Closes #<número>` da descrição do pull request (ou desligue-o em "Development" na issue), apague a branch do agente se ainda existir (`fix/<número>-...`) e confira que a issue está com `Size: P` e sem responsável. Se continuar fora da fila, abra uma issue nova.
-
-O pull request aberto pela automação não dispara o CI sozinho: feche e reabra o pull request ou envie um commit nele.
-
 ### Instalação das automações
 
 Feita pelo dono do repositório, uma vez:
 
 1. Gere a credencial da assinatura Pro/Max com `claude setup-token` e guarde como segredo do repositório com o nome `CLAUDE_CODE_OAUTH_TOKEN`: `gh secret set CLAUDE_CODE_OAUTH_TOKEN --repo felipe-sant/claude-kit`.
 2. Instale o app do Claude no repositório com `/install-github-app` no Claude Code.
-3. Ligue em Settings, Actions, General, a opção "Allow GitHub Actions to create and approve pull requests" (a mesma do passo 2 dos passos do dono). Sem ela, a automação não abre o pull request do agente.
+3. Ligue a opção "Allow GitHub Actions to create and approve pull requests" (veja os passos do dono). Sem ela, a automação não abre o pull request do agente.
 
 Sem a credencial, a execução falha de forma visível, e a Issue Size Set não dispara a Issue Claude Agent.
 
