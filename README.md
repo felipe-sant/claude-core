@@ -127,7 +127,7 @@ A `orchestrator` não é um agente: é a sessão principal depois de `/team-setu
 - Cada tarefa roda em uma worktree própria, confirmada com você, para várias sessões trabalharem juntas no mesmo repositório.
 - No início, ela pergunta um tema opcional para os nomes (por exemplo, personagens de Jujutsu Kaisen), o nome dela e o do `product-owner`. O nome de cada dev, do `reviewer`, do `qa` e do `designer` é perguntado só quando eles entram, uma pergunta por agente.
 - Ela mostra uma tabela com o que cada agente está fazendo quando o time é montado, quando uma fase muda, quando alguém trava e antes de te fazer uma pergunta.
-- Os agentes compartilham uma memória do time por repositório, em `.claude/team-memory/`, que guarda só o que continua valendo depois da tarefa e só é gravada a pedido seu.
+- Os agentes compartilham uma memória do time por repositório, em `.claude/team-memory/`, que guarda só o que continua valendo depois da tarefa, só é gravada a pedido seu e o `ai-sync` a mantém fora do git.
 
 ### Subagentes ou time de agentes
 
