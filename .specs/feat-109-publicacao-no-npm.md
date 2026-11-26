@@ -5,6 +5,7 @@
 > Tamanho: grande
 > Branch: feat/109-publicacao-no-npm
 > Criada em: 2026-11-25
+> Revisão: o Reviewer aprovou T1 a T9 e o encaixe entre elas, sem achado bloqueante. Falta a validação do QA.
 
 Issue: #109 de felipe-sant/claude-kit. Pedido por: Dev Ops 1.
 
@@ -343,7 +344,7 @@ Regra para todos os que implementarem: nunca escrever comentários em código, n
 - Teste: unitário, sobre o texto do workflow. Primeiro deve falhar "o pull request de versão fica fora da checagem de nota".
 - Gate: `node --test tests/changeset-check-workflow.test.js tests/workflow-actions-version.test.js`, `npm run lint` e o actionlint do Plano de execução.
 - Modelo: economico.
-- Status: feita (commit 10ef12f, Dev Ops 1 por executor; 13 testes; o teste falhando primeiro não foi relatado; gate: testes, lint e actionlint 1.7.12 ok).
+- Status: feita (commit 10ef12f, Dev Ops 1 por executor; 10 testes; o executor não relatou o teste falhando primeiro, e o Reviewer refez a prova contra o commit anterior: o teste do pull request de versão fora da checagem falha por ENOENT; gate: testes, lint e actionlint 1.7.12 ok).
 
 ### T6 [P] Agente de issues cria a nota de mudança e trata o major
 
