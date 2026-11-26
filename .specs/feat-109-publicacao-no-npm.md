@@ -22,7 +22,7 @@ Hoje cada repositório usa o claude-kit a partir de um clone local, sem versão.
 - RN-06: O merge do pull request de versão cria a tag `vX.Y.Z`, cria o Release com a seção daquela versão do CHANGELOG e publica a versão no npm. Versão que já tem tag não é publicada de novo. Fonte: usuário (issue #109).
 - RN-07: O pull request de versão também atualiza a cópia do time que este repositório usa em si mesmo (a pasta gerada pelo próprio `ai-sync`). O registro dessa cópia guarda a versão do claude-kit, e a checagem de sincronia é rígida. Fonte: usuário (issue #109).
 - RN-08: Regra de versão. major: remove ou renomeia um agente, uma regra ou uma skill, muda o fluxo do time ou quebra uma opção do `ai-sync`. minor: novo agente, regra, skill, stack ou opção. patch: ajuste de texto, correção ou mudança que não quebra nada. Fonte: usuário (issue #109).
-- RN-09: O agente de issues cria a nota de mudança nos pull requests que abre: patch para correção e nota vazia para documentação, CI ou testes. O texto é em português simples. Fonte: usuário (issue #109).
+- RN-09: O agente de issues cria a nota de mudança nos pull requests que abre, pela regra de versão: patch para correção ou ajuste que não quebra nada, minor para um item ou uma opção nova pequena (a issue continua P) e nota vazia para documentação, CI ou testes. O texto da nota é em português simples. Fonte: usuário (issue #109) e product-owner (resposta à dúvida P1).
 - RN-10: A publicação usa o trusted publishing do npm. Nenhum token fica guardado no repositório, e a publicação automática leva a prova de origem. Fonte: usuário (issue #109).
 - RN-11: O npm só deixa ligar o trusted publishing na página de um pacote que já existe. Por isso a 1.0.0 é publicada à mão pelo dono, e a automação assume a partir da versão seguinte. Fonte: usuário (issue #109, conferido na documentação do npm).
 - RN-12: O pacote leva só o que o `ai-sync` usa para funcionar. Testes, lint, automações do GitHub, o agente de issues, as especificações e os scripts de versão ficam de fora. Fonte: usuário (issue #109).
@@ -35,6 +35,7 @@ Hoje cada repositório usa o claude-kit a partir de um clone local, sem versão.
 - RN-19: A checagem "Changeset" passa a ser obrigatória na regra da `main`. O dono faz essa mudança depois do merge desta tarefa. Fonte: usuário (decisão sobre a dúvida U3).
 - RN-20: O pacote usa a licença MIT, com titular Luiz Felipe e ano 2026, e a descrição do pacote informa essa licença. Fonte: usuário (decisão sobre a dúvida U4).
 - RN-21: Os títulos de seção que a ferramenta de notas escreve sozinha em inglês no CHANGELOG e na lista do pull request de versão ficam como estão. Só o parágrafo fixo da descrição do pull request de versão é traduzido. Fonte: usuário (decisão sobre a dúvida U5).
+- RN-22: Mudança major pela regra de versão nunca é P. A classificação de tamanho trata como M toda mudança que a regra de versão classifica como major. O agente de issues conhece a regra de versão completa e, se perceber durante a execução que a mudança é major, para, explica o motivo na issue e troca P por M, sem deixar pull request, como já faz quando a issue P é maior do que parecia. Fonte: product-owner (resposta à dúvida P1).
 
 ## Critérios de aceite
 
@@ -56,13 +57,17 @@ Hoje cada repositório usa o claude-kit a partir de um clone local, sem versão.
 - CA-16: QUANDO a consulta ao npm falha por um motivo que não seja "versão não encontrada" ENTÃO o sistema DEVE parar com erro, sem publicar e sem criar tag. Cobre RN-06.
 - CA-17: QUANDO o CHANGELOG não tem a seção da versão ENTÃO o sistema DEVE parar com erro em português, sem publicar e sem criar tag. Cobre RN-06.
 - CA-18: QUANDO alguém lê a configuração do repositório ENTÃO o sistema NÃO DEVE ter token do npm guardado nem passado à publicação. Cobre RN-10.
-- CA-19: QUANDO o agente de issues abre um pull request de correção ENTÃO o pull request DEVE trazer uma nota de mudança patch em português simples. Cobre RN-09.
+- CA-19: QUANDO o agente de issues abre um pull request de correção ou de ajuste que não quebra nada ENTÃO o pull request DEVE trazer uma nota de mudança patch em português simples. Cobre RN-09.
 - CA-20: QUANDO o agente de issues abre um pull request só de documentação, CI ou testes ENTÃO o pull request DEVE trazer uma nota vazia. Cobre RN-09.
 - CA-21: QUANDO a branch do agente de issues não traz nota de mudança ENTÃO o sistema NÃO DEVE abrir o pull request e DEVE registrar o motivo na issue, como já faz nas outras recusas. Cobre RN-04 e RN-09.
 - CA-22: QUANDO alguém lê o README e as instruções do projeto ENTÃO o sistema DEVE explicar como instalar e atualizar pelo npm, como escrever a nota de mudança (com tipo ou vazia), a regra de versão e os passos do dono. Cobre RN-08, RN-11 e RN-15.
 - CA-23: QUANDO a suíte, o lint, a checagem do catálogo e a checagem das automações rodam depois da mudança ENTÃO o sistema DEVE aprovar todas. Cobre RN-14 e RN-16.
 - CA-24: QUANDO alguém confere o repositório e a descrição do pacote ENTÃO o sistema DEVE ter o arquivo de licença MIT com o titular Luiz Felipe e o ano 2026, e a descrição do pacote DEVE informar a licença MIT. Cobre RN-20.
 - CA-25: QUANDO alguém lê os passos do dono no README ENTÃO eles DEVEM trazer, na ordem, tornar a checagem "Changeset" obrigatória depois do merge desta tarefa, a publicação da 1.0.0 à mão antes do merge do pull request de versão e o fechar e reabrir do pull request de versão antes de cada merge dele. Cobre RN-17, RN-18 e RN-19.
+- CA-26: QUANDO o agente de issues abre um pull request que adiciona um item ou uma opção nova pequena (agente, regra, skill, stack ou opção do `ai-sync`) ENTÃO o pull request DEVE trazer uma nota de mudança minor em português simples, e a issue DEVE continuar P. Cobre RN-08 e RN-09.
+- CA-27: QUANDO o agente de issues percebe, durante a execução, que a mudança é major pela regra de versão ENTÃO o sistema DEVE parar sem enviar branch nem abrir pull request, comentar o motivo na issue e trocar o tamanho P por M. Cobre RN-08 e RN-22.
+- CA-28: QUANDO a classificação de tamanho avalia uma issue cuja mudança é major pela regra de versão ENTÃO o sistema DEVE classificá-la como M, nunca como P. Cobre RN-08 e RN-22.
+- CA-29: QUANDO alguém lê as instruções do agente de issues ENTÃO elas DEVEM trazer a regra de versão completa (major, minor e patch) e a nota vazia para documentação, CI ou testes. Cobre RN-08 e RN-09.
 
 ## Critérios de sucesso
 
@@ -76,7 +81,7 @@ Hoje cada repositório usa o claude-kit a partir de um clone local, sem versão.
 - Ambiente de staging e promoção entre branches: o repositório só tem a `main` (RN-03). Por isso o verificador de notas pendentes do portfolio, que só serve à promoção, não é trazido.
 - Dependabot ou Renovate nos repositórios que usam o pacote: é configuração de cada consumidor.
 - Mudanças no `ai-sync` além do que o empacotamento exigir. Hoje ele acha o conteúdo a partir da pasta do próprio comando, o que já funciona dentro do pacote instalado (ver Desenho). Uma mudança só entra se o teste de instalação provar que é necessária.
-- Mudar a classificação de tamanho das issues ou o fluxo do time.
+- Mudar a classificação de tamanho das issues ou o fluxo do time. A única mudança na classificação é a de RN-22: mudança major pela regra de versão é M. O resto dos critérios de tamanho fica como está.
 - Uma regra da nota de mudança para os repositórios consumidores: a regra vale só para este repositório e fica no README e nas instruções do projeto, nunca nas regras copiadas pelo `ai-sync`.
 - Traduzir os títulos de seção que a ferramenta de notas escreve sozinha no CHANGELOG e na lista do pull request de versão: por decisão do usuário, eles ficam em inglês (RN-21).
 
@@ -93,7 +98,7 @@ Hoje cada repositório usa o claude-kit a partir de um clone local, sem versão.
 | `.github/workflows/changeset-check.yml` | Reprova pull request sem nota | Dev Ops 1 |
 | `.github/workflows/version.yml` e scripts do texto do PR de versão | Abre ou atualiza o pull request de versão | Dev Ops 1 |
 | `.github/workflows/release.yml` e scripts de release | Publica, cria a tag e o Release | Dev Ops 1 |
-| `.github/issue-agent/agent-prompt.md` e `.github/issue-agent/open-pull-request.js` | Agente cria a nota, e a abertura do pull request confere se ela existe | Dev Ops 2 |
+| `.github/issue-agent/agent-prompt.md`, `.github/issue-agent/size-set-prompt.md` e `.github/issue-agent/open-pull-request.js` | Agente cria a nota pela regra de versão e para no major, a classificação trata major como M, e a abertura do pull request confere se a nota existe | Dev Ops 2 |
 | `README.md` e `.claude/CLAUDE.md` | Documentação | Dev Doc |
 
 ### Contrato (fixado pela T1, consumido por T2 a T9)
@@ -159,6 +164,8 @@ Em `bin/ai-sync.js`, `root = path.resolve(__dirname, '..')` aponta para a raiz d
 ### Agente de issues
 
 - O agente já pode usar `Write` sem restrição de caminho, `git add:*` e `git commit:*`, e não pode rodar `npx`. Então ele grava a nota direto, no formato do contrato, com a ferramenta de escrita, e a inclui no commit pelo caminho. Não é preciso mudar as ferramentas liberadas no workflow.
+- O prompt do agente (`agent-prompt.md`) traz a regra de versão completa e o tipo da nota: patch para correção ou ajuste compatível, minor para item ou opção nova pequena, vazia para documentação, CI ou testes. Major não tem nota: o agente usa a saída que já existe na seção "Se a issue P for maior do que parecia" (para, apaga a branch local, não envia branch, comenta o motivo na issue sem a marca de classificação e troca `Size: P` por `Size: M`). A conferência final do workflow do agente já aceita `Size: M` quando não há pull request do agente aberto para a issue, então o workflow não muda.
+- O prompt do Size Set (`size-set-prompt.md`) ganha, na lista de critérios de tamanho, só a regra de que mudança major pela regra de versão é sempre M, com os casos de major de RN-08. O workflow do Size Set não muda.
 - A abertura do pull request (`open-pull-request.js`) passa a recusar a branch que não traz nenhuma nota nova, com um motivo em português. É a mesma forma das outras recusas (`Refusal`, `failure_reason`), que o comentário de fim de acompanhamento já mostra na issue. Isso garante RN-04 mesmo quando o CI não roda no pull request aberto pela automação.
 
 ### Passos do dono (documentados pela Dev Doc, feitos fora do código)
@@ -336,25 +343,40 @@ Regra para todos os que implementarem: nunca escrever comentários em código, n
 - Modelo: economico.
 - Status: pendente.
 
-### T6 [P] Agente de issues cria a nota de mudança
+### T6 [P] Agente de issues cria a nota de mudança e trata o major
 
-- O quê: instruir o agente de issues a gravar a nota de mudança no formato do contrato em todo pull request que abre.
-- Onde: `.github/issue-agent/agent-prompt.md` (seção "Pull request" e "Limites") e `tests/issue-claude-agent-prompt.test.js` (novas guardas).
+- O quê: instruir o agente de issues a gravar a nota de mudança pela regra de versão e a parar no major trocando P por M, e instruir a classificação de tamanho a tratar mudança major como M.
+- Onde:
+  - `.github/issue-agent/agent-prompt.md` (seções "Pull request", "Se a issue P for maior do que parecia" e "Limites").
+  - `.github/issue-agent/size-set-prompt.md` (lista de critérios de "Classificar").
+  - `tests/issue-claude-agent-prompt.test.js` e `tests/issue-size-set-prompt.test.js` (novas guardas).
+  - Não edita o `package.json`, os workflows do Dev Ops 1 nem os workflows `issue-*.yml`.
 - Dev: Dev Ops 2.
 - Depende de: T1.
-- Reaproveita: o mapa `guards` do teste do prompt e as regras atuais do prompt (sem crase nem cifrão em comandos, arquivos pelo caminho).
-- Atende: RN-08, RN-09; CA-19, CA-20.
+- Reaproveita:
+  - O mapa `guards` dos dois testes de prompt.
+  - As regras atuais do prompt do agente (sem crase nem cifrão em comandos, arquivos pelo caminho).
+  - A seção "Se a issue P for maior do que parecia", que já é a saída para trocar P por M sem pull request.
+  - A regra de versão (RN-08), escrita do mesmo jeito nos dois prompts.
+- Atende: RN-08, RN-09, RN-22; CA-19, CA-20, CA-26, CA-27, CA-28, CA-29.
 - Pronto quando:
-  - O prompt manda gravar, com a ferramenta de escrita, um arquivo `.changeset/<nome-da-branch-com-hífen>.md`:
-    - patch para correção, com uma ou duas linhas em português simples, sem caminho de arquivo nem código;
+  - O prompt do agente traz a regra de versão completa: major (remove ou renomeia agente, regra ou skill, muda o fluxo do time ou quebra uma opção do `ai-sync`), minor (novo agente, regra, skill, stack ou opção) e patch (ajuste de texto, correção ou mudança que não quebra nada).
+  - O prompt do agente manda gravar, com a ferramenta de escrita, um arquivo `.changeset/<nome-da-branch-com-hífen>.md`:
+    - patch para correção ou ajuste compatível, com uma ou duas linhas em português simples, sem caminho de arquivo nem código;
+    - minor para item ou opção nova pequena, no mesmo formato;
     - nota vazia para documentação, CI ou testes, no formato exato do contrato.
-  - O prompt manda incluir a nota no commit pelo caminho e nunca rodar `npx changeset`.
-  - Novas guardas no teste conferem cada frase.
-  - As ferramentas liberadas no workflow não mudam.
+  - O prompt do agente diz que mudança major nunca é P: se ele perceber durante a execução que a mudança é major, segue a seção "Se a issue P for maior do que parecia" (para, não envia branch nem deixa pull request, comenta o motivo na issue e troca `Size: P` por `Size: M`).
+  - O prompt do agente manda incluir a nota no commit pelo caminho e nunca rodar `npx changeset`.
+  - O prompt do Size Set diz que mudança classificada como major pela regra de versão é sempre M, com os casos de major. Os outros critérios de tamanho não mudam.
+  - Novas guardas nos dois testes conferem cada frase, e as guardas atuais continuam passando.
+  - As ferramentas liberadas e o resto dos workflows `issue-*.yml` não mudam.
   - O gate passa.
-- Teste: unitário. Primeiro deve falhar a guarda "o agente grava a nota de mudança patch na correção".
-- Gate: `node --test tests/issue-claude-agent-prompt.test.js tests/issue-claude-agent-workflow.test.js` e `npm run lint`.
-- Modelo: economico.
+- Teste: unitário.
+  - Primeiro deve falhar a guarda "o agente grava a nota de mudança patch na correção".
+  - Depois as guardas da nota minor, da nota vazia, da regra de versão no prompt do agente e de "major para e troca P por M".
+  - Depois a guarda do Size Set "mudança major pela regra de versão é M".
+- Gate: `node --test tests/issue-claude-agent-prompt.test.js tests/issue-claude-agent-workflow.test.js tests/issue-size-set-prompt.test.js tests/issue-size-set-workflow.test.js` e `npm run lint`. Sem typecheck nem formatador no projeto.
+- Modelo: padrao.
 - Status: pendente.
 
 ### T7 [P] Abertura do pull request do agente confere a nota
@@ -433,8 +455,4 @@ Regra para todos os que implementarem: nunca escrever comentários em código, n
 
 Do usuário: nenhuma. As dúvidas U1 a U5 foram decididas e viraram as regras RN-17 a RN-21.
 
-Do product-owner:
-
-- P1: quando uma issue P resolvida pelo agente de issues adiciona algo novo (agente, regra, skill ou opção, que pela regra de versão é minor) ou quebra algo (major), qual nota o agente grava? A decisão do usuário cobre só patch e vazia.
-  - Proposta a confirmar: minor segue a regra de versão, e major faz a issue virar M, por exigir decisão do dono.
-  - Até a resposta, a T6 instrui só patch e vazia.
+Do product-owner: nenhuma. A dúvida P1 foi respondida e virou RN-09 (ampliada) e RN-22.
