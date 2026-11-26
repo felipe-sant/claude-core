@@ -366,7 +366,7 @@ e escolha o tipo (major, minor ou patch). Para documentação, textos (como o RE
 npm run changeset -- --empty
 ```
 
-A nota é o arquivo `.changeset/<nome-da-branch>.md`, com o tipo no cabeçalho e o texto em português simples, de uma ou duas linhas:
+A nota é um arquivo em `.changeset/`, com o tipo no cabeçalho e o texto em português simples, de uma ou duas linhas. O nome do arquivo é livre e único: o `npm run changeset` gera um nome aleatório, e o nome da branch é só uma sugestão para quem cria à mão. O `npm run changeset` com tipo é interativo; quem não tem terminal (como um agente) cria o arquivo à mão, no mesmo formato:
 
 ```
 ---
@@ -376,7 +376,7 @@ A nota é o arquivo `.changeset/<nome-da-branch>.md`, com o tipo no cabeçalho e
 Corrige a mensagem do ai-sync quando a pasta não existe.
 ```
 
-A nota vazia é a que o `npm run changeset -- --empty` gera: só o cabeçalho, sem tipo e sem texto. O CI reprova o pull request sem nota (a checagem `Changeset`), e o pull request de versão fica fora dessa checagem.
+A nota vazia é a que o `npm run changeset -- --empty` gera: só os dois `---` do cabeçalho, sem tipo e sem texto. O CI reprova o pull request sem nota (a checagem `Changeset`), e o pull request de versão fica fora dessa checagem.
 
 ### Regra de versão
 
