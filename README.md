@@ -15,17 +15,30 @@ Stacks com conteúdo hoje: React, NestJS, Laravel e AdonisJS.
 
 ## Usar em um repositório
 
-Requer Node 22 ou mais novo.
+Requer Node 22 ou mais novo. O `claude-kit` é publicado no npm como `@felipe-sant/claude-kit`, e o comando é o `ai-sync`, chamado pelo `npx`.
+
+Para fixar a versão do time no repositório, instale como dependência de desenvolvimento e rode:
+
+```
+npm install --save-dev @felipe-sant/claude-kit
+npx ai-sync
+```
+
+Para usar sem instalar:
+
+```
+npx @felipe-sant/claude-kit
+```
+
+Para atualizar, suba a versão e rode o `ai-sync` de novo (por exemplo, `npm install --save-dev @felipe-sant/claude-kit@latest` e `npx ai-sync`). Para voltar a uma versão anterior, instale essa versão (`@felipe-sant/claude-kit@1.0.0`) e rode o `ai-sync`. Cada arquivo instalado guarda no registro a versão do `claude-kit` que o trouxe.
+
+Quem desenvolve o próprio `claude-kit` pode usar um clone local no lugar do pacote:
 
 ```
 node ~/claude-kit/bin/ai-sync.js /caminho/do/repo
 ```
 
-Ou, dentro do repositório, sem argumento de pasta:
-
-```
-node ~/claude-kit/bin/ai-sync.js
-```
+O pacote leva só o que o `ai-sync` usa (o comando, o catálogo, os agentes, as regras, as skills, as stacks, os modelos de configuração e os perfis). Testes, lint, automações do GitHub e especificações ficam de fora.
 
 Depois, abra o Claude normalmente no repositório e transforme a sessão na orquestradora do time:
 
@@ -241,7 +254,7 @@ Duas automações do GitHub Actions, só deste repositório (não vão para outr
 | `Size: M` | Precisa da atenção do dono do repositório. |
 | `Size: G` | Grande migração ou mudança que envolve o fluxo inteiro do repositório. |
 
-Na dúvida entre P e M, o tamanho é M. Mudar automações, fluxos do GitHub, permissões ou segredos, ou apagar arquivo, é sempre M. As issues M e G recebem só o tamanho e um comentário curto com o motivo e o link da execução.
+Na dúvida entre P e M, o tamanho é M. Mudar automações, fluxos do GitHub, permissões ou segredos, ou apagar arquivo, é sempre M, e mudança major pela regra de versão (veja "Versões e publicação") também. As issues M e G recebem só o tamanho e um comentário curto com o motivo e o link da execução.
 
 ### Issue Size Set
 
@@ -254,12 +267,12 @@ Na dúvida entre P e M, o tamanho é M. Mudar automações, fluxos do GitHub, pe
 
 ### Issue Claude Agent
 
-- Faz: resolve uma issue P, no padrão de branch, commit e descrição do time, só com o lint e os testes passando. O agente envia a branch e grava a descrição do pull request, com as seções "O que muda", "Como foi verificado" e "Observações", num arquivo que a própria automação indica. Quem abre o pull request é um passo da automação, depois do agente: o passo confere a branch, monta o título (como `Fix :bug: [#n] <título da issue>`) e o `Closes #n` que liga à issue, e acrescenta a linha "Aberto pelo agente de issues.". O agente nunca abre o pull request nem escreve o `Closes` ou essa linha. O pull request só é aberto se a etapa do agente terminou com sucesso.
+- Faz: resolve uma issue P, no padrão de branch, commit e descrição do time, só com o lint e os testes passando. O agente envia a branch e grava a descrição do pull request, com as seções "O que muda", "Como foi verificado" e "Observações", num arquivo que a própria automação indica. O agente grava também a nota de mudança no commit, pela regra de versão (patch para correção ou ajuste que não quebra nada, minor para item ou opção nova pequena, nota vazia para documentação, CI ou testes), e a automação recusa a branch sem nota. Quem abre o pull request é um passo da automação, depois do agente: o passo confere a branch, monta o título (como `Fix :bug: [#n] <título da issue>`) e o `Closes #n` que liga à issue, e acrescenta a linha "Aberto pelo agente de issues.". O agente nunca abre o pull request nem escreve o `Closes` ou essa linha. O pull request só é aberto se a etapa do agente terminou com sucesso.
 - Quando algo dá errado: se um comando é negado, ou a execução falha ou trava, o agente comenta na issue o que houve, em um parágrafo, com o link da execução.
 - Acompanhamento: assim que a Seleção escolhe a issue, a automação comenta nela que o agente começou, com o link da execução. No fim, ela edita esse mesmo comentário (não cria outro) com o resultado: o link do pull request aberto, ou o motivo de não ter aberto (o agente falhou, o limite de uso do Claude, comandos barrados, erro na abertura do pull request, o agente explicou em comentário ou terminou sem fazer nada). Se o agente comentou na issue nesta execução (e não abriu pull request), a automação apaga o comentário de acompanhamento em vez de editá-lo, para ficar só o do agente; se a remoção falhar, só sai um aviso. O comentário é do `github-actions[bot]`, não conta como comentário do agente e não leva a marca de classificação. Execução sem issue escolhida não comenta. A conferência final continua reprovando a execução sem pull request e sem comentário do agente.
 - Saída da execução: a saída completa do agente fica como artefato `saida-do-agente` da execução, por 7 dias. Como o repositório é público, o arquivo passa antes por um filtro que troca por `***` os valores dos segredos da execução e os formatos conhecidos de token; a saída completa nunca vai para o log. O resumo da execução lista os comandos que foram barrados, para ler sem baixar nada.
 - Limpeza: se a execução termina com uma branch do agente enviada e sem pull request, a automação apaga essa branch, para a issue voltar à fila. Nunca apaga uma branch que já existia antes da execução.
-- Nunca faz: classificar, nem pôr ou mudar tamanho. A única exceção: se começa uma P e percebe que ela é maior, para, explica na issue e troca P por M, sem deixar pull request.
+- Nunca faz: classificar, nem pôr ou mudar tamanho. A única exceção: se começa uma P e percebe que ela é maior (o que inclui mudança major pela regra de versão, que nunca é P), para, explica na issue e troca P por M, sem deixar pull request.
 - Só trabalha em issue P, de dono, membro ou colaborador, sem pull request ligado, sem branch própria, sem responsável e sem tamanho M ou G, e só quando há menos de 5 pull requests do agente abertos. Pode haver até 5 abertos ao mesmo tempo, mas cada execução trata uma única issue e abre no máximo um pull request, da P mais antiga da fila que puder ser tratada. Conta como pull request do agente o que foi aberto pela conta do Claude ou o que traz na descrição a linha "Aberto pelo agente de issues.". O agente não tenta prever conflito entre as issues: isso fica para a revisão de cada pull request.
 - Roda de três jeitos: encadeada pela Issue Size Set, quando há P esperando; todo dia às 02:47 de Brasília (05:47 UTC), logo depois da Issue Size Set, como rede de segurança; e à mão.
 - No encadeamento ela pega a P mais antiga da fila, que pode não ser a issue que fez a Issue Size Set rodar. Uma issue de quem não é colaborador nunca é tratada por ela, mas a abertura dela faz a Issue Size Set rodar e pode adiantar uma P de colaborador que já estava na fila.
@@ -335,6 +348,63 @@ O pull request aberto pela automação não dispara o CI sozinho. Para rodar o C
 
 No comentário da issue, que traz o motivo do tamanho e o link da execução da Issue Size Set, e no registro de cada execução em Actions, que mostra o que foi escolhido e por quê, o que o Claude rodou e o resumo das decisões. As automações ficam em `.github/workflows/issue-size-set.yml` e `.github/workflows/issue-claude-agent.yml`, e os scripts e as instruções em `.github/issue-agent/`.
 
+## Versões e publicação
+
+Só existe a `main`. As versões são automáticas, a partir de uma nota de mudança (changeset) que cada pull request traz.
+
+### Nota de mudança
+
+Todo pull request traz uma nota, criada no mesmo pull request. Rode:
+
+```
+npm run changeset
+```
+
+e escolha o tipo (major, minor ou patch). Para documentação, textos (como o README), CI e testes, crie a nota vazia:
+
+```
+npm run changeset -- --empty
+```
+
+A nota é o arquivo `.changeset/<nome-da-branch>.md`, com o tipo no cabeçalho e o texto em português simples, de uma ou duas linhas:
+
+```
+---
+"@felipe-sant/claude-kit": patch
+---
+
+Corrige a mensagem do ai-sync quando a pasta não existe.
+```
+
+A nota vazia é a que o `npm run changeset -- --empty` gera: só o cabeçalho, sem tipo e sem texto. O CI reprova o pull request sem nota (a checagem `Changeset`), e o pull request de versão fica fora dessa checagem.
+
+### Regra de versão
+
+- major: remove ou renomeia um agente, uma regra ou uma skill, muda o fluxo do time ou quebra uma opção do `ai-sync`.
+- minor: novo agente, regra, skill, stack ou opção.
+- patch: ajuste de texto, correção ou mudança que não quebra nada.
+
+### Fluxo
+
+1. O pull request com nota de tipo entra na `main`. A automação abre o pull request de versão, "Chore :see_no_evil: Atualiza versão e CHANGELOG", ou o atualiza se ele já existir. Ele traz a nova versão, o CHANGELOG e a cópia do time deste repositório (o `.claude/`) regenerada com a versão nova. Se só entraram notas vazias, ele não é aberto. Os títulos de seção que a ferramenta escreve sozinha no CHANGELOG ficam em inglês.
+2. O merge do pull request de versão cria a tag `vX.Y.Z`, cria o Release com a seção daquela versão do CHANGELOG e publica a versão no npm. Versão que já tem tag não é publicada de novo, e versão abaixo da 1.0.0 não é publicada.
+3. A publicação usa o trusted publishing do npm: não há token guardado no repositório, e as versões automáticas saem com prova de origem. Se a publicação falha, a tag não é criada e rodar a automação de novo tenta publicar outra vez.
+
+O pull request de versão é aberto com o token padrão do GitHub, então ele não dispara o CI sozinho. Por isso, antes de cada merge dele e depois da última atualização automática, feche e reabra o pull request e espere o CI passar.
+
+### Passos do dono do repositório
+
+Feitos uma vez, fora do código, nesta ordem:
+
+1. Ter conta no npm e ser dono do escopo `@felipe-sant`, com verificação em dois fatores.
+2. Manter ligada, em Settings, Actions, General, a opção "Allow GitHub Actions to create and approve pull requests".
+3. Fazer o merge do pull request da publicação no npm. A versão continua 0.1.0 e nada é publicado. A automação abre o pull request de versão com a 1.0.0.
+4. Colocar a checagem `Changeset` entre as obrigatórias da regra da `main`. Só depois do passo 3, porque antes disso a checagem não existe na `main`.
+5. Publicar a 1.0.0 à mão, a partir da branch do pull request de versão: `git switch changeset-release/main`, `npm ci`, `npm pack --dry-run` para conferir a lista e `npm publish --access public`. O npm só deixa ligar o trusted publishing em um pacote que já existe, e por isso essa versão sai sem prova de origem. Entre esta publicação e o merge do passo 6, nenhum outro pull request pode entrar na `main`.
+6. Fechar e reabrir o pull request de versão, esperar o CI passar e fazer o merge. A automação cria a tag `v1.0.0` e o Release e não publica de novo.
+7. Na página do pacote no npm, ligar o trusted publishing com o dono `felipe-sant`, o repositório `claude-kit` e o workflow `release.yml`, logo antes do merge do primeiro pull request de versão que deve publicar sozinho. A ligação expira se a primeira publicação por ela não acontecer em 2 dias.
+8. Em todo pull request de versão seguinte, logo antes do merge, fechar e reabrir o pull request e esperar o CI passar.
+
 ## Menções ao Claude
 
 O Claude também responde quando alguém com permissão de escrita no repositório o menciona com @claude em uma issue ou em um comentário.
@@ -351,9 +421,13 @@ O Claude também responde quando alguém com permissão de escrita no repositór
 | `templates/` | Modelos de configuração do Claude (hoje, `settings.base.json`). |
 | `profiles/` | Perfis manuais, escolhidos com `--profile`. |
 | `bin/ai-sync.js` | Aplica o conteúdo em um repositório. |
+| `.changeset/` | Notas de mudança (uma por pull request) e a configuração da ferramenta de versões. |
+| `scripts/` | Scripts das automações de versão e publicação. |
+| `LICENSE` | Licença MIT. |
 | `lint/` | Regra do oxlint contra comentários e checagem do formato de agentes, regras, skills e perfis. |
 | `tests/` | Testes do `ai-sync` e do formato do conteúdo. |
 | `.github/workflows/ci.yml` | Roda lint e testes em todo PR. |
+| `.github/workflows/changeset-check.yml`, `.github/workflows/version.yml` e `.github/workflows/release.yml` | Conferem a nota de mudança no PR, abrem o pull request de versão e publicam a versão no npm (veja "Versões e publicação"). |
 | `.github/workflows/issue-size-set.yml`, `.github/workflows/issue-claude-agent.yml` e `.github/issue-agent/` | Agente de issues: a Issue Size Set classifica as issues por tamanho e a Issue Claude Agent abre pull request das pequenas. |
 
 O campo `applies` de cada item do catálogo diz a que projetos ele serve: `["all"]` para qualquer projeto ou uma lista de stacks, como `["react"]`.
@@ -378,4 +452,7 @@ Instale as dependências uma vez com `npm ci`.
 - `node bin/ai-sync.js --check`: consistência do catálogo e dos perfis.
 - `npm run sync`: aplica o próprio `claude-kit` neste repositório com o perfil `tooling`, atualizando o `.claude/`. O hook de pre-commit (`.githooks/pre-commit`, ligado pelo `npm ci`) roda isso a cada commit. No commit sem caminhos, inclui o `.claude/` no commit; no commit por caminhos, não adiciona nada e recusa o commit se os arquivos gerados não estiverem atualizados e coerentes com as fontes que vão nele, orientando a rodar `npm run sync` e a incluí-los nos caminhos. Se outro agente tem fontes alteradas e não commitadas na mesma pasta, o commit é recusado até ele commitar ou até você usar uma worktree isolada. Se o último commit já estiver fora de sincronia, o hook recusa também o commit que não toca fonte, com uma mensagem própria que diz como corrigir. Um teste também reprova a cópia desatualizada.
 
-O GitHub roda lint e testes em todo PR, com os mesmos comandos.
+- `npm pack --dry-run`: lista o que o pacote leva para o npm.
+- `npm run changeset`: cria a nota de mudança do pull request (veja "Versões e publicação").
+
+O GitHub roda lint e testes em todo PR, com os mesmos comandos, e confere a nota de mudança.
