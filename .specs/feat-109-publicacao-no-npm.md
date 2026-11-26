@@ -552,6 +552,12 @@ Registros aceitos, sem mudança de código:
 - Na abertura do pull request do agente, a consulta de arquivos do GitHub lista no máximo 300 arquivos. É um limite conhecido.
 - Um Release cuja seção do CHANGELOG está vazia sai sem texto. Aceito.
 
+Adendo pós-revisão (pedido direto do usuário, com especificação dispensada): o README foi reescrito inteiro para servir a quem instala e a quem contribui, nos commits 6ec6013 e 8f2aa48 (Dev Doc).
+- Saiu o uso sem instalar (`npx @felipe-sant/claude-kit`), por decisão do usuário. Isso substitui a marca "a confirmar depois da primeira publicação" da T13.
+- Saíram detalhes internos, justificativas e repetições. Os detalhes internos vão para a wiki (issue #113).
+- O uso pelo clone local continua citado, e o critério da T8 continua atendido.
+- A revisão do Reviewer sobre o adendo está em andamento.
+
 ## Dúvidas
 
 Do usuário: nenhuma. As dúvidas U1 a U5 foram decididas e viraram as regras RN-17 a RN-21.
