@@ -5,7 +5,7 @@
 > Tamanho: grande
 > Branch: feat/109-publicacao-no-npm
 > Criada em: 2026-11-25
-> Revisão: o Reviewer aprovou T1 a T9 e o encaixe entre elas, sem achado bloqueante. Falta a validação do QA.
+> Revisão: o Reviewer aprovou T1 a T9 e o encaixe entre elas, sem achado bloqueante. O QA não achou falha bloqueante. O usuário decidiu aplicar todas as sugestões antes do pull request (T10 a T13).
 
 Issue: #109 de felipe-sant/claude-kit. Pedido por: Dev Ops 1.
 
@@ -192,7 +192,11 @@ Sem typecheck: o projeto é JS puro, sem TypeScript nem `checkJs`. Sem formatado
   - Cada tarefa edita arquivos próprios. Nenhuma edita o `package.json`, que é só da T1.
   - Se uma tarefa da Fase 2 precisar mudar o `package.json`, ela relata o que precisa ao Dev Ops 1, que faz a mudança numa tarefa própria.
   - Gate de fase: o mesmo da Fase 1.
-- Fase 3: reviewer e QA, depois os passos do dono (Desenho).
+- Fase 3: reviewer e QA. Concluída: sem achado bloqueante (ver "Revisão e QA").
+- Fase 4 (paralelo, ajustes da revisão e do QA, decididos pelo usuário): T10 [P] T11 [P] (Dev Ops 1), T12 [P] (Dev Ops 2), T13 [P] (Dev Doc).
+  - Cada tarefa edita arquivos próprios. Só a T11 edita o `package.json`.
+  - Gate de fase: o mesmo da Fase 1.
+- Fase 5: o reviewer revisa só o que mudou na Fase 4; depois o pull request e os passos do dono (Desenho).
 
 Gate de fase, comandos:
 - `npm run lint`
@@ -454,6 +458,92 @@ Regra para todos os que implementarem: nunca escrever comentários em código, n
 - Gate: `node --test tests/self-sync.test.js tests/team.test.js` e `npm run lint`.
 - Modelo: economico.
 - Status: feita (commit 1615c2f, Dev Doc; gate: `npm test` 570/570, lint ok, `ai-sync --check` ok).
+
+### T10 [P] Checagem de nota pula só o pull request de versão do próprio repositório
+
+- O quê: a checagem de nota só deixa de rodar quando a branch é `changeset-release/main` e o pull request vem do próprio repositório, nunca de um fork.
+- Onde: `.github/workflows/changeset-check.yml` e `tests/changeset-check-workflow.test.js`.
+- Dev: Dev Ops 1.
+- Depende de: T5.
+- Reaproveita: o `if` do job `Changeset` e o teste de texto do workflow da T5.
+- Atende: RN-04; CA-05, CA-07.
+- Pronto quando:
+  - O job `Changeset` roda quando a branch não é `changeset-release/main` ou quando o pull request vem de um fork (`github.event.pull_request.head.repo.full_name != github.repository`).
+  - Um pull request de fork com a branch `changeset-release/main` passa pela checagem.
+  - O actionlint passa.
+  - O gate passa.
+- Teste: unitário, sobre o texto do workflow. Primeiro deve falhar "pull request de fork com a branch de versão passa pela checagem de nota".
+- Gate: `node --test tests/changeset-check-workflow.test.js tests/workflow-actions-version.test.js`, `npm run lint` e o actionlint do Plano de execução.
+- Modelo: economico.
+- Status: pendente.
+
+### T11 [P] Validador da nota, teste da versão e sync:version no Windows
+
+- O quê: levar a exclusão do README para o validador da nota, fazer o teste da versão comparar com uma sincronização de verdade e tirar o `rm -f` do `sync:version`.
+- Onde: `scripts/changeset-note.js`, `tests/package-contract.test.js`, `tests/version-sync.test.js`, `package.json` e o que o `npm run sync` regenerar no `.claude/`.
+- Dev: Dev Ops 1.
+- Depende de: T1.
+- Reaproveita: `isValidChangesetNote`, `lockVersions` e o modelo de repositório com hook de `tests/version-sync.test.js`, e `tests/helpers.js`.
+- Atende: RN-03, RN-07; CA-06, CA-09 (parte local).
+- Pronto quando:
+  - O validador da nota decide sozinho que o `.changeset/README.md` não é nota, e o teste do contrato deixa de filtrar o README por conta própria.
+  - O teste do `sync:version` compara o `.claude/` da cópia, depois da troca de versão, com uma sincronização numa pasta vazia, e não só as versões do registro.
+  - O `sync:version` apaga o registro com `node` (por exemplo, `fs.rmSync` com `force`), sem `rm -f`, e funciona no Windows e no Linux.
+  - Os scripts `sync` e `prepare` ficam como estão.
+  - O gate passa.
+- Teste: unitário e integração. Primeiro deve falhar "o validador ignora o README da pasta de notas"; depois, "o sync:version deixa o .claude igual a uma sincronização numa pasta vazia" (quando a comparação atual não cobre isso) e "o sync:version não usa comando de shell do Linux".
+- Gate: `node --test tests/package-contract.test.js tests/version-sync.test.js tests/self-sync.test.js`, `npm run lint` e `node bin/ai-sync.js --check`. Sem typecheck nem formatador no projeto.
+- Modelo: padrao.
+- Status: pendente.
+
+### T12 [P] Prova de que o agente sem nota não cria pull request
+
+- O quê: um teste com o `fetch` dublado prova que, sem nota de mudança na branch, a abertura do pull request do agente de issues não chama a criação de pull request.
+- Onde: `tests/issue-claude-agent-open-pull-request.test.js`.
+- Dev: Dev Ops 2.
+- Depende de: T7.
+- Reaproveita: o `fetch` dublado e os casos da T7.
+- Atende: RN-04, RN-09; CA-21.
+- Pronto quando:
+  - O teste roda a abertura inteira com uma comparação sem nota e confere que nenhuma chamada de criação de pull request foi feita e que o motivo da recusa é o da T7.
+  - Os testes atuais continuam passando.
+  - O gate passa.
+- Teste: integração com dublê na fronteira do GitHub. O vermelho é provado tirando a conferência da nota numa cópia local, sem commitar essa mudança.
+- Gate: `node --test tests/issue-claude-agent-open-pull-request.test.js` e `npm run lint`.
+- Modelo: economico.
+- Status: pendente.
+
+### T13 [P] Documentação: nome da nota e agente sem terminal
+
+- O quê: o README e as instruções do projeto dizem que o nome do arquivo da nota é livre e único e explicam como um agente sem terminal cria a nota.
+- Onde: `README.md` e `.claude/CLAUDE.md`.
+- Dev: Dev Doc.
+- Depende de: T8, T9.
+- Reaproveita: os textos da T8 e da T9 e o contrato.
+- Atende: RN-15; CA-22.
+- Pronto quando:
+  - Os dois textos dizem que o nome do arquivo da nota é livre e único, e que o nome da branch é só uma sugestão.
+  - Os dois textos dizem que, como o `npm run changeset` com tipo é interativo, um agente sem terminal cria o arquivo à mão no formato do contrato.
+  - O README marca o uso sem instalar (`npx @felipe-sant/claude-kit`) como a confirmar depois da primeira publicação.
+  - A pendência da T8 é resolvida: os nomes dos workflows e a branch `changeset-release/main` citados no README batem com o código.
+  - O gate passa.
+- Teste: nenhum novo (só texto). `tests/self-sync.test.js` e `tests/team.test.js` precisam continuar passando.
+- Gate: `node --test tests/self-sync.test.js tests/team.test.js` e `npm run lint`.
+- Modelo: economico.
+- Status: pendente.
+
+## Revisão e QA
+
+Revisão: o Reviewer aprovou T1 a T9 e o encaixe entre elas, sem achado bloqueante, e refez a prova do vermelho da T5.
+
+QA: sem falha bloqueante. CA-07 a CA-09, CA-11 a CA-21 e CA-26 a CA-29 ficam sem cobertura de QA até a primeira execução real no GitHub.
+
+Sugestões aplicadas por decisão do usuário: T10 a T13.
+
+Registros aceitos, sem mudança de código:
+- O formato da nota é garantido pela suíte de testes, que roda em todo pull request, inclusive nos do agente de issues. Por isso T5 e T7 não precisam reaproveitar o validador da nota.
+- Na abertura do pull request do agente, a consulta de arquivos do GitHub lista no máximo 300 arquivos. É um limite conhecido.
+- Um Release cuja seção do CHANGELOG está vazia sai sem texto. Aceito.
 
 ## Dúvidas
 
