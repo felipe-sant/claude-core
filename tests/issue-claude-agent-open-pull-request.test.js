@@ -182,3 +182,33 @@ test('sem arquivo de saída do passo não grava nada e não falha', () => {
   assert.doesNotThrow(() => recordOutputs('', { failure_reason: 'x' }))
   assert.doesNotThrow(() => recordOutputs(undefined, { failure_reason: 'x' }))
 })
+
+test('branch sem nota de mudança não abre pull request', () => {
+  const { checkChangesetNote } = require(scriptPath)
+  const problem = checkChangesetNote([{ filename: 'README.md', status: 'modified' }], 'fix/95-algo')
+  assert.equal(problem, 'A branch fix/95-algo não traz a nota de mudança.')
+})
+
+test('aceita branch com nota de mudança adicionada, inclusive a vazia', () => {
+  const { checkChangesetNote } = require(scriptPath)
+  assert.equal(checkChangesetNote([{ filename: '.changeset/corrige-algo.md', status: 'added' }], 'fix/95-algo'), '')
+  assert.equal(checkChangesetNote([{ filename: 'a.js', status: 'modified' }, { filename: '.changeset/vazia.md', status: 'added' }], 'fix/95-algo'), '')
+})
+
+test('o README da pasta de notas sozinho não conta como nota', () => {
+  const { checkChangesetNote } = require(scriptPath)
+  assert.notEqual(checkChangesetNote([{ filename: '.changeset/README.md', status: 'added' }], 'fix/95-algo'), '')
+})
+
+test('nota fora da pasta de notas, em subpasta, de outro tipo ou só modificada não conta', () => {
+  const { checkChangesetNote } = require(scriptPath)
+  for (const file of [
+    { filename: 'docs/nota.md', status: 'added' },
+    { filename: '.changeset/sub/nota.md', status: 'added' },
+    { filename: '.changeset/config.json', status: 'added' },
+    { filename: '.changeset/antiga.md', status: 'modified' },
+    { filename: '.changeset/removida.md', status: 'removed' }
+  ]) {
+    assert.notEqual(checkChangesetNote([file], 'fix/95-algo'), '', file.filename)
+  }
+})

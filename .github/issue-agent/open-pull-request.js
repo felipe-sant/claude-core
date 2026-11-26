@@ -64,6 +64,14 @@ function checkSize(labels) {
   return labels.includes(SIZE_SMALL) ? '' : `A issue deixou de ser ${SIZE_SMALL}: o pull request não foi aberto.`
 }
 
+function hasChangesetNote(files) {
+  return files.some((file) => file.status === 'added' && /^\.changeset\/(?!README\.md$)[^/]+\.md$/.test(file.filename))
+}
+
+function checkChangesetNote(files, branch) {
+  return hasChangesetNote(files) ? '' : `A branch ${branch} não traz a nota de mudança.`
+}
+
 class Refusal extends Error {}
 
 function recordOutputs(file, values) {
@@ -145,6 +153,9 @@ async function main() {
   const comparison = await request(token, `${API_URL}/repos/${repository}/compare/${base}...${branch}`)
   if (comparison.ahead_by < 1) throw new Refusal(`A branch ${branch} não tem commits além da principal.`)
 
+  const changesetProblem = checkChangesetNote(comparison.files || [], branch)
+  if (changesetProblem) throw new Refusal(changesetProblem)
+
   const owner = repository.split('/')[0]
   const openPulls = await request(token, `${API_URL}/repos/${repository}/pulls?state=open&head=${owner}:${branch}`)
   if (openPulls.length > 0) {
@@ -171,4 +182,4 @@ if (require.main === module) {
   })
 }
 
-module.exports = { recordOutputs, createPullRequest, findIssueBranch, validateDescription, buildBody, buildTitle, checkSize, DESCRIPTION_FILE, PULL_REQUEST_LINE }
+module.exports = { recordOutputs, createPullRequest, findIssueBranch, validateDescription, buildBody, buildTitle, checkSize, hasChangesetNote, checkChangesetNote, DESCRIPTION_FILE, PULL_REQUEST_LINE }
