@@ -24,7 +24,7 @@ npm install --save-dev @felipe-sant/claude-kit
 npx ai-sync
 ```
 
-Para usar sem instalar:
+Para usar sem instalar (a confirmar depois da primeira publicação):
 
 ```
 npx @felipe-sant/claude-kit
