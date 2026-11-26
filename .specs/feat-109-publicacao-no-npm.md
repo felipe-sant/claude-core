@@ -511,7 +511,7 @@ Regra para todos os que implementarem: nunca escrever comentários em código, n
 - Teste: integração com dublê na fronteira do GitHub. O vermelho é provado tirando a conferência da nota numa cópia local, sem commitar essa mudança.
 - Gate: `node --test tests/issue-claude-agent-open-pull-request.test.js` e `npm run lint`.
 - Modelo: economico.
-- Status: pendente.
+- Status: feita (commit 2e49884, Dev Ops 2; vermelho: "main is not a function" em 2 testes; depois, com a recusa trocada temporariamente, o teste sem nota falhou, e a recusa foi restaurada; gate: `npm test` com 0 falhas, lint ok, `ai-sync --check` ok).
 
 ### T13 [P] Documentação: nome da nota e agente sem terminal
 
@@ -530,7 +530,7 @@ Regra para todos os que implementarem: nunca escrever comentários em código, n
 - Teste: nenhum novo (só texto). `tests/self-sync.test.js` e `tests/team.test.js` precisam continuar passando.
 - Gate: `node --test tests/self-sync.test.js tests/team.test.js` e `npm run lint`.
 - Modelo: economico.
-- Status: pendente.
+- Status: feita (commit 41db4fb, Dev Doc; gate: lint ok, `ai-sync --check` ok; as 2 falhas da suíte naquela rodada eram o vermelho da T12 em andamento).
 
 ## Revisão e QA
 
