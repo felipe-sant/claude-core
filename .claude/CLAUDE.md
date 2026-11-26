@@ -23,6 +23,9 @@ Todo o texto dos agentes, das regras e da documentação é em **português**. N
 | `tests/` | Testes do `ai-sync` e do formato do conteúdo, com `node --test`. |
 | `.github/workflows/ci.yml` | Roda `npm run lint` e `npm test` em todo PR. |
 | `.github/workflows/issue-size-set.yml`, `.github/workflows/issue-claude-agent.yml` e `.github/issue-agent/` | Automações do agente de issues: a Issue Size Set classifica as issues por tamanho (P, M, G) e a Issue Claude Agent resolve só as P e abre o PR por um passo próprio, depois do agente, e o agente comenta na issue quando algo dá errado. Documentadas no `README.md`. |
+| `.changeset/` | Notas de mudança (uma por pull request) e a configuração da ferramenta de versões. |
+| `scripts/` | Scripts das automações de versão e publicação, em JS puro e sem dependências. |
+| `.github/workflows/changeset-check.yml`, `.github/workflows/version.yml` e `.github/workflows/release.yml` | Reprova o PR sem nota de mudança, abre o pull request de versão e, no merge dele, cria a tag e o Release e publica no npm. |
 | `bin/ai-sync.js` | Copia o conteúdo para um repositório. Sem `--profile`, detecta as stacks e aplica o que vale para todos mais o das stacks; com `--profile`, aplica só o perfil. Registra o que instalou em `.claude/claude-kit.lock.json` e só atualiza ou remove arquivo instalado e sem alterações; `--force` sobrescreve os arquivos em conflito que o catálogo entrega. |
 
 ## O time
@@ -49,11 +52,14 @@ Fluxo: o `product-owner` define as regras, um dev chama o `sdd` para a especific
 - Agente que escreve código leva no prompt a regra de não escrever comentários.
 - Tarefas escritas por agentes usam linguagem simples, que um PO e um QA entendam, sem caminhos de arquivo, código ou detalhes internos.
 - O `.claude/` deste repositório (menos este `CLAUDE.md`) é gerado: é o próprio `ai-sync` aplicado aqui com o perfil `tooling`. Nunca o edite à mão; edite a fonte (`agents/`, `rules/`, `skills/`, `templates/`, `catalog.json`, `profiles/`). Todo commit regenera o `.claude/` pelo hook `.githooks/pre-commit`, que o `npm ci` liga: o commit sem caminhos já o inclui, e o commit por caminhos é recusado se os gerados não estiverem nos caminhos, atualizados e coerentes com as fontes do commit (rode `npm run sync`, inclua-os nos caminhos e commite de novo; com fonte de outro agente alterada na pasta, espere ele commitar ou use uma worktree isolada; se o último commit já estiver fora de sincronia, até o commit que não toca fonte é recusado, com a mensagem de como corrigir). Se o hook não rodar (commit com `--no-verify` ou sem `npm ci`), rode `npm run sync` e commite o `.claude/` junto; o teste de sincronização no CI reprova a cópia desatualizada.
+- **Todo PR traz uma nota de mudança (changeset), criada no mesmo PR: patch, minor ou major pela regra de versão, ou vazia para documentação, textos (como o README), CI e testes.**
+- A nota é o arquivo `.changeset/<nome-da-branch-com-hífen>.md`, criado por `npm run changeset` (ou `npm run changeset -- --empty` para a vazia). Com tipo, o cabeçalho tem só a linha `"@felipe-sant/claude-kit": patch`, `minor` ou `major`, seguida de um corpo em português simples de uma ou duas linhas. Regra de versão: major remove ou renomeia agente, regra ou skill, muda o fluxo do time ou quebra uma opção do `ai-sync`; minor traz novo agente, regra, skill, stack ou opção; patch é ajuste de texto, correção ou mudança que não quebra nada. Mudança major nunca é P para o agente de issues.
+- O pull request de versão é da automação: ela atualiza a versão, o CHANGELOG e regenera o `.claude/` (`npm run changeset:version`). Não o crie nem o edite à mão; o dono fecha e reabre o PR antes do merge para o CI rodar. A publicação no npm sai do merge dele.
 - Ao criar ou renomear um papel, atualize o `catalog.json`, `profiles/`, a lista de agentes da skill `team-setup`, o `README.md` e a lista acima.
 
 ## Verificar uma mudança
 
-Rode `npm run lint` e `npm test` (o CI roda os mesmos comandos). Toda mudança de comportamento do `ai-sync` ou de formato do conteúdo precisa de teste. Depois rode a checagem e o `ai-sync` em uma pasta temporária e confira o resultado:
+Rode `npm run lint` e `npm test` (o CI roda os mesmos comandos). Toda mudança de comportamento do `ai-sync` ou de formato do conteúdo precisa de teste. Use `npm pack --dry-run` para conferir o que o pacote leva. Depois rode a checagem e o `ai-sync` em uma pasta temporária e confira o resultado:
 
 ```bash
 node bin/ai-sync.js --check
