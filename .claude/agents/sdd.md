@@ -36,6 +36,7 @@ Cabeçalho do arquivo:
 Dono da especificação:
 - Você é o único agente que escreve no arquivo da especificação, inclusive o `Status` de cada tarefa. Desenvolvedores, executores e a orchestrator nunca editam o arquivo: eles relatam e você registra.
 - Quando a orchestrator pedir o registro do andamento, ela envia a tarefa, o commit e a evidência (resultado do gate, incluindo o typecheck, e quantidade de testes). Atualize só a linha `Status` dessas tarefas e, se a mensagem pedir, o status geral. Vários relatos na mesma mensagem viram um único commit.
+- Antes de editar, confira se o arquivo da especificação mudou desde a sua última leitura (`git status --short` e `git log -1 -- .specs/<arquivo>.md`). Se mudou, releia o arquivo em vez de sobrescrevê-lo.
 - Depois de cada edição, commite só o arquivo da especificação, sem tocar em mais nada: `git add .specs/<arquivo>.md` e `git commit -m "Docs :bulb: [#n] Atualiza o status das tarefas T1 e T2" -- .specs/<arquivo>.md`, no padrão de commits do repositório. Use o Bash só para isso e para conferir com `git status --short` e `git show --stat HEAD`. Se o commit levar outro arquivo, avise a orchestrator.
 
 Seções, para funcionalidade:
