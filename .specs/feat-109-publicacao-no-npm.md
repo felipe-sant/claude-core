@@ -429,7 +429,7 @@ Regra para todos os que implementarem: nunca escrever comentários em código, n
 - Teste: nenhum novo (só texto). Os testes atuais do README em `tests/team.test.js` precisam continuar passando.
 - Gate: `node --test tests/team.test.js` e `npm run lint`.
 - Modelo: economico.
-- Status: pendente.
+- Status: feita (commit cbc0094, Dev Doc; gate: `npm test` 570/570, lint ok, `ai-sync --check` ok). Pendência: o README cita os workflows e a branch `changeset-release/main` pela especificação; conferir contra o código quando T3 a T5 estiverem commitadas.
 
 ### T9 [P] Instruções do projeto: nota de mudança e versões
 
@@ -450,7 +450,7 @@ Regra para todos os que implementarem: nunca escrever comentários em código, n
 - Teste: nenhum novo (só texto). `tests/self-sync.test.js` e `tests/team.test.js` precisam continuar passando.
 - Gate: `node --test tests/self-sync.test.js tests/team.test.js` e `npm run lint`.
 - Modelo: economico.
-- Status: pendente.
+- Status: feita (commit 1615c2f, Dev Doc; gate: `npm test` 570/570, lint ok, `ai-sync --check` ok).
 
 ## Dúvidas
 
