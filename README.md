@@ -49,7 +49,7 @@ Perfis (`--profile`), todos com as nove regras gerais e as skills gerais:
 - `qa`: valida a entrega.
 - `designer`: visual e experiência de uso.
 
-Regras (9 gerais e 5 de stack, uma por stack, incluindo a `i18n-standard`, de textos de interface e tradução, aplicada quando o projeto usa uma biblioteca de tradução), copiadas para `.claude/rules/`: `commit-standard`, `code-standard`, `testing-standard`, `security-standard`, `review-standard`, `git-standard`, `feedback-standard`, `pull-request-standard` e `issue-standard`. A `pull-request-standard` define a descrição do pull request com "O que muda", "Como foi verificado" e "Observações". Problema nas instruções do próprio time vira issue no `felipe-sant/claude-kit`, pelo `feedback-standard`.
+Regras (9 gerais e as de cada stack, incluindo a `i18n-standard`, de textos de interface e tradução, aplicada quando o projeto usa uma biblioteca de tradução), copiadas para `.claude/rules/`: `commit-standard`, `code-standard`, `testing-standard`, `security-standard`, `review-standard`, `git-standard`, `feedback-standard`, `pull-request-standard` e `issue-standard`. A `pull-request-standard` define a descrição do pull request com "O que muda", "Como foi verificado" e "Observações". Problema nas instruções do próprio time vira issue no `felipe-sant/claude-kit`, pelo `feedback-standard`.
 
 ### Subagentes ou time de agentes
 
