@@ -74,13 +74,12 @@ function isQueuedSmall(issue, branches, openNumbers) {
   )
 }
 
-function selectSizeSet({ issues, eventIssue }) {
-  const scoped = eventIssue === null ? issues : issues.filter((issue) => issue.number === eventIssue)
-  const classify = scoped
+function selectSizeSet({ issues }) {
+  const classify = issues
     .filter(isBaseEligible)
     .filter((issue) => !hasSizeLabel(issue) && !hasAgentClassification(issue))
     .sort(byOldest)
-    .slice(0, eventIssue === null ? MAX_CLASSIFY : 1)
+    .slice(0, MAX_CLASSIFY)
     .map((issue) => issue.number)
   const reason = classify.length > 0 ? `Classificar: ${classify.join(', ')}.` : 'Nenhuma issue para classificar.'
   return { classify, reason }
@@ -229,12 +228,6 @@ async function fetchBranches(token, repository) {
   return branches.map((branch) => branch.name)
 }
 
-function readEventIssue() {
-  if (process.env.GITHUB_EVENT_NAME !== 'issues' || !process.env.GITHUB_EVENT_PATH) return null
-  const payload = JSON.parse(fs.readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8'))
-  return payload.issue.number
-}
-
 async function main() {
   const mode = parseMode(process.argv[2])
   const token = process.env.GITHUB_TOKEN
@@ -245,7 +238,7 @@ async function main() {
   const issues = await fetchIssues(token, repository)
   let result
   if (mode === 'size-set') {
-    const selection = selectSizeSet({ issues, eventIssue: readEventIssue() })
+    const selection = selectSizeSet({ issues })
     result = { outputs: { classify: selection.classify.join(','), reason: selection.reason }, reason: selection.reason }
   } else {
     const [openPulls, branches] = await Promise.all([fetchOpenPulls(token, repository), fetchBranches(token, repository)])
