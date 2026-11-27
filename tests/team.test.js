@@ -406,7 +406,7 @@ test('o README lista as regras de pull request e de issues e a contagem das regr
 
   assert.match(readme, /`pull-request-standard`/)
   assert.match(readme, /`issue-standard`/)
-  assert.match(readme, /9 gerais e 4 de stack/)
+  assert.match(readme, /9 gerais e as de cada stack/)
   assert.match(readme, /as nove regras gerais/)
   assert.match(readme, /O que muda.*Como foi verificado.*Observações/s)
 })
