@@ -24,6 +24,12 @@
         "dependencies": ["@adonisjs/core"]
       }
     },
+    "typescript": {
+      "description": "Projetos que usam TypeScript.",
+      "detect": {
+        "dependencies": ["typescript"]
+      }
+    },
     "i18n": {
       "description": "Projetos com biblioteca de tradução.",
       "detect": {
@@ -181,6 +187,11 @@
       "path": "stacks/adonisjs/rules/adonisjs-standard.md",
       "applies": ["adonisjs"],
       "description": "Padrão para aplicações AdonisJS."
+    },
+    "typescript-standard": {
+      "path": "stacks/typescript/rules/typescript-standard.md",
+      "applies": ["typescript"],
+      "description": "Padrão TypeScript: modo estrito, sem any, sem conversão de tipo para calar erro, tipos explícitos nas funções públicas e tipos compartilhados."
     },
     "i18n-standard": {
       "path": "stacks/i18n/rules/i18n-standard.md",

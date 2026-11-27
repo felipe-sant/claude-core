@@ -14,7 +14,8 @@ const stackRules = {
   react: ['react-standard', 'style-standard', 'react-organization-standard', 'frontend-testing-standard', 'accessibility-standard'],
   nestjs: ['nestjs-standard'],
   laravel: ['laravel-standard'],
-  adonisjs: ['adonisjs-standard']
+  adonisjs: ['adonisjs-standard'],
+  typescript: ['typescript-standard']
 }
 
 function sync(target, ...args) {
@@ -32,7 +33,8 @@ const projects = {
   react: { 'package.json': JSON.stringify({ dependencies: { react: '18' } }) },
   nestjs: { 'package.json': JSON.stringify({ dependencies: { '@nestjs/core': '10' } }) },
   laravel: { 'composer.json': JSON.stringify({ require: { 'laravel/framework': '11' } }) },
-  adonisjs: { 'package.json': JSON.stringify({ dependencies: { '@adonisjs/core': '6' } }) }
+  adonisjs: { 'package.json': JSON.stringify({ dependencies: { '@adonisjs/core': '6' } }) },
+  typescript: { 'package.json': JSON.stringify({ devDependencies: { typescript: '5' } }) }
 }
 
 for (const [stack, files] of Object.entries(projects)) {
@@ -77,6 +79,16 @@ test('projeto sem biblioteca de tradução não recebe o padrão de tradução',
   sync(target)
 
   assert.ok(!rulesOf(target).includes('i18n-standard'))
+})
+
+test('projeto com React e TypeScript recebe os padrões das duas stacks', () => {
+  const target = h.makeTarget({
+    'package.json': JSON.stringify({ dependencies: { react: '18' }, devDependencies: { typescript: '5' } })
+  })
+  const output = sync(target)
+
+  assert.match(output, /Stacks detectadas: .*typescript/)
+  assert.deepEqual(rulesOf(target), [...general, ...stackRules.react, ...stackRules.typescript].sort())
 })
 
 test('projeto sem stack conhecida recebe só os padrões gerais', () => {
