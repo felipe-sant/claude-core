@@ -64,7 +64,7 @@ test('projeto com React e TypeScript recebe os padrões das duas stacks', () => 
   const output = sync(target)
 
   assert.match(output, /Stacks detectadas: .*typescript/)
-  assert.deepEqual(rulesOf(target), [...general, 'react-standard', 'typescript-standard'].sort())
+  assert.deepEqual(rulesOf(target), [...general, ...[stackRules.react].flat(), stackRules.typescript].sort())
 })
 
 test('projeto sem stack conhecida recebe só os padrões gerais', () => {
