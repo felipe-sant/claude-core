@@ -11,11 +11,11 @@ const script = path.join(h.repoRoot, 'bin', 'ai-sync.js')
 const catalog = JSON.parse(fs.readFileSync(path.join(h.repoRoot, 'catalog.json'), 'utf8'))
 const general = ['code-standard', 'testing-standard', 'security-standard', 'review-standard', 'commit-standard', 'git-standard', 'feedback-standard', 'pull-request-standard', 'issue-standard']
 const stackRules = {
-  react: 'react-standard',
-  nestjs: 'nestjs-standard',
-  laravel: 'laravel-standard',
-  adonisjs: 'adonisjs-standard',
-  typescript: 'typescript-standard'
+  react: ['react-standard', 'style-standard', 'react-organization-standard', 'frontend-testing-standard', 'accessibility-standard'],
+  nestjs: ['nestjs-standard'],
+  laravel: ['laravel-standard'],
+  adonisjs: ['adonisjs-standard'],
+  typescript: ['typescript-standard']
 }
 
 function sync(target, ...args) {
@@ -43,7 +43,7 @@ for (const [stack, files] of Object.entries(projects)) {
     const output = sync(target)
 
     assert.match(output, new RegExp(`Stacks detectadas: ${stack}$`, 'm'))
-    assert.deepEqual(rulesOf(target), [...general, stackRules[stack]].sort())
+    assert.deepEqual(rulesOf(target), [...general, ...stackRules[stack]].sort())
   })
 }
 
@@ -54,7 +54,31 @@ test('projeto com React e NestJS recebe os padrões das duas stacks e de mais ne
   })
   sync(target)
 
-  assert.deepEqual(rulesOf(target), [...general, 'react-standard', 'nestjs-standard'].sort())
+  assert.deepEqual(rulesOf(target), [...general, ...stackRules.react, ...stackRules.nestjs].sort())
+})
+
+for (const dependency of ['i18next', 'react-i18next', 'next-intl', 'vue-i18n']) {
+  test(`projeto com ${dependency} recebe o padrão de tradução`, () => {
+    const target = h.makeTarget({ 'package.json': JSON.stringify({ dependencies: { [dependency]: '1' } }) })
+    const output = sync(target)
+
+    assert.match(output, /Stacks detectadas: i18n$/m)
+    assert.deepEqual(rulesOf(target), [...general, 'i18n-standard'].sort())
+  })
+}
+
+test('projeto Laravel com pacote de idiomas recebe o padrão de tradução e o do Laravel', () => {
+  const target = h.makeTarget({ 'composer.json': JSON.stringify({ require: { 'laravel/framework': '11', 'laravel-lang/lang': '15' } }) })
+  sync(target)
+
+  assert.deepEqual(rulesOf(target), [...general, 'laravel-standard', 'i18n-standard'].sort())
+})
+
+test('projeto sem biblioteca de tradução não recebe o padrão de tradução', () => {
+  const target = h.makeTarget(projects.react)
+  sync(target)
+
+  assert.ok(!rulesOf(target).includes('i18n-standard'))
 })
 
 test('projeto com React e TypeScript recebe os padrões das duas stacks', () => {
@@ -64,7 +88,7 @@ test('projeto com React e TypeScript recebe os padrões das duas stacks', () => 
   const output = sync(target)
 
   assert.match(output, /Stacks detectadas: .*typescript/)
-  assert.deepEqual(rulesOf(target), [...general, ...[stackRules.react].flat(), stackRules.typescript].sort())
+  assert.deepEqual(rulesOf(target), [...general, ...stackRules.react, ...stackRules.typescript].sort())
 })
 
 test('projeto sem stack conhecida recebe só os padrões gerais', () => {
@@ -98,7 +122,7 @@ test('cada padrão de stack se limita aos arquivos da stack e todo padrão é cu
 })
 
 const generalSkills = ['bug-investigation', 'code-review', 'commit-message', 'create-pull-request', 'documentation', 'team-setup']
-const stackSkills = { react: 'react-component', nestjs: 'nestjs-module' }
+const stackSkills = { react: ['react-component', 'accessibility-audit'], nestjs: ['nestjs-module'] }
 
 function skillsOf(target) {
   const dir = path.join(target, '.claude', 'skills')
@@ -109,7 +133,7 @@ for (const [stack, files] of Object.entries(projects)) {
   test(`projeto ${stack} recebe as skills gerais e só as da própria stack`, () => {
     const target = h.makeTarget(files)
     sync(target)
-    const expected = stackSkills[stack] ? [...generalSkills, stackSkills[stack]] : generalSkills
+    const expected = stackSkills[stack] ? [...generalSkills, ...stackSkills[stack]] : generalSkills
 
     assert.deepEqual(skillsOf(target), [...expected].sort())
     for (const skill of expected) assert.ok(h.exists(target, `.claude/skills/${skill}/SKILL.md`))
@@ -123,7 +147,7 @@ test('projeto com React e NestJS recebe as skills das duas stacks', () => {
   })
   sync(target)
 
-  assert.deepEqual(skillsOf(target), [...generalSkills, 'react-component', 'nestjs-module'].sort())
+  assert.deepEqual(skillsOf(target), [...generalSkills, 'react-component', 'accessibility-audit', 'nestjs-module'].sort())
 })
 
 test('skill editada no projeto não é sobrescrita e uma skill do usuário nunca é tocada', () => {

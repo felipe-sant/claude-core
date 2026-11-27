@@ -29,6 +29,30 @@
       "detect": {
         "dependencies": ["typescript"]
       }
+    },
+    "i18n": {
+      "description": "Projetos com biblioteca de tradução.",
+      "detect": {
+        "dependencies": [
+          "i18next",
+          "react-i18next",
+          "next-i18next",
+          "next-intl",
+          "react-intl",
+          "vue-i18n",
+          "@nuxtjs/i18n",
+          "@lingui/core",
+          "@ngx-translate/core",
+          "@angular/localize",
+          "nestjs-i18n",
+          "i18n-js",
+          "expo-localization",
+          "react-native-localize",
+          "@adonisjs/i18n",
+          "laravel-lang/lang",
+          "mcamara/laravel-localization"
+        ]
+      }
     }
   },
   "agents": {
@@ -129,6 +153,26 @@
       "applies": ["react"],
       "description": "Padrão para componentes React."
     },
+    "react-organization-standard": {
+      "path": "stacks/react/rules/react-organization-standard.md",
+      "applies": ["react"],
+      "description": "Organização de arquivos, exportações e imports no frontend."
+    },
+    "style-standard": {
+      "path": "stacks/react/rules/style-standard.md",
+      "applies": ["react"],
+      "description": "Padrão de estilo (CSS) para telas React."
+    },
+    "frontend-testing-standard": {
+      "path": "stacks/react/rules/frontend-testing-standard.md",
+      "applies": ["react"],
+      "description": "Padrão de testes de frontend."
+    },
+    "accessibility-standard": {
+      "path": "stacks/react/rules/accessibility-standard.md",
+      "applies": ["react"],
+      "description": "Padrão de acessibilidade para telas."
+    },
     "nestjs-standard": {
       "path": "stacks/nestjs/rules/nestjs-standard.md",
       "applies": ["nestjs"],
@@ -148,6 +192,11 @@
       "path": "stacks/typescript/rules/typescript-standard.md",
       "applies": ["typescript"],
       "description": "Padrão TypeScript: modo estrito, sem any, sem conversão de tipo para calar erro, tipos explícitos nas funções públicas e tipos compartilhados."
+    },
+    "i18n-standard": {
+      "path": "stacks/i18n/rules/i18n-standard.md",
+      "applies": ["i18n"],
+      "description": "Textos de interface vêm de chaves de tradução, em todos os idiomas, com um único ponto para o idioma ativo."
     },
     "git-standard": {
       "path": "rules/git-standard.md",
@@ -205,6 +254,11 @@
       "path": "stacks/react/skills/react-component",
       "applies": ["react"],
       "description": "Cria ou altera um componente React com teste primeiro."
+    },
+    "accessibility-audit": {
+      "path": "stacks/react/skills/accessibility-audit",
+      "applies": ["react"],
+      "description": "Audita a acessibilidade de uma tela e lista o que só uma pessoa confere."
     },
     "nestjs-module": {
       "path": "stacks/nestjs/skills/nestjs-module",

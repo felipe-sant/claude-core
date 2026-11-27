@@ -57,11 +57,11 @@
       "version": "1.0.0"
     },
     ".claude/rules/review-standard.md": {
-      "hash": "d7427ec7ac45c903e205c7f8216c4b7ae9f3de2570dc0eed2ef4e25002a03be3",
+      "hash": "63d5d5771fef30e3c917f04d663370b63946241f0b7a2731673e11de79112f2f",
       "version": "1.0.0"
     },
     ".claude/rules/security-standard.md": {
-      "hash": "7fc1895d2843d75541bf33793473f58b7b5f2b53a0c3add50fedc1495cf3eb2c",
+      "hash": "7a90692bfc2fde993ab76802543447eaa819238e70e115fab004a715bef95ce7",
       "version": "1.0.0"
     },
     ".claude/rules/testing-standard.md": {

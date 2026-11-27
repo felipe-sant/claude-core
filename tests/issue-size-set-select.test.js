@@ -21,8 +21,8 @@ function issue(overrides = {}) {
   }
 }
 
-function select(issues, eventIssue = null) {
-  return selectSizeSet({ issues, eventIssue })
+function select(issues) {
+  return selectSizeSet({ issues })
 }
 
 const agentComment = { author: 'claude[bot]', body: 'Tamanho definido pelo agente de issues: P' }
@@ -71,16 +71,16 @@ test('onze issues a classificar viram só as dez mais antigas', () => {
   assert.deepEqual(result.classify, issues.map((entry) => entry.number).slice(0, 10))
 })
 
-test('evento com issue a classificar devolve só ela', () => {
-  const other = issue()
+test('o evento de uma issue nova também classifica as mais antigas que ficaram sem tamanho', () => {
+  const cancelled = issue()
   const target = issue()
-  assert.deepEqual(select([other, target], target.number).classify, [target.number])
+  assert.deepEqual(select([cancelled, target]).classify, [cancelled.number, target.number])
 })
 
-test('evento com issue não elegível não escolhe nada mesmo havendo outras', () => {
+test('o evento de uma issue não elegível não impede classificar as outras', () => {
   const other = issue()
   const target = issue({ assignees: ['x'] })
-  assert.deepEqual(select([other, target], target.number).classify, [])
+  assert.deepEqual(select([other, target]).classify, [other.number])
 })
 
 test('o modo size-set nunca devolve pr_issue nem olha pull requests', () => {

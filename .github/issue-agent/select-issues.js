@@ -2,11 +2,9 @@ const fs = require('node:fs')
 const { fetchWithRetry } = require('./fetch-with-retry')
 
 const MAX_CLASSIFY = 10
-const MAX_AGENT_PULLS = 5
 const COLLABORATOR_ASSOCIATIONS = ['OWNER', 'MEMBER', 'COLLABORATOR']
 const AGENT_AUTHOR = 'claude[bot]'
 const CLASSIFICATION_MARK = 'Tamanho definido pelo agente de issues'
-const PULL_REQUEST_LINE = 'Aberto pelo agente de issues.'
 const SIZE_PREFIX = 'Size:'
 const SIZE_SMALL = 'Size: P'
 const SIZES_NOT_TREATED = ['Size: M', 'Size: G']
@@ -53,10 +51,6 @@ function isBaseEligible(issue) {
   )
 }
 
-function isAgentPull(pull) {
-  return pull.author === AGENT_AUTHOR || pull.body.includes(PULL_REQUEST_LINE)
-}
-
 function byOldest(first, second) {
   return new Date(first.createdAt) - new Date(second.createdAt) || first.number - second.number
 }
@@ -74,13 +68,12 @@ function isQueuedSmall(issue, branches, openNumbers) {
   )
 }
 
-function selectSizeSet({ issues, eventIssue }) {
-  const scoped = eventIssue === null ? issues : issues.filter((issue) => issue.number === eventIssue)
-  const classify = scoped
+function selectSizeSet({ issues }) {
+  const classify = issues
     .filter(isBaseEligible)
     .filter((issue) => !hasSizeLabel(issue) && !hasAgentClassification(issue))
     .sort(byOldest)
-    .slice(0, eventIssue === null ? MAX_CLASSIFY : 1)
+    .slice(0, MAX_CLASSIFY)
     .map((issue) => issue.number)
   const reason = classify.length > 0 ? `Classificar: ${classify.join(', ')}.` : 'Nenhuma issue para classificar.'
   return { classify, reason }
@@ -103,25 +96,17 @@ function refusalReason(issue, number, branches, openNumbers) {
   return dependencyReason(number, openDependencies(issue, openNumbers))
 }
 
-function limitReason(agentPullCount, ending) {
-  return `Já há ${agentPullCount} pull requests do agente abertos e o limite é ${MAX_AGENT_PULLS}: ${ending}`
-}
-
-function selectAgent({ issues, openPulls, branches, requested }) {
+function selectAgent({ issues, branches, requested }) {
   const requestedText = requested === null ? '' : requested.trim()
-  const agentPullCount = openPulls.filter(isAgentPull).length
-  const limitReached = agentPullCount >= MAX_AGENT_PULLS
   const openNumbers = new Set(issues.filter((issue) => !issue.isPullRequest).map((issue) => issue.number))
 
   if (requestedText === '') {
-    if (limitReached) return { prIssue: '', reason: limitReason(agentPullCount, 'a fila das P espera.') }
     const queued = issues.filter((issue) => isQueuedSmall(issue, branches, openNumbers)).sort(byOldest)
     if (queued.length === 0) return { prIssue: '', reason: 'Nenhuma issue P na fila.' }
     return { prIssue: queued[0].number, reason: `Pull request da issue ${queued[0].number}.` }
   }
 
   if (!REQUESTED_ISSUE_PATTERN.test(requestedText)) return { prIssue: '', reason: 'O número informado não é válido: use só dígitos, como 76.' }
-  if (limitReached) return { prIssue: '', reason: limitReason(agentPullCount, 'nenhuma issue é tratada agora.') }
   const number = Number(requestedText)
   const reason = refusalReason(issues.find((issue) => issue.number === number), number, branches, openNumbers)
   if (reason !== '') return { prIssue: '', reason }
@@ -219,20 +204,9 @@ async function fetchIssues(token, repository) {
   }
 }
 
-async function fetchOpenPulls(token, repository) {
-  const pulls = await fetchAllPages(token, `${API_URL}/repos/${repository}/pulls?state=open`)
-  return pulls.map((pull) => ({ author: pull.user.login, body: pull.body || '' }))
-}
-
 async function fetchBranches(token, repository) {
   const branches = await fetchAllPages(token, `${API_URL}/repos/${repository}/branches`)
   return branches.map((branch) => branch.name)
-}
-
-function readEventIssue() {
-  if (process.env.GITHUB_EVENT_NAME !== 'issues' || !process.env.GITHUB_EVENT_PATH) return null
-  const payload = JSON.parse(fs.readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8'))
-  return payload.issue.number
 }
 
 async function main() {
@@ -245,11 +219,11 @@ async function main() {
   const issues = await fetchIssues(token, repository)
   let result
   if (mode === 'size-set') {
-    const selection = selectSizeSet({ issues, eventIssue: readEventIssue() })
+    const selection = selectSizeSet({ issues })
     result = { outputs: { classify: selection.classify.join(','), reason: selection.reason }, reason: selection.reason }
   } else {
-    const [openPulls, branches] = await Promise.all([fetchOpenPulls(token, repository), fetchBranches(token, repository)])
-    const selection = selectAgent({ issues, openPulls, branches, requested: process.env.REQUESTED_ISSUE ?? null })
+    const branches = await fetchBranches(token, repository)
+    const selection = selectAgent({ issues, branches, requested: process.env.REQUESTED_ISSUE ?? null })
     result = { outputs: { pr_issue: selection.prIssue, reason: selection.reason }, reason: selection.reason }
   }
   console.log(result.reason)
@@ -265,4 +239,4 @@ if (require.main === module) {
   })
 }
 
-module.exports = { selectSizeSet, selectAgent, extractDependencies, parseMode, writeOutputs, writeSummary, normalizeAuthor, normalizeIssue, fetchIssues, request, MAX_CLASSIFY, MAX_AGENT_PULLS }
+module.exports = { selectSizeSet, selectAgent, extractDependencies, parseMode, writeOutputs, writeSummary, normalizeAuthor, normalizeIssue, fetchIssues, request, MAX_CLASSIFY }
