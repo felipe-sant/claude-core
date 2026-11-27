@@ -133,6 +133,11 @@
       "applies": ["react"],
       "description": "Padrão de estilo (CSS) para telas React."
     },
+    "frontend-testing-standard": {
+      "path": "stacks/react/rules/frontend-testing-standard.md",
+      "applies": ["react"],
+      "description": "Padrão de testes de frontend."
+    },
     "nestjs-standard": {
       "path": "stacks/nestjs/rules/nestjs-standard.md",
       "applies": ["nestjs"],
