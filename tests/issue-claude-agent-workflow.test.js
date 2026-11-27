@@ -274,19 +274,18 @@ test('nenhuma chamada gh api é encadeada com pipe, para a falha da API derrubar
   assert.deepEqual(piped, [])
 })
 
-test('o trabalho do agente declara o limite de pull requests do agente', () => {
-  assert.match(job('agent'), /^ {6}MAX_AGENT_PULLS: 5$/m)
+test('o trabalho do agente não declara limite de pull requests abertos', () => {
+  assert.doesNotMatch(job('agent'), /MAX_AGENT_PULLS/)
 })
-
 test('a foto de antes grava a contagem de pull requests do agente abertos', () => {
   const step = stepOf(job('agent'), 'Foto de antes')
   assert.match(step, /pulls\?state=open/)
   assert.match(step, /> "\$CHECK_DIR\/agent-pulls"/)
 })
 
-test('a conferência final limita o total ao MAX_AGENT_PULLS e a um pull request novo por execução', () => {
+test('a conferência final limita a um pull request novo por execução e não a um total', () => {
   const step = stepOf(job('agent'), 'Conferência final')
-  assert.match(step, /"\$open_agent_pulls" -le "\$MAX_AGENT_PULLS"/)
+  assert.doesNotMatch(step, /MAX_AGENT_PULLS/)
   assert.match(step, /agent_pulls_before=\$\(cat "\$CHECK_DIR\/agent-pulls"\)/)
   assert.match(step, /"\$open_agent_pulls" -le \$\(\(agent_pulls_before \+ 1\)\)/)
   assert.doesNotMatch(step, /"\$open_agent_pulls" -le 1 /)

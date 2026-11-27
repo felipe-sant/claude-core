@@ -54,7 +54,6 @@ jobs:
       PR_ISSUE: ${{ needs.select.outputs.pr_issue }}
       CLASSIFICATION_MARK: Tamanho definido pelo agente de issues
       PULL_REQUEST_LINE: Aberto pelo agente de issues.
-      MAX_AGENT_PULLS: 5
     steps:
       - uses: actions/checkout@v7
         with:
@@ -181,7 +180,6 @@ jobs:
           open_agent_pulls=$(awk '{total += $1} END {print total + 0}' "$CHECK_DIR/agent-pulls-pages")
           echo "Pull requests do agente abertos: $open_agent_pulls"
           agent_pulls_before=$(cat "$CHECK_DIR/agent-pulls")
-          [ "$open_agent_pulls" -le "$MAX_AGENT_PULLS" ] || fail "Há mais de $MAX_AGENT_PULLS pull requests do agente abertos."
           [ "$open_agent_pulls" -le $((agent_pulls_before + 1)) ] || fail "A execução abriu mais de um pull request do agente."
           gh api --paginate "repos/$GITHUB_REPOSITORY/pulls?state=open" --jq '.[].head.ref' > "$CHECK_DIR/open-heads"
           gh api --paginate "repos/$GITHUB_REPOSITORY/branches" --jq '.[].name' > "$CHECK_DIR/branches-after"
