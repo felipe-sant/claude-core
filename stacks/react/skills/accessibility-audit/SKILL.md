@@ -23,7 +23,7 @@ Entrega: achados por gravidade e, no fim, a lista do que ficou para conferência
 - **Idioma**: a página declara o idioma, e trechos em outro idioma também.
 - **Contraste**: texto com pelo menos 4,5 para 1 (3 para 1 em texto grande) e a informação nunca depende só da cor.
 - **Movimento**: animação respeita a preferência de reduzir movimento e nada pisca.
-- **Alvos de toque**: áreas clicáveis com pelo menos 24 por 24 pixels, melhor 44.
+- **Alvos de toque**: áreas clicáveis com pelo menos 44 por 44 pixels, como pede o padrão de acessibilidade do kit (o mínimo das diretrizes AA é 24 por 24).
 - **Zoom**: a tela funciona com 200% de zoom e com o texto aumentado, sem perder conteúdo nem rolar para os lados.
 
 ## Só uma pessoa confere
