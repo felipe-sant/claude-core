@@ -216,6 +216,7 @@ test('o passo de abertura do pull request roda depois da ação, só com sucesso
   assert.doesNotMatch(step, /always\(\)/)
   assert.match(step, /run: node \.github\/issue-agent\/open-pull-request\.js "\$CONTEXT_DIR" "\$PR_ISSUE"/)
   assert.match(step, /GITHUB_TOKEN: \$\{\{ secrets\.GITHUB_TOKEN \}\}/)
+  assert.match(step, /PR_OPEN_TOKEN: \$\{\{ secrets\.PR_OPEN_TOKEN \}\}/)
   assert.match(step, /CONTEXT_DIR: \$\{\{ runner\.temp \}\}\/issue-agent/)
   assert.match(step, /CHECK_DIR: \$\{\{ runner\.temp \}\}\/issue-check/)
   assert.doesNotMatch(step, /steps\.prompt|outputs\.text/)
@@ -223,7 +224,7 @@ test('o passo de abertura do pull request roda depois da ação, só com sucesso
 
 test('o agente nunca recebe a leitura de arquivo para publicar e o passo de abertura não interpola texto', () => {
   const step = stepOf(job('agent'), 'Abertura do pull request')
-  assert.doesNotMatch(step, /\$\{\{ (?!secrets\.GITHUB_TOKEN|runner\.temp)/)
+  assert.doesNotMatch(step, /\$\{\{ (?!secrets\.GITHUB_TOKEN|secrets\.PR_OPEN_TOKEN|runner\.temp)/)
 })
 
 test('a foto de antes grava as branches da issue e a contagem de comentários do agente', () => {

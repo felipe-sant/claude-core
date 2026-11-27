@@ -213,7 +213,7 @@ test('nota fora da pasta de notas, em subpasta, de outro tipo ou só modificada 
   }
 })
 
-async function runMainWithBranchFiles(files) {
+async function runMainWithBranchFiles(files, openToken) {
   const fs = require('node:fs')
   const os = require('node:os')
   const { main } = require(scriptPath)
@@ -226,6 +226,9 @@ async function runMainWithBranchFiles(files) {
   process.env.GITHUB_REPOSITORY = 'dono/repo'
   process.env.CHECK_DIR = dir
   delete process.env.GITHUB_OUTPUT
+  const savedOpenToken = process.env.PR_OPEN_TOKEN
+  if (openToken === undefined) delete process.env.PR_OPEN_TOKEN
+  else process.env.PR_OPEN_TOKEN = openToken
   const calls = []
   const answers = {
     '/branches?': [{ name: 'main' }, { name: 'fix/95-algo' }],
@@ -235,7 +238,7 @@ async function runMainWithBranchFiles(files) {
     '/repos/dono/repo': { default_branch: 'main' }
   }
   globalThis.fetch = async (url, options = {}) => {
-    calls.push({ url, method: options.method || 'GET' })
+    calls.push({ url, method: options.method || 'GET', authorization: options.headers && options.headers.Authorization })
     if (options.method === 'POST') return { ok: true, status: 201, json: async () => ({ html_url: 'https://github.com/dono/repo/pull/1' }) }
     const key = Object.keys(answers).find((part) => url.includes(part))
     return { ok: true, status: 200, json: async () => answers[key] }
@@ -246,7 +249,7 @@ async function runMainWithBranchFiles(files) {
   } finally {
     globalThis.fetch = originalFetch
     process.argv = saved.argv
-    for (const [name, value] of [['GITHUB_TOKEN', saved.token], ['GITHUB_REPOSITORY', saved.repository], ['CHECK_DIR', saved.check], ['GITHUB_OUTPUT', saved.output]]) {
+    for (const [name, value] of [['PR_OPEN_TOKEN', savedOpenToken], ['GITHUB_TOKEN', saved.token], ['GITHUB_REPOSITORY', saved.repository], ['CHECK_DIR', saved.check], ['GITHUB_OUTPUT', saved.output]]) {
       if (value === undefined) delete process.env[name]
       else process.env[name] = value
     }
@@ -264,4 +267,22 @@ test('no fluxo principal, branch com nota de mudança cria o pull request', asyn
   const { outcome, calls } = await runMainWithBranchFiles([{ filename: '.changeset/algo.md', status: 'added' }])
   assert.equal(outcome, null)
   assert.equal(calls.filter((call) => call.method === 'POST').length, 1)
+})
+
+const changesetFiles = [{ filename: '.changeset/nota.md', status: 'added' }]
+
+test('com o token do dono, só a criação do pull request usa esse token', async () => {
+  const { outcome, calls } = await runMainWithBranchFiles(changesetFiles, 'token-do-dono')
+  assert.equal(outcome, null)
+  const create = calls.find((call) => call.method === 'POST')
+  assert.equal(create.authorization, 'Bearer token-do-dono')
+  for (const call of calls.filter((other) => other.method !== 'POST')) assert.equal(call.authorization, 'Bearer token')
+})
+
+test('sem o token do dono, ou com ele vazio, a criação usa o token padrão', async () => {
+  for (const openToken of [undefined, '']) {
+    const { outcome, calls } = await runMainWithBranchFiles(changesetFiles, openToken)
+    assert.equal(outcome, null)
+    assert.equal(calls.find((call) => call.method === 'POST').authorization, 'Bearer token')
+  }
 })

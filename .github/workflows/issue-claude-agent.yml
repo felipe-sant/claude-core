@@ -142,6 +142,7 @@ jobs:
         if: steps.claude.outcome == 'success'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_OPEN_TOKEN: ${{ secrets.PR_OPEN_TOKEN }}
           CONTEXT_DIR: ${{ runner.temp }}/issue-agent
           CHECK_DIR: ${{ runner.temp }}/issue-check
         run: node .github/issue-agent/open-pull-request.js "$CONTEXT_DIR" "$PR_ISSUE"

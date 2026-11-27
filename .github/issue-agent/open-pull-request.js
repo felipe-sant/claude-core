@@ -164,7 +164,7 @@ async function main() {
     return
   }
 
-  const created = await createPullRequest(token, `${API_URL}/repos/${repository}/pulls`, {
+  const created = await createPullRequest(process.env.PR_OPEN_TOKEN || token, `${API_URL}/repos/${repository}/pulls`, {
     title: buildTitle(branch, issueNumber, issue.title),
     head: branch,
     base,
