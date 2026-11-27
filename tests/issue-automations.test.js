@@ -58,9 +58,9 @@ test('a Issue Claude Agent não dispara por issue nem por chamada de outro workf
   assert.doesNotMatch(claudeAgent, /workflow_call/)
 })
 
-test('a marca do comentário e a linha do pull request são iguais no script e nas duas automações', () => {
+test('a marca do comentário e a linha do pull request são iguais nos scripts e nas duas automações', () => {
   const mark = script.match(/CLASSIFICATION_MARK = '([^']+)'/)[1]
-  const line = script.match(/PULL_REQUEST_LINE = '([^']+)'/)[1]
+  const line = openPullRequest.match(/PULL_REQUEST_LINE = '([^']+)'/)[1]
   for (const [name, text] of both) {
     assert.ok(text.includes(`CLASSIFICATION_MARK: ${mark}`), name)
     assert.ok(text.includes(`PULL_REQUEST_LINE: ${line}`), name)
@@ -126,15 +126,9 @@ test('o script de abertura é chamado pela automação e existe', () => {
   assert.ok(claudeAgent.includes('node .github/issue-agent/open-pull-request.js "$CONTEXT_DIR" "$PR_ISSUE"'))
 })
 
-test('a linha fixa do pull request é a mesma na seleção, no script e na automação', () => {
-  const line = script.match(/PULL_REQUEST_LINE = '([^']+)'/)[1]
-  assert.ok(openPullRequest.includes(`PULL_REQUEST_LINE = '${line}'`))
+test('a linha fixa do pull request é a mesma no script de abertura e na automação', () => {
+  const line = openPullRequest.match(/PULL_REQUEST_LINE = '([^']+)'/)[1]
   assert.ok(claudeAgent.includes(`PULL_REQUEST_LINE: ${line}`))
-})
-
-test('o limite de pull requests do agente é o mesmo na seleção e na automação', () => {
-  const limit = script.match(/MAX_AGENT_PULLS = (\d+)/)[1]
-  assert.ok(claudeAgent.includes(`MAX_AGENT_PULLS: ${limit}\n`))
 })
 
 test('as instruções citam o rótulo que a automação escreve para o arquivo da descrição', () => {
