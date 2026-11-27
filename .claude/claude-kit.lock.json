@@ -25,7 +25,7 @@
       "version": "1.0.0"
     },
     ".claude/agents/reviewer.md": {
-      "hash": "d1e0f7fb378d3061623a677f674ddde2cfc33d27a3fffd26255969a291a46df0",
+      "hash": "0010c2311e3d77207fb4c81c754c9bc7e4cbda08994a072b8e98c685e2af2cac",
       "version": "1.0.0"
     },
     ".claude/agents/sdd.md": {
@@ -57,7 +57,7 @@
       "version": "1.0.0"
     },
     ".claude/rules/review-standard.md": {
-      "hash": "d7427ec7ac45c903e205c7f8216c4b7ae9f3de2570dc0eed2ef4e25002a03be3",
+      "hash": "63d5d5771fef30e3c917f04d663370b63946241f0b7a2731673e11de79112f2f",
       "version": "1.0.0"
     },
     ".claude/rules/security-standard.md": {
