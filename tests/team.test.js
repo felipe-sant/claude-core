@@ -136,6 +136,19 @@ test('o modelo base não nega a leitura do .env e as regras mandam copiar sem ex
   assert.match(teamSetup(), /copia para ela, com `cp`, os arquivos de configuração locais/)
 })
 
+test('o padrão de segurança traz o roteiro de checagem antes de adicionar uma dependência', () => {
+  const rule = ruleText('security-standard')
+
+  assert.match(rule, /## Dependência nova/)
+  assert.match(rule, /bem mantido/)
+  assert.match(rule, /arquivado/)
+  assert.match(rule, /avisos de segurança/)
+  assert.match(rule, /compatível com as versões/)
+  assert.match(rule, /poucas linhas/)
+  assert.match(rule, /especificação ou na descrição do pull request/)
+  assert.match(rule, /decisão do dono/)
+})
+
 test('só o sdd escreve na especificação e commita só o arquivo dela', () => {
   for (const name of [...devs, 'dev-doc']) {
     assert.match(body(name), /Não edite a especificação nem o `Status` dela/, `${name} não edita a especificação`)
