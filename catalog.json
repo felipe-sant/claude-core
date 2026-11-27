@@ -195,6 +195,11 @@
       "applies": ["react"],
       "description": "Cria ou altera um componente React com teste primeiro."
     },
+    "accessibility-audit": {
+      "path": "stacks/react/skills/accessibility-audit",
+      "applies": ["react"],
+      "description": "Audita a acessibilidade de uma tela e lista o que só uma pessoa confere."
+    },
     "nestjs-module": {
       "path": "stacks/nestjs/skills/nestjs-module",
       "applies": ["nestjs"],

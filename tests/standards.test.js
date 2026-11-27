@@ -86,7 +86,7 @@ test('cada padrão de stack se limita aos arquivos da stack e todo padrão é cu
 })
 
 const generalSkills = ['bug-investigation', 'code-review', 'commit-message', 'create-pull-request', 'documentation', 'team-setup']
-const stackSkills = { react: 'react-component', nestjs: 'nestjs-module' }
+const stackSkills = { react: ['react-component', 'accessibility-audit'], nestjs: ['nestjs-module'] }
 
 function skillsOf(target) {
   const dir = path.join(target, '.claude', 'skills')
@@ -97,7 +97,7 @@ for (const [stack, files] of Object.entries(projects)) {
   test(`projeto ${stack} recebe as skills gerais e só as da própria stack`, () => {
     const target = h.makeTarget(files)
     sync(target)
-    const expected = stackSkills[stack] ? [...generalSkills, stackSkills[stack]] : generalSkills
+    const expected = stackSkills[stack] ? [...generalSkills, ...stackSkills[stack]] : generalSkills
 
     assert.deepEqual(skillsOf(target), [...expected].sort())
     for (const skill of expected) assert.ok(h.exists(target, `.claude/skills/${skill}/SKILL.md`))
@@ -111,7 +111,7 @@ test('projeto com React e NestJS recebe as skills das duas stacks', () => {
   })
   sync(target)
 
-  assert.deepEqual(skillsOf(target), [...generalSkills, 'react-component', 'nestjs-module'].sort())
+  assert.deepEqual(skillsOf(target), [...generalSkills, 'react-component', 'accessibility-audit', 'nestjs-module'].sort())
 })
 
 test('skill editada no projeto não é sobrescrita e uma skill do usuário nunca é tocada', () => {
