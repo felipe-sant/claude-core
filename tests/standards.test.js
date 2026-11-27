@@ -55,6 +55,30 @@ test('projeto com React e NestJS recebe os padrões das duas stacks e de mais ne
   assert.deepEqual(rulesOf(target), [...general, 'react-standard', 'nestjs-standard'].sort())
 })
 
+for (const dependency of ['i18next', 'react-i18next', 'next-intl', 'vue-i18n']) {
+  test(`projeto com ${dependency} recebe o padrão de tradução`, () => {
+    const target = h.makeTarget({ 'package.json': JSON.stringify({ dependencies: { [dependency]: '1' } }) })
+    const output = sync(target)
+
+    assert.match(output, /Stacks detectadas: i18n$/m)
+    assert.deepEqual(rulesOf(target), [...general, 'i18n-standard'].sort())
+  })
+}
+
+test('projeto Laravel com pacote de idiomas recebe o padrão de tradução e o do Laravel', () => {
+  const target = h.makeTarget({ 'composer.json': JSON.stringify({ require: { 'laravel/framework': '11', 'laravel-lang/lang': '15' } }) })
+  sync(target)
+
+  assert.deepEqual(rulesOf(target), [...general, 'laravel-standard', 'i18n-standard'].sort())
+})
+
+test('projeto sem biblioteca de tradução não recebe o padrão de tradução', () => {
+  const target = h.makeTarget(projects.react)
+  sync(target)
+
+  assert.ok(!rulesOf(target).includes('i18n-standard'))
+})
+
 test('projeto sem stack conhecida recebe só os padrões gerais', () => {
   const target = h.makeTarget()
   sync(target)
