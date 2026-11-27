@@ -123,6 +123,11 @@
       "applies": ["react"],
       "description": "Padrão para componentes React."
     },
+    "react-organization-standard": {
+      "path": "stacks/react/rules/react-organization-standard.md",
+      "applies": ["react"],
+      "description": "Organização de arquivos, exportações e imports no frontend."
+    },
     "nestjs-standard": {
       "path": "stacks/nestjs/rules/nestjs-standard.md",
       "applies": ["nestjs"],
