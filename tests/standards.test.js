@@ -122,7 +122,7 @@ test('cada padrão de stack se limita aos arquivos da stack e todo padrão é cu
 })
 
 const generalSkills = ['bug-investigation', 'code-review', 'commit-message', 'create-pull-request', 'documentation', 'team-setup']
-const stackSkills = { react: ['react-component', 'accessibility-audit'], nestjs: ['nestjs-module'] }
+const stackSkills = { react: ['react-component', 'accessibility-audit', 'exploratory-qa'], nestjs: ['nestjs-module'] }
 
 function skillsOf(target) {
   const dir = path.join(target, '.claude', 'skills')
@@ -147,7 +147,7 @@ test('projeto com React e NestJS recebe as skills das duas stacks', () => {
   })
   sync(target)
 
-  assert.deepEqual(skillsOf(target), [...generalSkills, 'react-component', 'accessibility-audit', 'nestjs-module'].sort())
+  assert.deepEqual(skillsOf(target), [...generalSkills, 'react-component', 'accessibility-audit', 'exploratory-qa', 'nestjs-module'].sort())
 })
 
 test('skill editada no projeto não é sobrescrita e uma skill do usuário nunca é tocada', () => {

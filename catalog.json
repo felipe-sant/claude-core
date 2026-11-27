@@ -260,6 +260,11 @@
       "applies": ["react"],
       "description": "Audita a acessibilidade de uma tela e lista o que só uma pessoa confere."
     },
+    "exploratory-qa": {
+      "path": "stacks/react/skills/exploratory-qa",
+      "applies": ["react"],
+      "description": "Roteiro de teste exploratório de uma tela e relatório de falhas em formato fixo."
+    },
     "nestjs-module": {
       "path": "stacks/nestjs/skills/nestjs-module",
       "applies": ["nestjs"],
