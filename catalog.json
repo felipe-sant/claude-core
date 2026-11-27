@@ -123,6 +123,21 @@
       "applies": ["react"],
       "description": "Padrão para componentes React."
     },
+    "react-organization-standard": {
+      "path": "stacks/react/rules/react-organization-standard.md",
+      "applies": ["react"],
+      "description": "Organização de arquivos, exportações e imports no frontend."
+    },
+    "style-standard": {
+      "path": "stacks/react/rules/style-standard.md",
+      "applies": ["react"],
+      "description": "Padrão de estilo (CSS) para telas React."
+    },
+    "frontend-testing-standard": {
+      "path": "stacks/react/rules/frontend-testing-standard.md",
+      "applies": ["react"],
+      "description": "Padrão de testes de frontend."
+    },
     "accessibility-standard": {
       "path": "stacks/react/rules/accessibility-standard.md",
       "applies": ["react"],
@@ -199,6 +214,11 @@
       "path": "stacks/react/skills/react-component",
       "applies": ["react"],
       "description": "Cria ou altera um componente React com teste primeiro."
+    },
+    "accessibility-audit": {
+      "path": "stacks/react/skills/accessibility-audit",
+      "applies": ["react"],
+      "description": "Audita a acessibilidade de uma tela e lista o que só uma pessoa confere."
     },
     "nestjs-module": {
       "path": "stacks/nestjs/skills/nestjs-module",

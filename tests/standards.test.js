@@ -11,10 +11,10 @@ const script = path.join(h.repoRoot, 'bin', 'ai-sync.js')
 const catalog = JSON.parse(fs.readFileSync(path.join(h.repoRoot, 'catalog.json'), 'utf8'))
 const general = ['code-standard', 'testing-standard', 'security-standard', 'review-standard', 'commit-standard', 'git-standard', 'feedback-standard', 'pull-request-standard', 'issue-standard']
 const stackRules = {
-  react: ['react-standard', 'accessibility-standard'],
-  nestjs: 'nestjs-standard',
-  laravel: 'laravel-standard',
-  adonisjs: 'adonisjs-standard'
+  react: ['react-standard', 'style-standard', 'react-organization-standard', 'frontend-testing-standard', 'accessibility-standard'],
+  nestjs: ['nestjs-standard'],
+  laravel: ['laravel-standard'],
+  adonisjs: ['adonisjs-standard']
 }
 
 function sync(target, ...args) {
@@ -41,7 +41,7 @@ for (const [stack, files] of Object.entries(projects)) {
     const output = sync(target)
 
     assert.match(output, new RegExp(`Stacks detectadas: ${stack}$`, 'm'))
-    assert.deepEqual(rulesOf(target), [...general, ...[stackRules[stack]].flat()].sort())
+    assert.deepEqual(rulesOf(target), [...general, ...stackRules[stack]].sort())
   })
 }
 
@@ -52,7 +52,7 @@ test('projeto com React e NestJS recebe os padrões das duas stacks e de mais ne
   })
   sync(target)
 
-  assert.deepEqual(rulesOf(target), [...general, 'react-standard', 'accessibility-standard', 'nestjs-standard'].sort())
+  assert.deepEqual(rulesOf(target), [...general, ...stackRules.react, ...stackRules.nestjs].sort())
 })
 
 test('projeto sem stack conhecida recebe só os padrões gerais', () => {
@@ -86,7 +86,7 @@ test('cada padrão de stack se limita aos arquivos da stack e todo padrão é cu
 })
 
 const generalSkills = ['bug-investigation', 'code-review', 'commit-message', 'create-pull-request', 'documentation', 'team-setup']
-const stackSkills = { react: 'react-component', nestjs: 'nestjs-module' }
+const stackSkills = { react: ['react-component', 'accessibility-audit'], nestjs: ['nestjs-module'] }
 
 function skillsOf(target) {
   const dir = path.join(target, '.claude', 'skills')
@@ -97,7 +97,7 @@ for (const [stack, files] of Object.entries(projects)) {
   test(`projeto ${stack} recebe as skills gerais e só as da própria stack`, () => {
     const target = h.makeTarget(files)
     sync(target)
-    const expected = stackSkills[stack] ? [...generalSkills, stackSkills[stack]] : generalSkills
+    const expected = stackSkills[stack] ? [...generalSkills, ...stackSkills[stack]] : generalSkills
 
     assert.deepEqual(skillsOf(target), [...expected].sort())
     for (const skill of expected) assert.ok(h.exists(target, `.claude/skills/${skill}/SKILL.md`))
@@ -111,7 +111,7 @@ test('projeto com React e NestJS recebe as skills das duas stacks', () => {
   })
   sync(target)
 
-  assert.deepEqual(skillsOf(target), [...generalSkills, 'react-component', 'nestjs-module'].sort())
+  assert.deepEqual(skillsOf(target), [...generalSkills, 'react-component', 'accessibility-audit', 'nestjs-module'].sort())
 })
 
 test('skill editada no projeto não é sobrescrita e uma skill do usuário nunca é tocada', () => {
