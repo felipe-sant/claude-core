@@ -11,7 +11,7 @@ const script = path.join(h.repoRoot, 'bin', 'ai-sync.js')
 const catalog = JSON.parse(fs.readFileSync(path.join(h.repoRoot, 'catalog.json'), 'utf8'))
 const general = ['code-standard', 'testing-standard', 'security-standard', 'review-standard', 'commit-standard', 'git-standard', 'feedback-standard', 'pull-request-standard', 'issue-standard']
 const stackRules = {
-  react: ['react-standard', 'frontend-testing-standard'],
+  react: ['react-standard', 'style-standard', 'react-organization-standard', 'frontend-testing-standard'],
   nestjs: ['nestjs-standard'],
   laravel: ['laravel-standard'],
   adonisjs: ['adonisjs-standard']

@@ -123,6 +123,16 @@
       "applies": ["react"],
       "description": "Padrão para componentes React."
     },
+    "react-organization-standard": {
+      "path": "stacks/react/rules/react-organization-standard.md",
+      "applies": ["react"],
+      "description": "Organização de arquivos, exportações e imports no frontend."
+    },
+    "style-standard": {
+      "path": "stacks/react/rules/style-standard.md",
+      "applies": ["react"],
+      "description": "Padrão de estilo (CSS) para telas React."
+    },
     "frontend-testing-standard": {
       "path": "stacks/react/rules/frontend-testing-standard.md",
       "applies": ["react"],
