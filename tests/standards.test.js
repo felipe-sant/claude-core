@@ -11,7 +11,7 @@ const script = path.join(h.repoRoot, 'bin', 'ai-sync.js')
 const catalog = JSON.parse(fs.readFileSync(path.join(h.repoRoot, 'catalog.json'), 'utf8'))
 const general = ['code-standard', 'testing-standard', 'security-standard', 'review-standard', 'commit-standard', 'git-standard', 'feedback-standard', 'pull-request-standard', 'issue-standard']
 const stackRules = {
-  react: 'react-standard',
+  react: ['react-standard', 'accessibility-standard'],
   nestjs: 'nestjs-standard',
   laravel: 'laravel-standard',
   adonisjs: 'adonisjs-standard'
@@ -41,7 +41,7 @@ for (const [stack, files] of Object.entries(projects)) {
     const output = sync(target)
 
     assert.match(output, new RegExp(`Stacks detectadas: ${stack}$`, 'm'))
-    assert.deepEqual(rulesOf(target), [...general, stackRules[stack]].sort())
+    assert.deepEqual(rulesOf(target), [...general, ...[stackRules[stack]].flat()].sort())
   })
 }
 
@@ -52,7 +52,7 @@ test('projeto com React e NestJS recebe os padrões das duas stacks e de mais ne
   })
   sync(target)
 
-  assert.deepEqual(rulesOf(target), [...general, 'react-standard', 'nestjs-standard'].sort())
+  assert.deepEqual(rulesOf(target), [...general, 'react-standard', 'accessibility-standard', 'nestjs-standard'].sort())
 })
 
 test('projeto sem stack conhecida recebe só os padrões gerais', () => {

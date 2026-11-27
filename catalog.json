@@ -123,6 +123,11 @@
       "applies": ["react"],
       "description": "Padrão para componentes React."
     },
+    "accessibility-standard": {
+      "path": "stacks/react/rules/accessibility-standard.md",
+      "applies": ["react"],
+      "description": "Padrão de acessibilidade para telas."
+    },
     "nestjs-standard": {
       "path": "stacks/nestjs/rules/nestjs-standard.md",
       "applies": ["nestjs"],
