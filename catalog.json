@@ -23,6 +23,12 @@
       "detect": {
         "dependencies": ["@adonisjs/core"]
       }
+    },
+    "typescript": {
+      "description": "Projetos que usam TypeScript.",
+      "detect": {
+        "dependencies": ["typescript"]
+      }
     }
   },
   "agents": {
@@ -137,6 +143,11 @@
       "path": "stacks/adonisjs/rules/adonisjs-standard.md",
       "applies": ["adonisjs"],
       "description": "Padrão para aplicações AdonisJS."
+    },
+    "typescript-standard": {
+      "path": "stacks/typescript/rules/typescript-standard.md",
+      "applies": ["typescript"],
+      "description": "Padrão TypeScript: modo estrito, sem any, sem conversão de tipo para calar erro, tipos explícitos nas funções públicas e tipos compartilhados."
     },
     "git-standard": {
       "path": "rules/git-standard.md",
