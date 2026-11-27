@@ -136,12 +136,22 @@ jobs:
           path: ${{ runner.temp }}/execution-report/claude-execution-output.json
           retention-days: 7
           if-no-files-found: ignore
+      - name: Token do aplicativo
+        id: app-token
+        if: steps.claude.outcome == 'success'
+        continue-on-error: true
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          permission-pull-requests: write
+          permission-contents: read
       - name: Abertura do pull request
         id: open
         if: steps.claude.outcome == 'success'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PR_OPEN_TOKEN: ${{ secrets.PR_OPEN_TOKEN }}
+          PR_OPEN_TOKEN: ${{ steps.app-token.outputs.token || secrets.PR_OPEN_TOKEN }}
           CONTEXT_DIR: ${{ runner.temp }}/issue-agent
           CHECK_DIR: ${{ runner.temp }}/issue-check
         run: node .github/issue-agent/open-pull-request.js "$CONTEXT_DIR" "$PR_ISSUE"

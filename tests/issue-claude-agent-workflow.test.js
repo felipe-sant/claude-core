@@ -216,15 +216,41 @@ test('o passo de abertura do pull request roda depois da ação, só com sucesso
   assert.doesNotMatch(step, /always\(\)/)
   assert.match(step, /run: node \.github\/issue-agent\/open-pull-request\.js "\$CONTEXT_DIR" "\$PR_ISSUE"/)
   assert.match(step, /GITHUB_TOKEN: \$\{\{ secrets\.GITHUB_TOKEN \}\}/)
-  assert.match(step, /PR_OPEN_TOKEN: \$\{\{ secrets\.PR_OPEN_TOKEN \}\}/)
+  assert.match(step, /PR_OPEN_TOKEN: \$\{\{ steps\.app-token\.outputs\.token \|\| secrets\.PR_OPEN_TOKEN \}\}/)
   assert.match(step, /CONTEXT_DIR: \$\{\{ runner\.temp \}\}\/issue-agent/)
   assert.match(step, /CHECK_DIR: \$\{\{ runner\.temp \}\}\/issue-check/)
   assert.doesNotMatch(step, /steps\.prompt|outputs\.text/)
 })
 
+test('o token do aplicativo é gerado depois da ação e antes da abertura, só com sucesso e sem derrubar a execução', () => {
+  const block = job('agent')
+  const step = stepOf(block, 'Token do aplicativo')
+  assert.ok(block.indexOf('id: claude') < block.indexOf('name: Token do aplicativo'))
+  assert.ok(block.indexOf('name: Token do aplicativo') < block.indexOf('name: Abertura do pull request'))
+  assert.match(step, /id: app-token/)
+  assert.match(step, /if: steps\.claude\.outcome == 'success'/)
+  assert.match(step, /continue-on-error: true/)
+})
+
+test('o token do aplicativo usa a ação oficial fixada por commit e só as permissões de pull request e conteúdo', () => {
+  const step = stepOf(job('agent'), 'Token do aplicativo')
+  assert.match(step, /uses: actions\/create-github-app-token@[0-9a-f]{40}$/m)
+  assert.match(step, /app-id: \$\{\{ secrets\.APP_ID \}\}/)
+  assert.match(step, /private-key: \$\{\{ secrets\.APP_PRIVATE_KEY \}\}/)
+  assert.match(step, /permission-pull-requests: write/)
+  assert.match(step, /permission-contents: read/)
+  assert.deepEqual(step.match(/permission-[a-z-]+/g).sort(), ['permission-contents', 'permission-pull-requests'])
+})
+
+test('o segredo do aplicativo não aparece fora do passo que gera o token', () => {
+  const block = job('agent')
+  const outside = block.replace(stepOf(block, 'Token do aplicativo'), '')
+  assert.doesNotMatch(outside, /APP_PRIVATE_KEY|secrets\.APP_ID/)
+})
+
 test('o agente nunca recebe a leitura de arquivo para publicar e o passo de abertura não interpola texto', () => {
   const step = stepOf(job('agent'), 'Abertura do pull request')
-  assert.doesNotMatch(step, /\$\{\{ (?!secrets\.GITHUB_TOKEN|secrets\.PR_OPEN_TOKEN|runner\.temp)/)
+  assert.doesNotMatch(step, /\$\{\{ (?!secrets\.GITHUB_TOKEN|steps\.app-token\.outputs\.token \|\| secrets\.PR_OPEN_TOKEN|runner\.temp)/)
 })
 
 test('a foto de antes grava as branches da issue e a contagem de comentários do agente', () => {
