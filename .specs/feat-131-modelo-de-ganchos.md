@@ -1,0 +1,238 @@
+# Modelo de ganchos com proteção de branch e formatação automática
+
+> Status: em-revisao
+> Tipo: funcionalidade
+> Tamanho: grande
+> Branch: feat/131-modelo-de-ganchos
+> Criada em: 2026-11-28
+
+## Objetivo
+
+Hoje cada projeto precisa montar sozinho as próprias guardas contra acidentes do agente. Este trabalho cria um novo modelo de configuração que a sincronização do kit mescla nas configurações do projeto, sem alterar o que o dono já definiu. O modelo traz dois ganchos:
+
+1. Uma guarda que, antes de o agente rodar um comando no terminal, impede commit e envio direto nas branches protegidas, envio forçado e remoção recursiva de arquivos, e explica o motivo em português.
+2. Uma etapa que formata e confere o arquivo logo depois de cada edição feita pelo agente, usando só as ferramentas que o projeto já tem instaladas.
+
+Para isso, a sincronização passa a saber mesclar listas de ganchos: acrescenta os do kit aos que o projeto já tem, sem duplicar e sem trazer de volta o que o dono removeu.
+
+## Regras
+
+- RN-01: O modelo de ganchos é um item novo do catálogo de configurações, ligado aos perfis do kit. Fonte: issue #131.
+- RN-02: Os ganchos funcionam sozinhos, escritos por inteiro na própria configuração, sem depender de scripts, arquivos ou comandos do projeto. Fonte: issue #131.
+- RN-03: Em caso de dúvida os ganchos deixam passar: comando que a guarda não reconhece, dados de entrada ilegíveis, pasta sem git, ferramenta ausente ou qualquer erro interno. Só é barrado o que está na lista da RN-05 a RN-08. Fonte: issue #131.
+- RN-04: Ao barrar, a guarda impede o comando e explica em português o que foi barrado e por quê, para o agente entender e mudar de rumo. Fonte: issue #131.
+- RN-05: Commit direto em branch protegida é barrado. As branches protegidas são `main`, `master`, `develop` e `production` (lista proposta, ver Dúvidas). Fonte: issue #131 e pedido da orchestrator.
+- RN-06: Envio (push) para branch protegida é barrado, seja nomeando a branch de destino, seja enviando sem nomear o destino enquanto se está nela. Apagar uma branch protegida no servidor também é barrado. Fonte: issue #131.
+- RN-07: Envio forçado é barrado em qualquer branch, nas suas várias formas (forçado, forçado com proteção e o destino marcado com sinal de mais). Fonte: issue #131.
+- RN-08: Remoção recursiva de arquivos é barrada em qualquer pasta, nas suas várias formas de escrever a opção. Fonte: issue #131.
+- RN-09: A branch conferida é a da pasta onde o comando vai rodar de fato: se o comando entra antes em outra pasta, vale a branch dessa pasta. Isso é o que permite aos agentes commitarem nas worktrees das tarefas enquanto a pasta principal está na `main`. Fonte: fluxo do time (CLAUDE.md, worktrees por tarefa).
+- RN-10: Depois de cada edição ou criação de arquivo pelo agente, o arquivo é formatado e conferido com as ferramentas do projeto que já estão instaladas nele. Se o projeto não tem nenhuma, nada acontece e nada falha. A etapa nunca desfaz nem impede a edição. Fonte: issue #131.
+- RN-11: A sincronização preserva os ganchos que o projeto já tem: os do kit são acrescentados ao lado, sem alterar, reordenar nem apagar os do dono. Fonte: issue #131 e garantia do kit de nunca sobrescrever o que é do usuário (CLAUDE.md).
+- RN-12: Rodar a sincronização de novo não duplica os ganchos do kit. Fonte: pedido da orchestrator.
+- RN-13: Gancho do kit que o dono apagou não volta nas próximas sincronizações, como já acontece com as demais configurações. Fonte: pedido da orchestrator e comportamento atual do kit.
+- RN-14: Quando o kit muda um gancho numa versão nova, a sincronização troca a versão antiga pela nova só se o dono não a alterou. Se o dono alterou ou apagou o gancho, a versão nova não entra e é listada como sugestão. Fonte: mesma lógica que o kit já usa para os arquivos instalados (CLAUDE.md).
+- RN-15: Quem precisar contornar os ganchos pode desligá-los sem editar arquivo versionado, por uma variável de ambiente (`CLAUDE_KIT_HOOKS_OFF=1`), posta no terminal ou na configuração local do Claude, que fica fora do git. Fonte: issue #131 e pedido da orchestrator.
+
+## Critérios de aceite
+
+Guarda de comandos (exemplos de comando entre crases são o texto que o agente pediria para rodar):
+
+- CA-01: QUANDO o agente pede `git commit -m "x"` numa pasta que está na `main`, `master`, `develop` ou `production` ENTÃO o sistema DEVE barrar o comando e explicar em português que commit direto em branch protegida não é permitido. Cobre RN-04, RN-05.
+- CA-02: QUANDO o agente pede `git commit -m "x"` numa pasta que está em outra branch (por exemplo `feat/1-x`) ENTÃO o sistema DEVE deixar passar. Cobre RN-03, RN-05.
+- CA-03: QUANDO o agente, a partir de uma pasta na `main`, pede `cd <worktree> && git commit ...` ou `git -C <worktree> commit ...` e a worktree está numa branch de tarefa ENTÃO o sistema DEVE deixar passar; e QUANDO a pasta de destino está numa branch protegida ENTÃO DEVE barrar. Cobre RN-09.
+- CA-04: QUANDO a pasta de destino não pode ser descoberta com segurança (nome vindo de variável, subcomando ou pasta inexistente) ENTÃO o sistema DEVE deixar passar. Cobre RN-03, RN-09.
+- CA-05: QUANDO o agente pede `git push origin main`, `git push origin HEAD:main`, `git push origin feat/x:main`, `git push origin :main` ou `git push origin --delete main` ENTÃO o sistema DEVE barrar, valendo o mesmo para as outras branches protegidas. Cobre RN-04, RN-06.
+- CA-06: QUANDO o agente pede `git push` ou `git push origin` sem nomear destino e a pasta está numa branch protegida ENTÃO o sistema DEVE barrar; e QUANDO está numa branch de tarefa ENTÃO DEVE deixar passar. Cobre RN-06.
+- CA-07: QUANDO o agente pede `git push -u origin feat/1-x` (inclusive estando na `main`) ENTÃO o sistema DEVE deixar passar. Cobre RN-03, RN-06.
+- CA-08: QUANDO o agente pede um envio com `--force`, `-f`, `--force-with-lease`, `--force-if-includes`, `-f` dentro de um grupo de opções curtas (como `-uf`) ou um destino começando com `+` (como `+feat/x`) ENTÃO o sistema DEVE barrar, em qualquer branch. Cobre RN-04, RN-07.
+- CA-09: QUANDO o agente pede `rm -r x`, `rm -rf x`, `rm -fr x`, `rm -Rf x`, `rm -r -f x`, `rm --recursive x` ou qualquer uma delas precedida de `sudo` ENTÃO o sistema DEVE barrar e explicar em português que remoção recursiva não é permitida. Cobre RN-04, RN-08.
+- CA-10: QUANDO o agente pede `rm arquivo.txt` ou `rm -f arquivo.txt` ENTÃO o sistema DEVE deixar passar. Cobre RN-03, RN-08.
+- CA-11: QUANDO o comando proibido aparece encadeado depois de outro (`npm test && git push --force`, `ls; rm -rf x`, `true || git commit -m x` na `main`) ENTÃO o sistema DEVE barrar. Cobre RN-05 a RN-08.
+- CA-12: QUANDO o texto proibido aparece só dentro de uma mensagem ou de um argumento entre aspas (por exemplo `git commit -m "explica o rm -rf"` numa branch de tarefa, ou `echo "git push --force"`) ENTÃO o sistema DEVE deixar passar. Cobre RN-03.
+- CA-13: QUANDO a entrada recebida pelo gancho não é legível, o comando está vazio, a pasta não tem git, o git não está instalado ou o Node não está instalado ENTÃO o sistema DEVE deixar passar, sem mensagem de erro. Cobre RN-02, RN-03.
+- CA-14: QUANDO o agente pede qualquer comando que não esteja na lista acima (por exemplo `npm test`, `git status`, `git worktree remove ../x`) ENTÃO o sistema DEVE deixar passar. Cobre RN-03.
+- CA-15: QUANDO a variável `CLAUDE_KIT_HOOKS_OFF` vale `1` ENTÃO o sistema DEVE deixar passar todos os comandos e não formatar nem conferir arquivos; isso vale com a variável no terminal e com a variável na configuração local do Claude (esta forma é conferida na prática na tarefa de registro). Cobre RN-15.
+
+Formatação depois da edição:
+
+- CA-16: QUANDO o agente edita ou cria um arquivo num projeto que tem o formatador instalado ENTÃO o sistema DEVE formatar esse arquivo logo em seguida. Cobre RN-10.
+- CA-17: QUANDO o projeto também tem a ferramenta de conferência instalada ENTÃO o sistema DEVE conferir o arquivo editado, sem desfazer nem impedir a edição (o que acontece com os problemas encontrados depende da resposta em Dúvidas). Cobre RN-10.
+- CA-18: QUANDO o arquivo editado está numa worktree ENTÃO o sistema DEVE usar as ferramentas instaladas na pasta do próprio arquivo (subindo pelas pastas acima dele), e QUANDO não há nenhuma instalada ali ENTÃO DEVE não fazer nada. Cobre RN-09, RN-10.
+- CA-19: QUANDO o projeto não tem formatador nem ferramenta de conferência, o arquivo não existe mais ou a entrada é ilegível ENTÃO o sistema DEVE terminar sem fazer nada e sem erro. Cobre RN-03, RN-10.
+- CA-20: QUANDO o formatador demora demais ENTÃO o sistema DEVE desistir depois de um tempo curto (30 segundos) sem travar o agente. Cobre RN-03.
+
+Sincronização:
+
+- CA-21: QUANDO o projeto não tem configuração ou não tem ganchos ENTÃO a sincronização DEVE acrescentar os dois ganchos do kit e listá-los no resumo como acrescentados. Cobre RN-01, RN-11.
+- CA-22: QUANDO o projeto já tem ganchos próprios no mesmo momento (antes de comando ou depois de edição) ENTÃO a sincronização DEVE manter os do dono exatamente como estavam, na mesma ordem, e acrescentar os do kit depois deles. Cobre RN-11.
+- CA-23: QUANDO a sincronização roda de novo sem mudanças ENTÃO nada DEVE mudar na configuração nem no registro, e os ganchos do kit DEVEM aparecer uma vez só. Cobre RN-12.
+- CA-24: QUANDO o dono apaga um gancho do kit, a lista inteira de um momento ou o grupo inteiro de ganchos ENTÃO as próximas sincronizações NÃO DEVEM trazê-lo de volta. Cobre RN-13.
+- CA-25: QUANDO o kit muda o texto de um gancho e o dono não tinha mexido no anterior ENTÃO a sincronização DEVE trocar o anterior pelo novo no mesmo lugar, sem deixar os dois. Cobre RN-14.
+- CA-26: QUANDO o kit muda o texto de um gancho e o dono tinha alterado ou apagado o anterior ENTÃO a sincronização NÃO DEVE acrescentar o novo e DEVE listá-lo como sugerido e não aplicado. Cobre RN-11, RN-14.
+- CA-27: QUANDO o registro do kit foi apagado e o projeto já tem um gancho igual ao do kit ENTÃO a sincronização DEVE registrá-lo como do kit sem duplicá-lo. Cobre RN-12, RN-13.
+- CA-28: QUANDO os ganchos do projeto estão num formato que a sincronização não entende (por exemplo, não são uma lista) ENTÃO ela NÃO DEVE mexer neles e DEVE listar os do kit como sugeridos. Cobre RN-11.
+- CA-29: QUANDO dois modelos do kit trazem ganchos para o mesmo momento ENTÃO a sincronização DEVE juntar as listas, sem que um modelo apague os ganchos do outro. Cobre RN-11.
+- CA-30: QUANDO as demais configurações (as que não são ganchos) são sincronizadas ENTÃO DEVEM se comportar exatamente como antes. Cobre RN-11.
+
+## Critérios de sucesso
+
+- Um projeto que roda a sincronização passa a ter as duas guardas funcionando, sem perder nenhum gancho próprio, e a segunda rodada não muda nada.
+- Nos testes, todos os exemplos barrados de CA-01 a CA-11 saem barrados e todos os exemplos liberados de CA-02 a CA-14 saem liberados.
+- `npm run lint` e `npm test` passam, e `node bin/ai-sync.js --check` não aponta erro.
+- O próprio claude-kit, que recebe o perfil `tooling`, passa a ter os ganchos e o fluxo do time segue funcionando nas worktrees.
+
+## Fora do escopo
+
+- Lista de branches protegidas configurável por projeto: a lista é fixa nesta entrega (ver Dúvidas).
+- Proteção contra outros comandos perigosos (reescrever histórico na principal, `git reset --hard`, apagar com outras ferramentas). A issue pede só os três casos.
+- Ferramentas de formatação e conferência de outras linguagens (PHP, por exemplo) e outras além das listadas nas tarefas, salvo decisão em Dúvidas.
+- Mudar as permissões do Claude ou as listas de comandos permitidos das automações de issues.
+- Escrever os ganchos em arquivos separados do projeto: a issue pede que não dependam de arquivos do projeto.
+
+## Desenho
+
+**Peças**
+
+1. Modelo de ganchos: arquivo novo de configuração do kit, registrado no catálogo como `hooks`. Contém o grupo `hooks` com duas entradas: uma no momento "antes de usar ferramenta" para a ferramenta de terminal (a guarda) e uma no momento "depois de usar ferramenta" para as ferramentas de edição e escrita (a formatação). Cada entrada traz o comando completo, sem depender de nada do projeto.
+2. Sincronização: aprende a mesclar listas de ganchos por entrada, sem mudar a regra das outras chaves.
+3. Registro do kit (o arquivo de trava que guarda o que o kit aplicou): passa a guardar uma identificação por gancho aplicado.
+
+**Contratos fixados por esta especificação (as tarefas paralelas partem deles)**
+
+- Arquivo do modelo: `templates/settings.hooks.json`, nome no catálogo `hooks`, `applies: ["all"]` (ver Dúvidas sobre ligar por padrão) e listado nos quatro perfis.
+- Formato do modelo, igual ao esperado pelo Claude Code:
+
+```json
+{
+  "hooks": {
+    "PreToolUse": [{ "matcher": "Bash", "hooks": [{ "type": "command", "command": "...", "timeout": 10 }] }],
+    "PostToolUse": [{ "matcher": "Edit|Write|MultiEdit", "hooks": [{ "type": "command", "command": "...", "timeout": 30 }] }]
+  }
+}
+```
+
+- Variável de desligar: `CLAUDE_KIT_HOOKS_OFF=1`.
+- Saída da guarda: código 2 com a mensagem em português na saída de erro para barrar; código 0 em qualquer outro caso, inclusive erro interno.
+- Linguagem do comando: um prefixo de shell curto que sai com 0 quando a variável de desligar está ligada ou quando o Node não existe (`command -v node`), seguido de `node -e` com o programa inteiro dentro de um `try`, cujo `catch` sai com 0. Motivo: o Node já é exigido pelo kit, lê JSON sem `jq` (que não é garantido) e roda igual em Linux, macOS e no shell que o Claude Code usa no Windows. O programa não pode conter aspas simples, para caber no `node -e '...'`.
+- A guarda lê do stdin o JSON do gancho (`tool_input.command` e `cwd`), divide o comando em trechos por `&&`, `||`, `;`, `|` e quebra de linha, respeitando aspas, acompanha `cd <pasta>` e `git -C <pasta>` para saber a pasta de cada trecho e pergunta a branch com `git -C <pasta> symbolic-ref --short HEAD`. Pasta indefinida ou falha do git: o trecho passa.
+- A formatação lê `tool_input.file_path`, sobe a partir da pasta do arquivo procurando `node_modules/.bin`, roda o formatador (`prettier --write <arquivo>`) e a conferência (`oxlint <arquivo>`) quando existem ali. Ausência de ambos ou de arquivo: sai com 0.
+
+**Mesclagem dos ganchos na sincronização**
+
+- Juntar modelos: no grupo `hooks`, as listas de um mesmo momento são concatenadas entre modelos, sem repetir entradas iguais. As demais chaves seguem como hoje (o último modelo vence).
+- Identidade de um gancho: um resumo (hash curto) do conteúdo inteiro da entrada (ferramenta, comando e tempo limite). Uma entrada do projeto é considerada a mesma do kit quando o conteúdo é idêntico.
+- Registro: cada gancho aplicado é guardado na lista de configurações aplicadas como `hooks.<Momento>.<hash>`, com ponto como separador. Assim, a checagem que já existe por prefixo reconhece a remoção do grupo inteiro (`hooks`) e da lista inteira de um momento (`hooks.PreToolUse`).
+- Para cada momento e cada entrada do modelo:
+  - grupo `hooks` ausente no projeto e já registrado antes: nada entra (o dono apagou);
+  - lista do momento ausente e já registrada antes: nada entra;
+  - lista do momento existe mas não é lista: nada muda, entrada vai para "sugerido";
+  - entrada idêntica já presente: nada muda (se o registro foi recriado, ela passa a ser registrada);
+  - hash da entrada já registrado e ausente do projeto: o dono apagou ou alterou, nada entra;
+  - entrada nova cuja ferramenta (`matcher`) tem uma entrada antiga do kit registrada: se a antiga ainda está presente e idêntica, é trocada pela nova no mesmo lugar e o registro troca de hash; se a antiga sumiu ou mudou, a nova vai para "sugerido";
+  - nos demais casos: a entrada é acrescentada ao fim da lista e registrada.
+- Resumo da sincronização: lista os ganchos acrescentados e sugeridos por momento e ferramenta (por exemplo `hooks.PreToolUse (Bash)`), sem despejar o comando inteiro.
+
+**Reflexos neste repositório**
+
+- O perfil `tooling` passa a receber os ganchos, então o `.claude/settings.json` gerado ganha as duas entradas.
+- O roteiro "Verificar uma mudança" do CLAUDE.md termina com uma remoção recursiva da pasta temporária, que passa a ser barrada (ver Dúvidas).
+- As automações de issues trabalham numa branch própria e só enviam essa branch, então não são barradas.
+
+**Testes**
+
+- Mesclagem: com o kit de teste que já existe nos testes, usando modelos de ganchos fictícios.
+- Guarda e formatação: leem o modelo real do repositório, extraem o comando da entrada certa e o executam com `spawnSync('sh', ['-c', comando], { input, cwd, env })`, alimentando o stdin com o JSON do gancho, dentro de um repositório git temporário (`git init -b main`, branches criadas por teste). A formatação usa um `node_modules/.bin/prettier` e um `oxlint` falsos que só gravam um arquivo de marca.
+
+## Plano de execução
+
+O projeto não tem typecheck nem formatador; os gates usam o lint e os testes.
+
+- Fase 1 (paralelo): T1 [P], T2 [P], T5 [P]
+  - Gate de fase: `npm run lint`, `npm test` e `node bin/ai-sync.js --check`.
+- Fase 2 (sequencial): T3, que só começa depois do commit de T2.
+  - Gate de fase: `npm run lint`, `npm test` e `node bin/ai-sync.js --check`.
+- Fase 3 (sequencial): T4, que só começa depois dos commits de T1 e T3.
+  - Gate de fase: `npm run lint`, `npm test`, `node bin/ai-sync.js --check`, `npm pack --dry-run` (o modelo novo entra no pacote) e o `ai-sync` numa pasta temporária, conferindo o `.claude/settings.json` gerado. Depois, o reviewer.
+
+T2, T3 e T4 mexem em fontes do conteúdo sincronizado (`templates/`, `catalog.json`, `profiles/`) e por isso não rodam em paralelo entre si: a próxima só começa depois do commit da anterior. T1 (sincronização) e T5 (documentação e nota de mudança) não mexem nessas fontes.
+
+## Tarefas
+
+### T1 [P] Mesclagem de listas de ganchos na sincronização
+
+- O quê: a sincronização passa a mesclar o grupo `hooks` por entrada, como descrito no Desenho, sem mudar o comportamento das outras chaves.
+- Onde: `bin/ai-sync.js` (`mergeTemplates`, `mergeMissing`, `wasApplied`, `applySettings`, `printSettingsReport`), `tests/settings.test.js`.
+- Depende de: nada.
+- Reaproveita: `previousSettings`, `appliedSettings`, `wasApplied`, `manifestWasRecreated`, `settingsReport` e o resumo atual; nos testes, `h.makeCore`, `h.makeTarget`, `h.run`, `h.snapshot` e o `appliedIn` do próprio arquivo.
+- Atende: RN-11, RN-12, RN-13, RN-14; CA-21 a CA-30.
+- Pronto quando: cada caso de CA-21 a CA-30 tem um teste com modelos de ganchos fictícios e passa; todos os testes que já existem em `tests/settings.test.js` passam sem alteração; o gate passa.
+- Teste: integração (rodando o `ai-sync` sobre pastas temporárias). O primeiro a falhar: "projeto com gancho próprio em PreToolUse recebe o do kit ao lado e mantém o seu", que hoje falha porque a lista inteira vai para "sugerido".
+- Gate: `node --test tests/settings.test.js` e `npm run lint`.
+- Modelo: padrao.
+- Status: pendente.
+
+### T2 [P] Guarda de comandos no modelo de ganchos
+
+- O quê: cria `templates/settings.hooks.json` só com a entrada de "antes de usar ferramenta" para o terminal, com a guarda completa em `node -e`, e os testes do bloqueio.
+- Onde: `templates/settings.hooks.json` (novo), `tests/hooks-guard.test.js` (novo). Não registra no catálogo nem nos perfis (fica para T4).
+- Depende de: nada.
+- Reaproveita: `h.tempDir`, `h.cleanup` e `h.repoRoot` de `tests/helpers.js`.
+- Atende: RN-02 a RN-09, RN-15; CA-01 a CA-15 (a parte da configuração local de CA-15 é conferida em T4).
+- Pronto quando: cada exemplo barrado de CA-01, CA-03, CA-05, CA-06, CA-08, CA-09 e CA-11 sai com código 2 e mensagem em português na saída de erro; cada exemplo liberado de CA-02, CA-03, CA-04, CA-06, CA-07, CA-10, CA-12, CA-13 e CA-14 sai com código 0 e sem mensagem; com `CLAUDE_KIT_HOOKS_OFF=1` todos saem com 0; com o Node fora do caminho de busca o comando sai com 0; o lint de conteúdo aceita o modelo; o gate passa.
+- Teste: integração, extraindo o comando do modelo real e executando-o com `spawnSync('sh', ['-c', comando], ...)` num repositório git temporário. O primeiro a falhar: "commit na main é barrado com mensagem em português".
+- Gate: `node --test tests/hooks-guard.test.js` e `npm run lint`.
+- Modelo: padrao.
+- Status: pendente.
+
+### T3 Formatação depois da edição no modelo de ganchos
+
+- O quê: acrescenta ao `templates/settings.hooks.json` a entrada de "depois de usar ferramenta" para edição e escrita, com a formatação e a conferência em `node -e`, e os testes.
+- Onde: `templates/settings.hooks.json`, `tests/hooks-format.test.js` (novo).
+- Depende de: T2 (mesmo arquivo de modelo, que é fonte sincronizada).
+- Reaproveita: `h.tempDir`, `h.cleanup`, `h.repoRoot` e o jeito de extrair e executar o comando criado em T2.
+- Atende: RN-02, RN-03, RN-10, RN-15; CA-15 a CA-20.
+- Pronto quando: com um `prettier` falso no `node_modules/.bin` da pasta do arquivo, ele é chamado com o arquivo editado; com um `oxlint` falso, ele também é chamado; num arquivo de worktree sem `node_modules` nada é chamado; sem ferramentas, sem arquivo, com entrada ilegível ou com `CLAUDE_KIT_HOOKS_OFF=1` o comando sai com 0 sem chamar nada; a entrada tem tempo limite de 30 segundos; o resultado da conferência segue a resposta da Dúvida 4; o gate passa.
+- Teste: integração, com ferramentas falsas que gravam um arquivo de marca. O primeiro a falhar: "arquivo editado é formatado pelo prettier do projeto".
+- Gate: `node --test tests/hooks-format.test.js` e `npm run lint`.
+- Modelo: padrao.
+- Status: pendente.
+
+### T4 Registro do modelo no catálogo e nos perfis
+
+- O quê: registra `hooks` no catálogo, liga nos quatro perfis, ajusta o teste que fixa os ganchos do projeto e regenera o `.claude/` deste repositório.
+- Onde: `catalog.json` (`settings.hooks`, com `applies` e descrição), `profiles/default.json`, `profiles/frontend.json`, `profiles/backend.json`, `profiles/tooling.json`, `tests/settings.test.js` (teste "o modelo do repositório respeita um projeto que já tem configuração"), `.claude/settings.json` e `.claude/claude-kit.lock.json` gerados por `npm run sync`.
+- Depende de: T1 e T3.
+- Reaproveita: a entrada `settings.base` do catálogo como modelo, o hook de pre-commit que regenera o `.claude/`.
+- Atende: RN-01, RN-11, RN-15; CA-15, CA-21, CA-22.
+- Pronto quando: `node bin/ai-sync.js --check` passa; o `ai-sync` numa pasta temporária cria o `.claude/settings.json` com as duas entradas de ganchos; o teste citado passa a conferir que os ganchos `Stop` do dono continuam iguais e que os do kit foram acrescentados (mudança justificada: o comportamento mudou por regra, RN-11, e não para o teste passar); a desativação pela configuração local foi conferida numa sessão real do Claude e o resultado foi relatado (se não funcionar, fica valendo só a variável no terminal e isso é relatado para ajustar a documentação); o gate passa.
+- Teste: integração; o teste ajustado deve falhar antes do registro (os ganchos do kit ainda não aparecem).
+- Gate: `node --test tests/settings.test.js tests/self-sync.test.js` e `npm run lint`.
+- Modelo: economico.
+- Status: pendente.
+
+### T5 [P] Documentação e nota de mudança
+
+- O quê: documenta o modelo de ganchos e como desligá-lo, ajusta o roteiro de verificação conforme a Dúvida 6 e cria a nota de mudança `minor`.
+- Onde: `README.md` (seção sobre o que o kit configura e como desligar os ganchos), `.claude/CLAUDE.md` do repositório (linha de `templates/` na tabela de estrutura e o roteiro "Verificar uma mudança"), `.changeset/<nome-unico>.md` com `"@felipe-sant/claude-kit": minor` e uma ou duas linhas em português simples.
+- Depende de: nada (os nomes estão fixados no Desenho).
+- Reaproveita: o formato das notas existentes em `.changeset/`.
+- Atende: RN-01, RN-15.
+- Pronto quando: o README diz o que os ganchos fazem e como desligá-los com `CLAUDE_KIT_HOOKS_OFF=1`; o roteiro do CLAUDE.md não usa mais remoção recursiva (ou segue a decisão da Dúvida 6); a nota existe com tipo `minor`; o gate passa.
+- Teste: nenhum (só texto).
+- Gate: `npm run lint` e `node --test tests/changeset-check-workflow.test.js tests/content.test.js`.
+- Modelo: economico.
+- Status: pendente.
+
+## Dúvidas
+
+Para o product-owner:
+
+1. Ligado por padrão para todos? Um item com `applies: ["all"]` é aplicado a todo projeto que roda a sincronização sem perfil, ou seja, todos os usuários atuais passam a ter as guardas na próxima atualização. Não existe hoje um jeito de entregar o modelo só para quem escolhe um perfil. A proposta é ligar para todos e nos quatro perfis.
+2. A lista de branches protegidas `main`, `master`, `develop` e `production` está certa? Deve incluir outras (como `staging` ou `release/*`) ou ser configurável por projeto (por exemplo, por variável de ambiente)?
+3. Quando o formatador existe mas o projeto não tem arquivo de configuração dele, o arquivo deve ser formatado com o padrão da ferramenta ou deixado como está?
+4. Quando a conferência encontra problemas no arquivo, o agente deve ser avisado (para corrigir em seguida, sem desfazer a edição) ou nada deve ser dito?
+5. Além de `prettier` e `oxlint`, devem entrar outras ferramentas (como `eslint` e `biome`, ou as de PHP para projetos Laravel)?
+
+Para o usuário:
+
+6. O roteiro "Verificar uma mudança" do CLAUDE.md termina apagando a pasta temporária com remoção recursiva, que a guarda vai barrar neste repositório. Prefere tirar a limpeza do roteiro (a pasta temporária fica para o sistema limpar), trocar por outra forma de apagar, ou abrir uma exceção na guarda para pastas temporárias?
