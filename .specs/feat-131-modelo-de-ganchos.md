@@ -1,6 +1,6 @@
 # Modelo de ganchos com proteção de branch e formatação automática
 
-> Status: em-andamento
+> Status: implementada (código aprovado pelo reviewer na nova revisão, sem achado bloqueante; risco pendente de confirmação do usuário, ver "Não conferido" no plano)
 > Tipo: funcionalidade
 > Tamanho: grande
 > Branch: feat/131-modelo-de-ganchos
@@ -105,6 +105,9 @@ Sincronização:
 - A conferência usa o `oxlint` instalado no `node_modules` do projeto; se ele estiver só instalado globalmente, não roda.
 - Quando o kit traz um gancho novo para uma ferramenta que já tinha um gancho antigo do kit alterado ou apagado pelo dono, o novo vai para "sugerido" e não é aplicado (RN-14).
 - A lista de branches protegidas é fixa.
+- A exceção do mktemp não sabe se a atribuição chegou a rodar. Por isso estes casos passam: `false && HOME=$(mktemp -d); rm -rf "$HOME"`, `(HOME=$(mktemp -d)); rm -rf "$HOME"`, `HOME=$(mktemp -d) rm -rf "$HOME"` e `T=$(mktemp -d && echo ~); rm -rf $T`.
+- Um `export T` entre a atribuição do mktemp e a remoção faz a remoção ser barrada, mesmo sendo da pasta temporária.
+- `git push --all` e `git push --mirror` a partir de branch de tarefa passam, por decisão do usuário (RN-06a).
 
 ## Desenho
 
@@ -173,7 +176,7 @@ O projeto não tem typecheck nem formatador; os gates usam o lint e os testes.
 - Fase 4 (correções da revisão, sequencial): T6 → T7 → T9 mexem no modelo de ganchos (fonte sincronizada) e foram commitadas em ordem; T8 mexe só na sincronização.
   - Gate de fase: `npm run lint`, `npm test` (726/726 no último commit), `node bin/ai-sync.js --check`. Depois, nova revisão.
 
-**Não conferido numa sessão real do Claude** (pendente): a desativação pela configuração local (parte de CA-15, pedida em T4) e o aviso do `oxlint` chegando ao agente (CA-17, testado só com ferramenta falsa em T3).
+**Não conferido numa sessão real do Claude** (risco conhecido, pendente de confirmação do usuário): a desativação pela configuração local (parte de CA-15, pedida em T4) e o aviso do `oxlint` chegando ao agente (CA-17, testado só com ferramenta falsa em T3).
 
 T2, T3 e T4 mexem em fontes do conteúdo sincronizado (`templates/`, `catalog.json`, `profiles/`) e por isso não rodam em paralelo entre si: a próxima só começa depois do commit da anterior. T1 (sincronização) e T5 (documentação e nota de mudança) não mexem nessas fontes.
 
