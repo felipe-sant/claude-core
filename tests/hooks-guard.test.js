@@ -104,6 +104,28 @@ for (const command of [
   })
 }
 
+for (const command of [
+  'git push origin 2>&1 | tail -5',
+  'git push origin >/dev/null',
+  'git push origin > saida.txt',
+  'git push origin 2>/dev/null',
+  'git push origin &>/dev/null',
+  'git push origin >> log.txt 2>&1',
+  'git push 2>&1',
+  'git push origin </dev/null'
+]) {
+  test(`redirecionamento não vira destino do envio: ${command}`, () => {
+    blocked(runGuard({ command, cwd: makeRepo() }))
+  })
+}
+
+test('redirecionamento em comando liberado continua passando', () => {
+  const cwd = makeRepo('feat/1-x')
+  allowed(runGuard({ command: 'git push origin 2>&1 | tail -5', cwd }))
+  allowed(runGuard({ command: 'git push -u origin feat/1-x >/dev/null 2>&1', cwd: makeRepo() }))
+  allowed(runGuard({ command: 'git status 2>&1', cwd }))
+})
+
 test('push sem destino é barrado em branch protegida e passa em branch de tarefa', () => {
   blocked(runGuard({ command: 'git push', cwd: makeRepo() }))
   blocked(runGuard({ command: 'git push origin', cwd: makeRepo() }))

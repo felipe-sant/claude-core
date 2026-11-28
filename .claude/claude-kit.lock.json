@@ -99,7 +99,7 @@
       "effortLevel",
       "env.CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY",
       "hooks.PostToolUse.5abfde16b7",
-      "hooks.PreToolUse.04131cb157"
+      "hooks.PreToolUse.83a8c22480"
     ]
   }
 }
