@@ -1,6 +1,6 @@
 # Modelo de ganchos com proteção de branch e formatação automática
 
-> Status: aprovada
+> Status: em-andamento
 > Tipo: funcionalidade
 > Tamanho: grande
 > Branch: feat/131-modelo-de-ganchos
@@ -173,7 +173,7 @@ T2, T3 e T4 mexem em fontes do conteúdo sincronizado (`templates/`, `catalog.js
 - Teste: integração (rodando o `ai-sync` sobre pastas temporárias). O primeiro a falhar: "projeto com gancho próprio em PreToolUse recebe o do kit ao lado e mantém o seu", que hoje falha porque a lista inteira vai para "sugerido".
 - Gate: `node --test tests/settings.test.js` e `npm run lint`.
 - Modelo: padrao.
-- Status: pendente.
+- Status: feita (commit 892e3bc; gate ok: lint, 643/643 testes, --check; sem typecheck nem formatador no projeto).
 
 ### T2 [P] Guarda de comandos no modelo de ganchos
 
