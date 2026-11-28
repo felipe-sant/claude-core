@@ -1,5 +1,19 @@
 # @felipe-sant/claude-kit
 
+## 1.2.0
+
+### Minor Changes
+
+- [#153](https://github.com/felipe-sant/claude-kit/pull/153) [`46311b2`](https://github.com/felipe-sant/claude-kit/commit/46311b242f061335bf002b5ac41925e95d88024f) Thanks [@ajudante-jerry](https://github.com/apps/ajudante-jerry)! - Nova skill de QA exploratório de uma tela para projetos React, com as combinações a conferir e o relatório de falhas em formato fixo. O agente de QA passa a usá-la ao validar telas.
+
+- [#157](https://github.com/felipe-sant/claude-kit/pull/157) [`dccccd6`](https://github.com/felipe-sant/claude-kit/commit/dccccd62d5667ccd30b9e6c0f441978a318c58f7) Thanks [@felipe-sant](https://github.com/felipe-sant)! - O catálogo passa a reconhecer três tecnologias pelas dependências do projeto, inclusive as de desenvolvimento: Vitest, Playwright e Redux Toolkit. O conteúdo de cada uma chega nas próximas mudanças.
+
+- [#158](https://github.com/felipe-sant/claude-kit/pull/158) [`8adab3a`](https://github.com/felipe-sant/claude-kit/commit/8adab3a1e8bcf1300958a44ac3cb89d68a1dd7b0) Thanks [@felipe-sant](https://github.com/felipe-sant)! - Novo modelo de ganchos, aplicado a todos os projetos: barra commit e envio direto em branch protegida, envio forçado e remoção recursiva de arquivos, e formata e confere cada arquivo editado. A sincronização acrescenta os ganchos sem tirar os que o projeto já tem, e `CLAUDE_KIT_HOOKS_OFF=1` desliga tudo.
+
+### Patch Changes
+
+- [#156](https://github.com/felipe-sant/claude-kit/pull/156) [`bed9c6a`](https://github.com/felipe-sant/claude-kit/commit/bed9c6a6fb8f764e8818797fb819c58ae043bd60) Thanks [@ajudante-jerry](https://github.com/apps/ajudante-jerry)! - Em modo time, os devs chamam o agente de especificação sem nome, e ele sempre termina com o relatório no retorno. Se o relatório não chegar, o dev confere o arquivo e o último commit.
+
 ## 1.1.0
 
 ### Minor Changes
