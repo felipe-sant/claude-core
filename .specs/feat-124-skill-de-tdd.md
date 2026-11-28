@@ -1,6 +1,6 @@
 # Criar a skill de TDD com ciclo, adequação dos testes e prova de que o teste falha
 
-> Status: em-andamento
+> Status: implementada (código aprovado pelo reviewer, sem achado bloqueante)
 > Tipo: funcionalidade
 > Tamanho: media
 > Branch: feat/124-skill-de-tdd
@@ -20,7 +20,7 @@ O padrão de testes diz o que fazer, mas não ensina o passo a passo nem como ju
 - RN-06: a skill ensina o caso do bug, que começa por um teste que reproduz o bug e falha. Fonte: issue #124 e padrão de testes.
 - RN-07: a skill nunca orienta alterar ou apagar um teste só para ele passar, nem pular um teste. Fonte: issue #124 e padrão de testes.
 - RN-08: a skill não traz caminhos nem comandos de um projeto específico. Fonte: issue #124.
-- RN-09: os agentes dev, o executor e o revisor passam a citar a skill. Fonte: issue #124.
+- RN-09: os agentes dev que escrevem código, o executor e o revisor passam a citar a skill. O dev de documentação fica de fora, porque o trabalho dele é só documentação. Fonte: issue #124 e decisão do usuário.
 - RN-10: a skill segue o padrão de testes já existente e não cria regra nova além dele e da issue. Fonte: pedido do dev.
 
 ## Critérios de aceite
@@ -50,6 +50,7 @@ O padrão de testes diz o que fazer, mas não ensina o passo a passo nem como ju
 - Mudar o padrão de testes: a skill o detalha, não o substitui.
 - Listas de skills no README, na skill de montagem do time e no guia do projeto: conferido que nenhum deles lista as skills pelo nome. O README só diz que todos os perfis trazem as skills gerais, e isso continua verdade com a skill nos quatro perfis.
 - Agentes de stack: nenhuma stack tem agentes próprios hoje.
+- Dev de documentação: não cita a skill, porque o trabalho dele é só documentação (decisão do usuário).
 - Ferramenta que coloque os defeitos de forma automática: a skill só descreve o método.
 
 ## Plano de execução
@@ -80,7 +81,7 @@ As tarefas T1 e T2 mexem em fontes do conteúdo sincronizado e não rodam ao mes
 ### T2 Fazer os devs, o executor e o revisor citarem a skill
 
 - O quê: acrescentar a cada agente dev que escreve código, ao executor e ao revisor uma linha que manda usar a skill de TDD, e incluir a skill na instrução que o dev passa ao executor.
-- Onde: `agents/dev-frontend.md`, `agents/dev-backend.md`, `agents/dev-mobile.md`, `agents/dev-devops.md`, `agents/dev-database.md`, `agents/dev-fullstack.md`, `agents/executor.md`, `agents/reviewer.md` e `tests/agents.test.js`. Gerados: `.claude/agents/` e `.claude/claude-kit.lock.json` via `npm run sync`. `agents/dev-doc.md` só entra se a dúvida abaixo for respondida com sim.
+- Onde: `agents/dev-frontend.md`, `agents/dev-backend.md`, `agents/dev-mobile.md`, `agents/dev-devops.md`, `agents/dev-database.md`, `agents/dev-fullstack.md`, `agents/executor.md`, `agents/reviewer.md` e `tests/agents.test.js`. Gerados: `.claude/agents/` e `.claude/claude-kit.lock.json` via `npm run sync`. `agents/dev-doc.md` fica de fora (RN-09).
 - Dev: dev-doc
 - Modelo: economico
 - Depende de: T1 (commit feito)
@@ -107,8 +108,4 @@ As tarefas T1 e T2 mexem em fontes do conteúdo sincronizado e não rodam ao mes
 
 ## Dúvidas
 
-Para o product-owner:
-- A issue diz "os agentes dev", mas o dev de documentação tem escrito que TDD não se aplica ao trabalho dele. Ele também deve citar a skill? Até a resposta, a especificação inclui só os seis devs que escrevem código.
-
-Para o usuário:
-- Nenhuma.
+Nenhuma. Decisão do usuário registrada na aprovação: o dev de documentação fica fora da lista de agentes que citam a skill de TDD, porque o trabalho dele é só documentação.
