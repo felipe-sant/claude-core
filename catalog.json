@@ -53,6 +53,24 @@
           "mcamara/laravel-localization"
         ]
       }
+    },
+    "vitest": {
+      "description": "Projetos com testes em Vitest.",
+      "detect": {
+        "dependencies": ["vitest"]
+      }
+    },
+    "playwright": {
+      "description": "Projetos com testes de ponta a ponta em Playwright.",
+      "detect": {
+        "dependencies": ["@playwright/test", "playwright"]
+      }
+    },
+    "redux-toolkit": {
+      "description": "Projetos com estado em Redux Toolkit.",
+      "detect": {
+        "dependencies": ["@reduxjs/toolkit"]
+      }
     }
   },
   "agents": {
