@@ -186,7 +186,7 @@ T2, T3 e T4 mexem em fontes do conteúdo sincronizado (`templates/`, `catalog.js
 - Teste: integração, extraindo o comando do modelo real e executando-o com `spawnSync('sh', ['-c', comando], ...)` num repositório git temporário. O primeiro a falhar: "commit na main é barrado com mensagem em português". Para a exceção, o primeiro a falhar: "remoção recursiva da pasta criada pelo mktemp no mesmo comando passa".
 - Gate: `node --test tests/hooks-guard.test.js` e `npm run lint`.
 - Modelo: padrao.
-- Status: pendente.
+- Status: feita (commit 43e7379; guarda com a exceção do mktemp, RN-08a, CA-10a e CA-10b; teste falhou antes com o arquivo do modelo ausente; gate ok: lint, 692/692 testes).
 
 ### T3 Formatação depois da edição no modelo de ganchos
 
@@ -199,7 +199,7 @@ T2, T3 e T4 mexem em fontes do conteúdo sincronizado (`templates/`, `catalog.js
 - Teste: integração, com ferramentas falsas que gravam um arquivo de marca. O primeiro a falhar: "arquivo editado é formatado pelo prettier do projeto".
 - Gate: `node --test tests/hooks-format.test.js` e `npm run lint`.
 - Modelo: padrao.
-- Status: pendente.
+- Status: feita (commit 1223428; teste falhou antes com TypeError; gate ok: lint, 707/707 testes).
 
 ### T4 Registro do modelo no catálogo e nos perfis
 
@@ -212,7 +212,7 @@ T2, T3 e T4 mexem em fontes do conteúdo sincronizado (`templates/`, `catalog.js
 - Teste: integração; o teste ajustado deve falhar antes do registro (os ganchos do kit ainda não aparecem).
 - Gate: `node --test tests/settings.test.js tests/self-sync.test.js` e `npm run lint`.
 - Modelo: economico.
-- Status: pendente.
+- Status: feita (commit 2a69c70; testes do modelo do repositório falharam antes; ajustados o teste do perfil tooling para incluir hooks e dois testes de configuração, por consequência da RN-11; gate ok: lint, 707/707 testes, --check, npm pack, ai-sync em pasta temporária gera PreToolUse e PostToolUse; gate de fase final ok).
 
 ### T5 [P] Documentação e nota de mudança
 
@@ -225,7 +225,7 @@ T2, T3 e T4 mexem em fontes do conteúdo sincronizado (`templates/`, `catalog.js
 - Teste: nenhum (só texto).
 - Gate: `npm run lint` e `node --test tests/changeset-check-workflow.test.js tests/content.test.js`.
 - Modelo: economico.
-- Status: pendente.
+- Status: feita (commit 8adab3a; README, linha de templates no CLAUDE.md e nota de mudança minor; gate ok: lint e testes de changeset e conteúdo).
 
 ## Dúvidas
 
