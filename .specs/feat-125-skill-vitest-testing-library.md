@@ -1,6 +1,6 @@
 # Skill de testes de unidade e de componente com Vitest e Testing Library
 
-> Status: aprovada
+> Status: em-andamento
 > Tipo: funcionalidade
 > Tamanho: media
 > Branch: feat/125-skill-vitest-testing-library
@@ -84,7 +84,7 @@ Criar uma skill que ensina o time a escrever, rodar e depurar testes de unidade,
 - Gate: `npm run lint` e `npm test`. Sem typecheck nem formatador no projeto.
 - Commit: `Test :test_tube: [#125] Cobre a entrega de skill aplicada a duas stacks`, com o caminho explícito.
 - Modelo: economico.
-- Status: pendente.
+- Status: feita (commit bc47903; 4 testes com catálogo de teste; 2 falhas ao trocar o pacote de detecção, desfeito; gate ok: lint, 744 testes).
 
 ### T2 [P] Escrever a skill de testes de unidade e de componente
 - O quê: criar a skill com o conteúdo da RN-06, no formato das skills atuais.
@@ -105,7 +105,7 @@ Criar uma skill que ensina o time a escrever, rodar e depurar testes de unidade,
 - Gate: `npm run lint` e `npm test`.
 - Commit: `Feat :sparkles: [#125] Adiciona a skill de testes de unidade e de componente`, com o caminho explícito. Rode `git status --short` antes: como a skill ainda não está no catálogo, nada em `.claude/` deve mudar.
 - Modelo: padrao.
-- Status: pendente.
+- Status: feita (commit 6558e44; skill unit-component-testing com 7 seções, neutra quanto ao executor de testes; gate ok).
 
 ### T3 Registrar a stack Testing Library e a skill no catálogo
 - O quê: registrar a stack `testing-library` com os pacotes da RN-04 e a skill com `applies` `["vitest", "testing-library"]`, atualizar os testes com o catálogo real e criar a nota de mudança minor.
@@ -130,7 +130,7 @@ Criar uma skill que ensina o time a escrever, rodar e depurar testes de unidade,
 - Gate: `npm run lint`, `npm test` e `node bin/ai-sync.js --check`. Sem typecheck nem formatador no projeto.
 - Commit: `Feat :sparkles: [#125] Registra a stack Testing Library e a skill de testes no catálogo`, com os caminhos explícitos. O catálogo é fonte sincronizada: antes de commitar, rode `npm run sync` e inclua nos caminhos os arquivos de `.claude/` que mudarem. Provavelmente nenhum muda, porque o perfil `tooling` não usa essas stacks. O hook recusa o commit por caminhos sem eles.
 - Modelo: padrao.
-- Status: pendente.
+- Status: feita (commit 6f86be1; stack testing-library com 7 pacotes, skill com applies vitest e testing-library, nota de mudança minor; 13 testes falharam antes; teste da #130 sobre Vitest sem conteúdo trocado de propósito, RN-11; gate ok: lint, 760 testes, --check, sync sem mudança, npm pack inclui a skill).
 
 ## Riscos
 
