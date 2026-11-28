@@ -29,6 +29,7 @@
     "documentation"
   ],
   "settings": [
-    "base"
+    "base",
+    "hooks"
   ]
 }

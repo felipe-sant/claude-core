@@ -181,6 +181,8 @@ test('o modelo do repositório cria a configuração em um projeto novo e não c
   assert.equal(shared.permissions, undefined)
   assert.equal(shared.permissions?.allow, undefined)
   assert.equal(shared.permissions?.defaultMode, undefined)
+  assert.equal(shared.hooks.PreToolUse.length, 1)
+  assert.equal(shared.hooks.PostToolUse.length, 1)
 })
 
 test('o modelo do repositório respeita um projeto que já tem configuração', () => {
@@ -191,7 +193,9 @@ test('o modelo do repositório respeita um projeto que já tem configuração', 
   const after = settings(target)
 
   assert.equal(after.effortLevel, 'xhigh')
-  assert.deepEqual(after.hooks, { Stop: [] })
+  assert.deepEqual(after.hooks.Stop, [])
+  assert.deepEqual(Object.keys(after.hooks).sort(), ['PostToolUse', 'PreToolUse', 'Stop'])
+  assert.equal(after.hooks.PreToolUse[0].matcher, 'Bash')
   assert.deepEqual(after.permissions.deny, ['Read(./segredo)'])
   assert.match(result.stdout, /Sugerido e não aplicado/)
 })
