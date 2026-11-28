@@ -1,6 +1,6 @@
 # Detectar stacks por tecnologia, não só por framework
 
-> Status: em-revisao
+> Status: aprovada
 > Tipo: funcionalidade
 > Tamanho: media
 > Branch: feat/130-detectar-stacks-por-tecnologia
