@@ -316,12 +316,92 @@ function mergeMissing(existing, template, prefix) {
   }
 }
 
+function mergeHookTemplates(base, template) {
+  const result = { ...base }
+  for (const [event, entries] of Object.entries(template)) {
+    const current = Array.isArray(result[event]) ? result[event] : []
+    const seen = new Set(current.map((entry) => JSON.stringify(entry)))
+    const extra = (Array.isArray(entries) ? entries : []).filter((entry) => !seen.has(JSON.stringify(entry)))
+    result[event] = [...current, ...extra]
+  }
+  return result
+}
+
 function mergeTemplates(base, template) {
   const result = { ...base }
   for (const [key, value] of Object.entries(template)) {
-    result[key] = isPlainObject(result[key]) && isPlainObject(value) ? mergeTemplates(result[key], value) : value
+    if (key === 'hooks' && isPlainObject(value)) {
+      result[key] = mergeHookTemplates(isPlainObject(result[key]) ? result[key] : {}, value)
+    } else {
+      result[key] = isPlainObject(result[key]) && isPlainObject(value) ? mergeTemplates(result[key], value) : value
+    }
   }
   return result
+}
+
+const hookId = (entry) => crypto.createHash('sha1').update(JSON.stringify(entry)).digest('hex').slice(0, 10)
+
+const hookLabel = (event, entry) => (entry && entry.matcher ? `hooks.${event} (${entry.matcher})` : `hooks.${event}`)
+
+function suggestHook(event, entry) {
+  settingsReport.suggested.push({ path: hookLabel(event, entry), hook: true })
+}
+
+function registerHook(event, entry) {
+  appliedSettings.add(`hooks.${event}.${hookId(entry)}`)
+}
+
+function mergeHookEvent(existingHooks, event, entries) {
+  const eventPath = `hooks.${event}`
+  if (!(event in existingHooks)) {
+    if (wasApplied(eventPath)) return
+    existingHooks[event] = []
+  }
+  const list = existingHooks[event]
+  if (!Array.isArray(list)) {
+    entries.forEach((entry) => suggestHook(event, entry))
+    return
+  }
+  const templateIds = new Set(entries.map(hookId))
+  const registeredIds = [...previousSettings].filter((applied) => applied.startsWith(`${eventPath}.`)).map((applied) => applied.slice(eventPath.length + 1))
+  for (const entry of entries) {
+    const id = hookId(entry)
+    if (list.some((item) => hookId(item) === id)) {
+      if (manifestWasRecreated) registerHook(event, entry)
+      continue
+    }
+    if (previousSettings.has(`${eventPath}.${id}`)) continue
+    const outdatedIndex = list.findIndex((item) => registeredIds.includes(hookId(item)) && !templateIds.has(hookId(item)) && item.matcher === entry.matcher)
+    if (outdatedIndex >= 0) {
+      appliedSettings.delete(`${eventPath}.${hookId(list[outdatedIndex])}`)
+      list[outdatedIndex] = JSON.parse(JSON.stringify(entry))
+      registerHook(event, entry)
+      settingsReport.added.push(hookLabel(event, entry))
+      continue
+    }
+    const staleRegistered = registeredIds.some((registered) => !templateIds.has(registered) && !list.some((item) => hookId(item) === registered))
+    if (staleRegistered) {
+      suggestHook(event, entry)
+      continue
+    }
+    list.push(JSON.parse(JSON.stringify(entry)))
+    registerHook(event, entry)
+    settingsReport.added.push(hookLabel(event, entry))
+  }
+  if (list.length === 0) delete existingHooks[event]
+}
+
+function mergeHooks(existing, hooks) {
+  if (!('hooks' in existing)) {
+    if (wasApplied('hooks')) return
+    existing.hooks = {}
+  }
+  if (!isPlainObject(existing.hooks)) {
+    Object.entries(hooks).forEach(([event, entries]) => entries.forEach((entry) => suggestHook(event, entry)))
+    return
+  }
+  for (const [event, entries] of Object.entries(hooks)) mergeHookEvent(existing.hooks, event, entries)
+  if (Object.keys(existing.hooks).length === 0) delete existing.hooks
 }
 
 function applySettings() {
@@ -353,7 +433,9 @@ function applySettings() {
     }
   }
 
-  mergeMissing(existing, recommended, '')
+  const { hooks: recommendedHooks, ...recommendedOthers } = recommended
+  mergeMissing(existing, recommendedOthers, '')
+  if (isPlainObject(recommendedHooks)) mergeHooks(existing, recommendedHooks)
   if (settingsReport.added.length === 0) return
 
   fs.mkdirSync(path.dirname(settingsFile), { recursive: true })
@@ -390,7 +472,11 @@ function printSettingsReport() {
   settingsReport.added.forEach((p) => console.log(`  ${p}`))
   if (settingsReport.suggested.length > 0) {
     console.log('\nSugerido e não aplicado (você já definiu outro valor):')
-    for (const { path: keyPath, current, recommended } of settingsReport.suggested) {
+    for (const { path: keyPath, current, recommended, hook } of settingsReport.suggested) {
+      if (hook) {
+        console.log(`  ${keyPath}: gancho do kit não aplicado (o que você tem em hooks foi mantido)`)
+        continue
+      }
       console.log(`  ${keyPath}: está ${formatValue(current)}, recomendado ${formatValue(recommended)}`)
     }
   }
