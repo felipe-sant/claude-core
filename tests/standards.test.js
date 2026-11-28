@@ -158,7 +158,7 @@ test('projeto com Redux Toolkit só em dependências de desenvolvimento recebe a
   const target = h.makeTarget({ 'package.json': JSON.stringify({ devDependencies: { '@reduxjs/toolkit': '2' } }) })
   const output = sync(target)
 
-  assert.match(output, /redux-toolkit/)
+  assert.match(output, /Stacks detectadas: redux-toolkit$/m)
   assert.deepEqual(skillsOf(target), [...generalSkills, ...reduxSkills].sort())
 })
 
@@ -186,6 +186,20 @@ test('toda skill de Redux Toolkit diz que a convenção do projeto vence', () =>
     const text = fs.readFileSync(path.join(h.repoRoot, item.path, 'SKILL.md'), 'utf8')
     assert.ok(text.includes(conventionSentence), `${name} deve dizer que a convenção do projeto vence`)
   }
+})
+
+test('as skills de Redux Toolkit dizem que os hooks valem só com React', () => {
+  for (const name of reduxSkills) {
+    const text = fs.readFileSync(path.join(h.repoRoot, catalog.skills[name].path, 'SKILL.md'), 'utf8')
+    assert.match(text, /Os hooks valem só em projetos com React/, `${name} deve limitar os hooks ao React`)
+  }
+})
+
+test('a skill de endpoint sugere o MSW e remete ao roteiro de dependência nova', () => {
+  const text = fs.readFileSync(path.join(h.repoRoot, catalog.skills['rtk-query-endpoint'].path, 'SKILL.md'), 'utf8')
+
+  assert.match(text, /MSW/)
+  assert.match(text, /Dependência nova/)
 })
 
 test('skill editada no projeto não é sobrescrita e uma skill do usuário nunca é tocada', () => {
