@@ -1,6 +1,6 @@
 # Skill de testes de unidade e de componente com Vitest e Testing Library
 
-> Status: em-andamento
+> Status: implementada (código aprovado pelo reviewer, sem achado bloqueante; T4, pedida pelo reviewer, pendente)
 > Tipo: funcionalidade
 > Tamanho: media
 > Branch: feat/125-skill-vitest-testing-library
@@ -59,6 +59,7 @@ Criar uma skill que ensina o time a escrever, rodar e depurar testes de unidade,
 - Fazer o `dev-frontend`, o `executor` ou outro agente citar a skill: fica para a issue #132, por decisão do usuário.
 - README e CLAUDE.md: a regra do repositório só pede atualização ao criar ou renomear papel, e nenhum dos dois lista as skills uma a uma.
 - Perfis manuais (`--profile`): a skill não entra em nenhum perfil manual, como as demais skills de stack (decisão do usuário).
+- A skill mencionar a verificação de acessibilidade que o padrão de testes de frontend exige: sugestão do reviewer, fica para decisão futura.
 
 ## Plano de execução
 
@@ -68,6 +69,8 @@ Criar uma skill que ensina o time a escrever, rodar e depurar testes de unidade,
 - Gate de fase 1: `npm run lint`, `npm test` e `node bin/ai-sync.js --check`.
 - Fase 2 (sequencial): T3, depois do commit da T2 (o catálogo precisa apontar para a pasta da skill já existente, e o catálogo é fonte sincronizada).
 - Gate de fase 2: `npm run lint`, `npm test`, `node bin/ai-sync.js --check` e `npm pack --dry-run` (confere que a pasta da skill vai no pacote). Depois rode a sincronização em uma pasta temporária com Vitest e confira a skill entregue. Rode tudo uma vez ao fim da fase e antes do reviewer.
+- Fase 3 (pedido do reviewer na revisão, sequencial): T4.
+- Gate de fase 3: `npm run lint`, `npm test` e `node bin/ai-sync.js --check`.
 - O projeto não tem typecheck, build nem formatador: o lint é o oxlint mais a checagem de formato do conteúdo.
 
 ## Tarefas
@@ -131,6 +134,20 @@ Criar uma skill que ensina o time a escrever, rodar e depurar testes de unidade,
 - Commit: `Feat :sparkles: [#125] Registra a stack Testing Library e a skill de testes no catálogo`, com os caminhos explícitos. O catálogo é fonte sincronizada: antes de commitar, rode `npm run sync` e inclua nos caminhos os arquivos de `.claude/` que mudarem. Provavelmente nenhum muda, porque o perfil `tooling` não usa essas stacks. O hook recusa o commit por caminhos sem eles.
 - Modelo: padrao.
 - Status: feita (commit 6f86be1; stack testing-library com 7 pacotes, skill com applies vitest e testing-library, nota de mudança minor; 13 testes falharam antes; teste da #130 sobre Vitest sem conteúdo trocado de propósito, RN-11; gate ok: lint, 760 testes, --check, sync sem mudança, npm pack inclui a skill).
+
+### T4 Reforçar os testes da detecção (pedido do reviewer)
+- O quê: no teste trocado de propósito (projeto só com Vitest), conferir também as regras gerais entregues, e acrescentar o caso de `@testing-library/user-event` e `@testing-library/jest-dom` juntos, sem outro pacote, sem receber a skill.
+- Onde: `tests/standards.test.js`.
+- Dev: dev-frontend-1.
+- Depende de: T3.
+- Reaproveita: os testes criados em T3, o auxiliar `rulesOf` e o caso de cada complemento sozinho.
+- Atende: RN-04a, RN-10, RN-11; CA-03, CA-05a.
+- Pronto quando: o teste do projeto só com Vitest confere as regras gerais além da skill; há teste com os dois complementos juntos que confere que a stack não é reconhecida e a skill não é entregue; o gate passa.
+- Teste: integração com o catálogo real. Como o comportamento já existe, os testes podem passar de primeira: para provar que não passam por acaso, inclua de propósito um complemento na lista do catálogo, confira que o teste falha e desfaça.
+- Gate: `npm run lint`, `npm test` e `node bin/ai-sync.js --check`. Sem typecheck nem formatador no projeto.
+- Commit: um commit de teste, `Test :test_tube: [#125] ...`, só com `tests/standards.test.js` nos caminhos.
+- Modelo: economico.
+- Status: pendente.
 
 ## Riscos
 
