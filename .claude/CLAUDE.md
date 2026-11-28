@@ -17,7 +17,7 @@ Todo o texto dos agentes, das regras e da documentação é em **português**. N
 | `rules/` | Regras compartilhadas, copiadas para `.claude/rules/` dos repositórios. |
 | `skills/` | Skills que valem para qualquer projeto, uma pasta por skill, copiadas para `.claude/skills/`. |
 | `stacks/<stack>/` | O que vale só para uma stack (`react`, `nestjs`, `laravel`...), com `agents/`, `rules/` e `skills/`. |
-| `templates/` | Modelos da configuração base do Claude, mesclados em `.claude/settings.json` do projeto sem alterar o que o usuário definiu. |
+| `templates/` | Modelos da configuração do Claude (base e ganchos de proteção), mesclados em `.claude/settings.json` do projeto sem alterar o que o usuário definiu. |
 | `profiles/` | Um `.json` por configuração, com as listas `agents`, `rules`, `skills` e `settings` (nomes do catálogo) que o repositório recebe. |
 | `lint/` | Regra do oxlint contra comentários e a checagem do formato de agentes, regras, skills e perfis. |
 | `tests/` | Testes do `ai-sync` e do formato do conteúdo, com `node --test`. |

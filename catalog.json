@@ -294,6 +294,11 @@
       "path": "templates/settings.base.json",
       "applies": ["all"],
       "description": "Configuração base do Claude: esforço econômico e sem pesquisa de satisfação."
+    },
+    "hooks": {
+      "path": "templates/settings.hooks.json",
+      "applies": ["all"],
+      "description": "Ganchos de proteção: barra commit e envio direto em branch protegida, envio forçado e remoção recursiva, e formata e confere o arquivo depois de cada edição."
     }
   }
 }

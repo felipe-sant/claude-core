@@ -61,6 +61,15 @@ Por padrão o time roda com subagentes. O time de agentes é opcional e experime
 - Para um repositório que proíbe a coautoria do Claude, use `"attribution": { "commit": "", "pr": "" }` no `.claude/settings.json`.
 - Os agentes podem ler e copiar o `.env`, mas nunca imprimem os valores nem o commitam.
 
+### Ganchos de proteção
+
+O `ai-sync` acrescenta ao `.claude/settings.json` do projeto dois ganchos, sem alterar os que o projeto já tem:
+
+- Antes de cada comando no terminal, barra commit e envio direto nas branches `main`, `master`, `develop`, `production` e `staging` (inclusive o envio de todas as branches a partir delas), envio forçado em qualquer branch e remoção recursiva de arquivos (`rm -r`), avisando o motivo em português. A remoção recursiva de uma pasta criada pelo `mktemp` no mesmo comando é permitida. Na dúvida, o comando passa.
+- Depois de cada edição de arquivo, formata com o `prettier` (só se o projeto tem configuração dele) e confere com o `oxlint`, usando o que o projeto já tem instalado. Se a conferência achar problemas, o agente é avisado e a edição é mantida.
+
+Os ganchos não dependem de arquivos do projeto. Para desligá-los sem editar arquivo versionado, defina `CLAUDE_KIT_HOOKS_OFF=1` no terminal ou em `env` no `.claude/settings.local.json`.
+
 ## Contribuir
 
 Todo pull request traz uma nota de mudança (changeset) em `.changeset/`, com nome livre e único. Use `npm run changeset`, ou crie o arquivo à mão. Para documentação, textos, CI e testes, a nota é vazia (`npm run changeset -- --empty`).

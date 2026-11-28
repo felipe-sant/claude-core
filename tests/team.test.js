@@ -304,7 +304,7 @@ test('o perfil tooling serve repositórios de ferramentas, scripts e conteúdo, 
     assert.ok(!profile.agents.includes(agent), `tooling não deve incluir ${agent}`)
   }
   assert.ok(profile.skills.includes('team-setup'))
-  assert.deepEqual(profile.settings, ['base'])
+  assert.deepEqual(profile.settings, ['base', 'hooks'])
   assert.match(readme, /- `tooling`:/)
 })
 

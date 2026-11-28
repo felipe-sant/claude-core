@@ -97,7 +97,9 @@
     "applied": [
       "$schema",
       "effortLevel",
-      "env.CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY"
+      "env.CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY",
+      "hooks.PostToolUse.5abfde16b7",
+      "hooks.PreToolUse.ab57696d83"
     ]
   }
 }
