@@ -186,3 +186,24 @@ test('a skill de TDD vale para todos, está em todos os perfis e cobre os pontos
   }
   assert.doesNotMatch(text, /(npm|npx|jest|vitest|pytest|phpunit) /i)
 })
+
+const technologyStacks = {
+  vitest: ['vitest'],
+  playwright: ['@playwright/test', 'playwright'],
+  'redux-toolkit': ['@reduxjs/toolkit']
+}
+
+for (const [stack, dependencies] of Object.entries(technologyStacks)) {
+  test(`o catálogo registra a stack ${stack} com os pacotes de detecção`, () => {
+    assert.ok(catalog.stacks[stack].description)
+    assert.deepEqual(catalog.stacks[stack].detect.dependencies, dependencies)
+  })
+}
+
+test('projeto só com Vitest, sem conteúdo para a stack, recebe só os padrões gerais', () => {
+  const target = h.makeTarget({ 'package.json': JSON.stringify({ devDependencies: { vitest: '2' } }) })
+  const output = sync(target)
+
+  assert.match(output, /Stacks detectadas: nenhuma$/m)
+  assert.deepEqual(rulesOf(target), [...general].sort())
+})

@@ -156,6 +156,79 @@ test('stack sem conteúdo no catálogo não é detectada', () => {
   assert.match(result.output, /Stacks detectadas: nenhuma/)
 })
 
+function technologyCore(playwrightPackages = ['@playwright/test', 'playwright']) {
+  return h.makeCore({
+    items: [
+      { group: 'agents', name: 'orchestrator', files: agent('orchestrator') },
+      { group: 'rules', name: 'react-standard', applies: ['react'], files: '# React\n' },
+      { group: 'rules', name: 'vitest-standard', applies: ['vitest'], files: '# Vitest\n' },
+      { group: 'rules', name: 'playwright-standard', applies: ['playwright'], files: '# Playwright\n' },
+      { group: 'rules', name: 'redux-toolkit-standard', applies: ['redux-toolkit'], files: '# Redux\n' }
+    ],
+    stacks: {
+      react: { description: 'React', detect: { dependencies: ['react'] } },
+      vitest: { description: 'Vitest', detect: { dependencies: ['vitest'] } },
+      playwright: { description: 'Playwright', detect: { dependencies: playwrightPackages } },
+      'redux-toolkit': { description: 'Redux Toolkit', detect: { dependencies: ['@reduxjs/toolkit'] } }
+    },
+    profiles: { minimal: { agents: ['orchestrator'], rules: [] } }
+  })
+}
+
+const technologyRules = ['vitest-standard', 'playwright-standard', 'redux-toolkit-standard']
+
+function technologyRulesIn(target) {
+  return technologyRules.filter((rule) => h.exists(target, `.claude/rules/${rule}.md`))
+}
+
+test('projeto com Vitest só em devDependencies recebe o conteúdo de Vitest e de mais nenhuma tecnologia', () => {
+  const target = h.makeTarget({ 'package.json': JSON.stringify({ devDependencies: { vitest: '2' } }) })
+  const result = h.run(technologyCore(), target)
+
+  assert.match(result.output, /Stacks detectadas: vitest$/m)
+  assert.deepEqual(technologyRulesIn(target), ['vitest-standard'])
+})
+
+for (const dependency of ['@playwright/test', 'playwright']) {
+  test(`projeto com ${dependency} recebe o conteúdo de Playwright e de mais nenhuma tecnologia`, () => {
+    const target = h.makeTarget({ 'package.json': JSON.stringify({ devDependencies: { [dependency]: '1' } }) })
+    const result = h.run(technologyCore(), target)
+
+    assert.match(result.output, /Stacks detectadas: playwright$/m)
+    assert.deepEqual(technologyRulesIn(target), ['playwright-standard'])
+  })
+}
+
+test('projeto com Redux Toolkit recebe o conteúdo de Redux Toolkit e de mais nenhuma tecnologia', () => {
+  const target = h.makeTarget({ 'package.json': JSON.stringify({ dependencies: { '@reduxjs/toolkit': '2' } }) })
+  const result = h.run(technologyCore(), target)
+
+  assert.match(result.output, /Stacks detectadas: redux-toolkit$/m)
+  assert.deepEqual(technologyRulesIn(target), ['redux-toolkit-standard'])
+})
+
+test('projeto com React, Vitest, Playwright e Redux Toolkit recebe o conteúdo das quatro stacks', () => {
+  const target = h.makeTarget({
+    'package.json': JSON.stringify({
+      dependencies: { react: '18', '@reduxjs/toolkit': '2' },
+      devDependencies: { vitest: '2', '@playwright/test': '1' }
+    })
+  })
+  const result = h.run(technologyCore(), target)
+
+  assert.match(result.output, /Stacks detectadas: react, vitest, playwright, redux-toolkit$/m)
+  assert.ok(h.exists(target, '.claude/rules/react-standard.md'))
+  assert.deepEqual(technologyRulesIn(target), technologyRules)
+})
+
+test('projeto React sem nenhuma das três tecnologias não recebe o conteúdo delas', () => {
+  const target = h.makeTarget({ 'package.json': JSON.stringify({ dependencies: { react: '18', redux: '5' } }) })
+  const result = h.run(technologyCore(), target)
+
+  assert.match(result.output, /Stacks detectadas: react$/m)
+  assert.deepEqual(technologyRulesIn(target), [])
+})
+
 test('o perfil manual prevalece sobre a detecção', () => {
   const core = stackCore()
   const target = h.makeTarget({ 'package.json': JSON.stringify({ dependencies: { react: '18' } }) })

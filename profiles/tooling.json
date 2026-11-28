@@ -30,6 +30,7 @@
     "tdd"
   ],
   "settings": [
-    "base"
+    "base",
+    "hooks"
   ]
 }

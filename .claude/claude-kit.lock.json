@@ -1,15 +1,15 @@
 {
   "files": {
     ".claude/agents/dev-backend.md": {
-      "hash": "99b8d5ad0b1d10e6de44fd1202bc5ecea2343ee59afb93e1227c002215538080",
+      "hash": "79897e298d4305a0da7206b382895cde6f86d9530a221d64dcc470a9d924c4e8",
       "version": "1.1.0"
     },
     ".claude/agents/dev-devops.md": {
-      "hash": "40f193a948450bfe72faaa0fff895d6f264d19ec4dc4a321fe22776834d92473",
+      "hash": "686f20fb9ff6d203d4c233f1359fd868377976c995dd85b52bd7e602eab1a551",
       "version": "1.1.0"
     },
     ".claude/agents/dev-doc.md": {
-      "hash": "be1fdde551e513b0c81ba9ba7dd465420626582fcd36a1cb513ccdb9c1b79115",
+      "hash": "fc8e889623523dab8c8aa59ffef2d602d4410e26db21141973c2c035bb02dcf8",
       "version": "1.1.0"
     },
     ".claude/agents/executor.md": {
@@ -29,7 +29,7 @@
       "version": "1.1.0"
     },
     ".claude/agents/sdd.md": {
-      "hash": "49775d012e6675242b9b303b0187d44fc41f6fc5b376428eefcb749fb7a0e355",
+      "hash": "2fffee5bcedaf5c4b8d67686df2cd4d323138e33fb2c274b6aeca2f46454bb2e",
       "version": "1.1.0"
     },
     ".claude/rules/code-standard.md": {
@@ -101,7 +101,9 @@
     "applied": [
       "$schema",
       "effortLevel",
-      "env.CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY"
+      "env.CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY",
+      "hooks.PostToolUse.5abfde16b7",
+      "hooks.PreToolUse.ab57696d83"
     ]
   }
 }

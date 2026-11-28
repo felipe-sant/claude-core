@@ -189,9 +189,9 @@ test('os relatórios são curtos e a orchestrator repassa resultado preso e igno
 })
 
 test('o sdd sempre devolve o relatório e os devs conferem a especificação quando ele não chega', () => {
-  assert.match(body('sdd'), /A última ação é sempre devolver esse relatório a quem o chamou/)
+  assert.match(body('sdd'), /A última ação é sempre devolver esse relatório curto como o retorno da chamada a quem o chamou \(inclusive em modo time, sem nome\)/)
   for (const name of devs) {
-    assert.match(body(name), /Se o `sdd` encerrar sem devolver o relatório, confira o arquivo da especificação/, name)
+    assert.match(body(name), /Se o `sdd` encerrar sem devolver o relatório, confira o arquivo da especificação em `\.specs\/` e o último commit dele/, name)
   }
 })
 
@@ -241,7 +241,7 @@ test('a sessão principal vira a orchestrator pela skill team-setup, sem agente 
 test('os devs chamam o sdd e o executor com nome, com alternativa sem nome, e tratam o modo time', () => {
   for (const name of devs) {
     const text = body(name)
-    assert.match(text, /se a ferramenta recusar o nome, chame sem nome e guarde o identificador/, `${name} chama o sdd com nome`)
+    assert.match(text, /Em modo time, chame-o sem nome, porque um integrante do time não pode criar agente com nome, e guarde o identificador/, `${name} chama o sdd sem nome em modo time`)
     assert.match(text, /Em time de agentes, se o `product-owner` for integrante/, `${name} pergunta ao product-owner direto no modo time`)
     assert.match(text, /rodarem um depois do outro/, `${name} aceita executores em sequência`)
   }
@@ -304,7 +304,7 @@ test('o perfil tooling serve repositórios de ferramentas, scripts e conteúdo, 
     assert.ok(!profile.agents.includes(agent), `tooling não deve incluir ${agent}`)
   }
   assert.ok(profile.skills.includes('team-setup'))
-  assert.deepEqual(profile.settings, ['base'])
+  assert.deepEqual(profile.settings, ['base', 'hooks'])
   assert.match(readme, /- `tooling`:/)
 })
 
