@@ -1,6 +1,6 @@
 # Criar a skill de TDD com ciclo, adequação dos testes e prova de que o teste falha
 
-> Status: em-revisao
+> Status: aprovada
 > Tipo: funcionalidade
 > Tamanho: media
 > Branch: feat/124-skill-de-tdd
