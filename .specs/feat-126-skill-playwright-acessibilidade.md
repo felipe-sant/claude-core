@@ -1,6 +1,6 @@
 # Skill de testes de ponta a ponta com Playwright e verificação de acessibilidade
 
-> Status: aprovada
+> Status: em-andamento
 > Tipo: funcionalidade
 > Tamanho: media
 > Branch: feat/126-skill-playwright-acessibilidade
@@ -79,7 +79,7 @@ Teste de ponta a ponta mal escrito é lento e instável. A issue #126 pede uma s
 - Gate: `node --test tests/standards.test.js`, `npm run lint` e `node bin/ai-sync.js --check`. Sem typecheck nem formatador no projeto.
 - Commit: `Feat :sparkles: [#126] Adiciona a skill de testes de ponta a ponta com Playwright`, com os caminhos explícitos. O catálogo e a pasta `stacks/` são fontes sincronizadas: antes de commitar, rode `npm run sync` e inclua nos caminhos os arquivos de `.claude/` que mudarem (provavelmente nenhum, já que o perfil `tooling` não usa essa stack). Se o hook recusar, siga a mensagem dele.
 - Modelo: padrao.
-- Status: pendente.
+- Status: feita (commit b208b1d; skill playwright-e2e, catálogo e testes; 5 testes falharam antes; gate ok: lint, 746 testes, --check).
 
 ### T2 [P] Nota de mudança
 - O quê: criar a nota de mudança minor da skill nova.
@@ -93,7 +93,7 @@ Teste de ponta a ponta mal escrito é lento e instável. A issue #126 pede uma s
 - Gate: `npm run lint`. Sem typecheck nem formatador no projeto.
 - Commit: `Docs :bulb: [#126] Adiciona a nota de mudança da skill de Playwright`, só com a nota nos caminhos.
 - Modelo: economico.
-- Status: pendente.
+- Status: feita (commit 6877a70; nota de mudança minor).
 
 ## Dúvidas
 
