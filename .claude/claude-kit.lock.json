@@ -88,6 +88,10 @@
       "hash": "ebcf8a1cbf8111b3916d3708215e2d405d3058e703f5511e85e610cdc8e43bf2",
       "version": "1.1.0"
     },
+    ".claude/skills/tdd/SKILL.md": {
+      "hash": "13ef092707c6f2f38b94fdc107d3e202c2c0f48582e517ba585e1f23b03ba79c",
+      "version": "1.1.0"
+    },
     ".claude/skills/team-setup/SKILL.md": {
       "hash": "8c1c272aeb5ba672f90c9e84e2dd752aef4710622d941329f9cf7ff5d054ceaa",
       "version": "1.1.0"
