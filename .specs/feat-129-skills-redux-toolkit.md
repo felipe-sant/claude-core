@@ -1,6 +1,6 @@
 # Skills de estado no cliente: fatia de estado e endpoint de API (Redux Toolkit)
 
-> Status: aprovada
+> Status: em-andamento
 > Tipo: funcionalidade
 > Tamanho: media
 > Branch: feat/129-skills-redux-toolkit
@@ -79,7 +79,7 @@ Estado da aplicação e dados vindos do servidor são onde mais aparece código 
 - Gate: `npm run lint`, `npm test` e `node bin/ai-sync.js --check`. Sem typecheck nem formatador no projeto.
 - Commit: `Feat :sparkles: [#129] Adiciona a skill de fatia de estado do Redux Toolkit`, com o caminho explícito do arquivo. Rode `git status --short` antes e `git show --stat HEAD` depois.
 - Modelo: padrao.
-- Status: pendente.
+- Status: feita (commit 079c718; skill redux-slice; sem teste novo, coberta pelo teste de formato existente; gate ok: lint, 740 testes, --check).
 
 ### T2 [P] Escrever a skill de endpoint de API com RTK Query
 - O quê: criar a skill `rtk-query-endpoint`, que guia a criação de endpoints de API com RTK Query.
@@ -99,7 +99,7 @@ Estado da aplicação e dados vindos do servidor são onde mais aparece código 
 - Gate: `npm run lint`, `npm test` e `node bin/ai-sync.js --check`. Sem typecheck nem formatador no projeto.
 - Commit: `Feat :sparkles: [#129] Adiciona a skill de endpoint de API com RTK Query`, com o caminho explícito do arquivo. Rode `git status --short` antes e `git show --stat HEAD` depois.
 - Modelo: padrao.
-- Status: pendente.
+- Status: feita (commit 54e42df; skill rtk-query-endpoint, com MSW sugerido sem instalar e hooks só com React; gate ok).
 
 ### T3 Registrar as duas skills no catálogo e cobrir com testes
 - O quê: registrar `redux-slice` e `rtk-query-endpoint` no catálogo com `applies` `["redux-toolkit"]`, testar detecção, instalação e formato, e criar a nota de mudança minor.
@@ -125,7 +125,7 @@ Estado da aplicação e dados vindos do servidor são onde mais aparece código 
 - Gate: `npm run lint`, `npm test` e `node bin/ai-sync.js --check`. Sem typecheck nem formatador no projeto.
 - Commit: `Feat :sparkles: [#129] Registra as skills de Redux Toolkit no catálogo`, com os caminhos explícitos (catálogo, teste e nota). O catálogo é fonte sincronizada: antes de commitar, rode `npm run sync` e inclua nos caminhos os arquivos de `.claude/` que mudarem (provavelmente nenhum, já que o perfil `tooling` não usa essa stack). O hook recusa o commit por caminhos sem eles.
 - Modelo: padrao.
-- Status: pendente.
+- Status: feita (commit a7b97e3; catálogo, testes com 5 falhas antes e nota de mudança minor; gate ok: lint, 746 testes, --check, npm pack lista as duas skills).
 
 ## Dúvidas
 
