@@ -179,3 +179,26 @@ test('as outras chaves se comportam como antes ao lado dos ganchos', () => {
   assert.match(result.output, /effortLevel: está "high", recomendado "medium"/)
   assert.deepEqual(settings(target).hooks, hooksTemplate().hooks)
 })
+
+test('lista vazia que o dono deixou em um momento não é apagada ao gravar a configuração', () => {
+  const target = h.makeTarget()
+  h.run(core(), target)
+  const edited = settings(target)
+  edited.hooks.PreToolUse = []
+  write(target, edited)
+  h.run(core({ ...hooksTemplate(), model: 'opus' }), target)
+
+  assert.equal(settings(target).model, 'opus')
+  assert.deepEqual(settings(target).hooks.PreToolUse, [])
+})
+
+test('grupo de ganchos vazio do dono não é apagado ao gravar a configuração', () => {
+  const target = h.makeTarget({ [SETTINGS]: JSON.stringify({ hooks: {} }) })
+  h.run(core({ hooks: { PreToolUse: [guard] }, model: 'opus' }), target)
+  const edited = settings(target)
+  edited.hooks = {}
+  write(target, edited)
+  h.run(core({ hooks: { PreToolUse: [guard] }, model: 'opus', effortLevel: 'medium' }), target)
+
+  assert.deepEqual(settings(target).hooks, {})
+})

@@ -353,7 +353,8 @@ function registerHook(event, entry) {
 
 function mergeHookEvent(existingHooks, event, entries) {
   const eventPath = `hooks.${event}`
-  if (!(event in existingHooks)) {
+  const createdByUs = !(event in existingHooks)
+  if (createdByUs) {
     if (wasApplied(eventPath)) return
     existingHooks[event] = []
   }
@@ -388,11 +389,12 @@ function mergeHookEvent(existingHooks, event, entries) {
     registerHook(event, entry)
     settingsReport.added.push(hookLabel(event, entry))
   }
-  if (list.length === 0) delete existingHooks[event]
+  if (createdByUs && list.length === 0) delete existingHooks[event]
 }
 
 function mergeHooks(existing, hooks) {
-  if (!('hooks' in existing)) {
+  const createdByUs = !('hooks' in existing)
+  if (createdByUs) {
     if (wasApplied('hooks')) return
     existing.hooks = {}
   }
@@ -401,7 +403,7 @@ function mergeHooks(existing, hooks) {
     return
   }
   for (const [event, entries] of Object.entries(hooks)) mergeHookEvent(existing.hooks, event, entries)
-  if (Object.keys(existing.hooks).length === 0) delete existing.hooks
+  if (createdByUs && Object.keys(existing.hooks).length === 0) delete existing.hooks
 }
 
 function applySettings() {
