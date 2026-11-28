@@ -1,6 +1,6 @@
 # Skill de testes de ponta a ponta com Playwright e verificação de acessibilidade
 
-> Status: em-andamento
+> Status: implementada (código aprovado pelo reviewer, sem achado bloqueante)
 > Tipo: funcionalidade
 > Tamanho: media
 > Branch: feat/126-skill-playwright-acessibilidade
@@ -14,7 +14,7 @@ Teste de ponta a ponta mal escrito é lento e instável. A issue #126 pede uma s
 
 - RN-01: Uma skill nova, registrada no catálogo e entregue a todo projeto que usa Playwright. Fonte: issue #126.
 - RN-02: O projeto é reconhecido como usuário de Playwright por qualquer um dos dois pacotes da ferramenta, nas dependências normais ou nas de desenvolvimento. Fonte: issue #126 e issue #130 (detecção já registrada no catálogo).
-- RN-03: A skill orienta, nesta ordem de assuntos: escolher os fluxos que valem o custo de um teste no navegador; esperar por um estado da tela, nunca por um tempo fixo; encontrar os elementos pelo papel e pelo texto que a pessoa vê; rodar a verificação automática de acessibilidade em cada tela visitada; testar mais de um tamanho de tela e mais de um tema, quando existirem; lidar com instabilidade (descobrir a causa em vez de repetir o teste até passar); e decidir quando o navegador de verdade é necessário e quando basta um teste de componente. Fonte: issue #126.
+- RN-03: A skill orienta, nesta ordem de assuntos: escolher os fluxos que valem o custo de um teste no navegador e, no mesmo passo, decidir quando o navegador de verdade é necessário e quando basta um teste de componente ou de unidade; esperar por um estado da tela, nunca por um tempo fixo; encontrar os elementos pelo papel e pelo texto que a pessoa vê; rodar a verificação automática de acessibilidade em cada tela visitada; testar mais de um tamanho de tela e mais de um tema, quando existirem; e lidar com instabilidade (descobrir a causa em vez de repetir o teste até passar). Fonte: issue #126; ordem ajustada na revisão para refletir a skill entregue.
 - RN-04: A skill não cita caminhos, nomes de pastas nem a estrutura de um projeto específico: vale para qualquer projeto que use a ferramenta. Fonte: issue #126.
 - RN-05: A skill é curta, no tamanho das outras skills de stack do kit. Fonte: pedido do dev (dev-frontend-2).
 - RN-06: A skill é coerente com o padrão de testes do kit: teste primeiro quando há comportamento novo, um comportamento por teste, testes independentes entre si, sem depender de serviço externo de verdade nem de dados que o teste não criou. Fonte: documento padrão de testes (`testing-standard`).
@@ -38,7 +38,7 @@ Teste de ponta a ponta mal escrito é lento e instável. A issue #126 pede uma s
 - CA-10: QUANDO o projeto não tem o verificador automático de acessibilidade ENTÃO a skill DEVE orientar a seguir o roteiro de dependência nova e pedir a decisão antes de instalar. (RN-08)
 - CA-11: QUANDO a skill trata de testes ENTÃO ela NÃO DEVE contradizer o padrão de testes (teste primeiro, independência, sem rede externa de verdade). (RN-06)
 - CA-12: QUANDO a checagem de formato roda ENTÃO a skill DEVE passar: nome igual ao da pasta, descrição com "Use quando" ou "Use para" e o texto com "Entrega:". (RN-09)
-- CA-13: QUANDO um projeto é sincronizado com um perfil escolhido à mão ENTÃO ele DEVE receber o mesmo conteúdo de antes, sem a skill nova. (RN-11)
+- CA-13: QUANDO um projeto é sincronizado com um perfil escolhido à mão ENTÃO ele DEVE receber o mesmo conteúdo de antes, sem a skill nova. (RN-11) Coberto pela regra geral de que skill de stack só chega ao projeto por detecção, nunca por perfil manual, protegida pelos testes de perfil existentes.
 - CA-14: QUANDO o catálogo real passa pela checagem ENTÃO ela DEVE terminar sem erro. (RN-01)
 
 ## Critérios de sucesso
