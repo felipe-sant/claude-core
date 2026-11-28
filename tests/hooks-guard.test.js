@@ -191,6 +191,13 @@ test('remoção recursiva com variável que não vem de mktemp ou foi reatribuí
   blocked(runGuard({ command: 'T=$(mktemp -d); T=/; rm -rf "$T"', cwd }))
   blocked(runGuard({ command: 'T=$(mktemp -d); rm -rf "$T/.." ', cwd }))
   blocked(runGuard({ command: 'T=$(mktemp -d); rm -rf "$T" /etc', cwd }))
+  blocked(runGuard({ command: 'T=$(mktemp -d)/../..; rm -rf "$T"', cwd }))
+  blocked(runGuard({ command: 'T=$(mktemp -d)/..; rm -rf "$T"', cwd }))
+  blocked(runGuard({ command: 'rm -rf "$HOME"; HOME=$(mktemp -d)', cwd }))
+  blocked(runGuard({ command: 'rm -rf "$T" && T=$(mktemp -d)', cwd }))
+  blocked(runGuard({ command: 'T=$(mktemp -d); for T in /; do rm -rf "$T"; done', cwd }))
+  blocked(runGuard({ command: 'T=$(mktemp -d); read T; rm -rf "$T"', cwd }))
+  blocked(runGuard({ command: 'T=$(mktemp -d); T+=/; rm -rf "$T"', cwd }))
 })
 
 for (const command of [
