@@ -1,6 +1,6 @@
 # Modelo de ganchos com proteção de branch e formatação automática
 
-> Status: implementada (código aprovado pelo reviewer na nova revisão, sem achado bloqueante; risco pendente de confirmação do usuário, ver "Não conferido" no plano)
+> Status: implementada (código aprovado pelo reviewer na nova revisão, sem achado bloqueante; risco pendente de confirmação do usuário, ver "Não conferido" no plano). Mudança de escopo pedida pelo usuário no PR: T10 pendente e nova revisão do reviewer pendente
 > Tipo: funcionalidade
 > Tamanho: grande
 > Branch: feat/131-modelo-de-ganchos
@@ -21,7 +21,7 @@ Para isso, a sincronização passa a saber mesclar listas de ganchos: acrescenta
 - RN-02: Os ganchos funcionam sozinhos, escritos por inteiro na própria configuração, sem depender de scripts, arquivos ou comandos do projeto. Fonte: issue #131.
 - RN-03: Em caso de dúvida os ganchos deixam passar: comando que a guarda não reconhece, dados de entrada ilegíveis, pasta sem git, ferramenta ausente ou qualquer erro interno. Só é barrado o que está na lista da RN-05 a RN-08. Fonte: issue #131.
 - RN-04: Ao barrar, a guarda impede o comando e explica em português o que foi barrado e por quê, para o agente entender e mudar de rumo. Fonte: issue #131.
-- RN-05: Commit direto em branch protegida é barrado. As branches protegidas são `main`, `master`, `develop` e `production` (lista fixa). Fonte: issue #131, pedido da orchestrator e decisão do usuário.
+- RN-05: Commit direto em branch protegida é barrado. As branches protegidas são `main`, `master`, `develop`, `production` e `staging` (lista fixa). Fonte: issue #131, pedido da orchestrator e decisão do usuário (`staging` incluída a pedido do usuário no PR).
 - RN-06: Envio (push) para branch protegida é barrado, seja nomeando a branch de destino, seja enviando sem nomear o destino enquanto se está nela. Apagar uma branch protegida no servidor também é barrado. Fonte: issue #131.
 - RN-06a: Enviar todas as branches de uma vez (opções `--all` e `--mirror`) é barrado quando a pasta está numa branch protegida, e deixado passar quando está numa branch de tarefa. Fonte: decisão do usuário na revisão.
 - RN-07: Envio forçado é barrado em qualquer branch, nas suas várias formas (forçado, forçado com proteção e o destino marcado com sinal de mais). Fonte: issue #131.
@@ -39,11 +39,11 @@ Para isso, a sincronização passa a saber mesclar listas de ganchos: acrescenta
 
 Guarda de comandos (exemplos de comando entre crases são o texto que o agente pediria para rodar):
 
-- CA-01: QUANDO o agente pede `git commit -m "x"` numa pasta que está na `main`, `master`, `develop` ou `production` ENTÃO o sistema DEVE barrar o comando e explicar em português que commit direto em branch protegida não é permitido. Cobre RN-04, RN-05.
+- CA-01: QUANDO o agente pede `git commit -m "x"` numa pasta que está na `main`, `master`, `develop`, `production` ou `staging` ENTÃO o sistema DEVE barrar o comando e explicar em português que commit direto em branch protegida não é permitido. Cobre RN-04, RN-05.
 - CA-02: QUANDO o agente pede `git commit -m "x"` numa pasta que está em outra branch (por exemplo `feat/1-x`) ENTÃO o sistema DEVE deixar passar. Cobre RN-03, RN-05.
 - CA-03: QUANDO o agente, a partir de uma pasta na `main`, pede `cd <worktree> && git commit ...` ou `git -C <worktree> commit ...` e a worktree está numa branch de tarefa ENTÃO o sistema DEVE deixar passar; e QUANDO a pasta de destino está numa branch protegida ENTÃO DEVE barrar. Cobre RN-09.
 - CA-04: QUANDO a pasta de destino não pode ser descoberta com segurança (nome vindo de variável, subcomando ou pasta inexistente) ENTÃO o sistema DEVE deixar passar. Cobre RN-03, RN-09.
-- CA-05: QUANDO o agente pede `git push origin main`, `git push origin HEAD:main`, `git push origin feat/x:main`, `git push origin :main` ou `git push origin --delete main` ENTÃO o sistema DEVE barrar, valendo o mesmo para as outras branches protegidas. Cobre RN-04, RN-06.
+- CA-05: QUANDO o agente pede `git push origin main`, `git push origin HEAD:main`, `git push origin feat/x:main`, `git push origin :main` ou `git push origin --delete main` ENTÃO o sistema DEVE barrar, valendo o mesmo para as outras branches protegidas, inclusive `staging` (por exemplo `git push origin staging`). Cobre RN-04, RN-06.
 - CA-05a: QUANDO o agente pede `git push --all`, `git push --mirror`, `git push --all origin` ou `git push origin --mirror` numa pasta em branch protegida ENTÃO o sistema DEVE barrar; e QUANDO a pasta está numa branch de tarefa ENTÃO DEVE deixar passar. Cobre RN-04, RN-06a.
 - CA-06: QUANDO o agente pede `git push` ou `git push origin` sem nomear destino e a pasta está numa branch protegida ENTÃO o sistema DEVE barrar; e QUANDO está numa branch de tarefa ENTÃO DEVE deixar passar. Cobre RN-06.
 - CA-07: QUANDO o agente pede `git push -u origin feat/1-x` (inclusive estando na `main`) ENTÃO o sistema DEVE deixar passar. Cobre RN-03, RN-06.
@@ -175,6 +175,8 @@ O projeto não tem typecheck nem formatador; os gates usam o lint e os testes.
   - Gate de fase: `npm run lint`, `npm test`, `node bin/ai-sync.js --check`, `npm pack --dry-run` (o modelo novo entra no pacote) e o `ai-sync` numa pasta temporária, conferindo o `.claude/settings.json` gerado. Depois, o reviewer.
 - Fase 4 (correções da revisão, sequencial): T6 → T7 → T9 mexem no modelo de ganchos (fonte sincronizada) e foram commitadas em ordem; T8 mexe só na sincronização.
   - Gate de fase: `npm run lint`, `npm test` (726/726 no último commit), `node bin/ai-sync.js --check`. Depois, nova revisão.
+- Fase 5 (mudança de escopo pedida pelo usuário no PR, sequencial): T10.
+  - Gate de fase: `npm run lint`, `npm test`, `node bin/ai-sync.js --check`. Depois, nova revisão do reviewer.
 
 **Não conferido numa sessão real do Claude** (risco conhecido, pendente de confirmação do usuário): a desativação pela configuração local (parte de CA-15, pedida em T4) e o aviso do `oxlint` chegando ao agente (CA-17, testado só com ferramenta falsa em T3).
 
@@ -291,14 +293,29 @@ T2, T3 e T4 mexem em fontes do conteúdo sincronizado (`templates/`, `catalog.js
 - Modelo: padrao.
 - Status: feita (commit fc0a8ca; vermelho em 4 testes; gate ok: 726/726 testes).
 
+### T10 Incluir `staging` nas branches protegidas (mudança de escopo pedida pelo usuário)
+
+- O quê: a guarda passa a tratar `staging` como branch protegida, junto com `main`, `master`, `develop` e `production`.
+- Onde: `templates/settings.hooks.json`, `tests/hooks-guard.test.js`, `.claude/settings.json` e `.claude/claude-kit.lock.json` regenerados por `npm run sync`.
+- Dev: dev-backend-2.
+- Depende de: T9.
+- Reaproveita: os testes por branch protegida já existentes em `tests/hooks-guard.test.js`.
+- Atende: RN-05, RN-06, RN-06a; CA-01, CA-05, CA-05a, CA-06.
+- Pronto quando: commit, envio nomeando o destino, envio sem destino, `--all` e `--mirror` a partir de `staging` são barrados; os mesmos comandos em branch de tarefa seguem passando; `.claude/` regenerado e commitado junto; o gate passa.
+- Teste: integração. O primeiro a falhar: "commit na staging é barrado com mensagem em português".
+- Gate: `node --test tests/hooks-guard.test.js`, `npm test`, `npm run lint` e `node bin/ai-sync.js --check`. Sem typecheck nem formatador no projeto.
+- Modelo: economico.
+- Status: pendente.
+
 ## Dúvidas
 
 Nenhuma. Decisões do usuário registradas na aprovação:
 
 1. O modelo vale para todos os projetos (`applies: ["all"]`) e entra nos quatro perfis.
-2. Branches protegidas: `main`, `master`, `develop` e `production`, em lista fixa.
+2. Branches protegidas: `main`, `master`, `develop`, `production` e `staging`, em lista fixa (`staging` incluída depois, ver item 8).
 3. Sem arquivo de configuração do formatador no projeto, o arquivo não é formatado.
 4. Problemas encontrados pela conferência são avisados ao agente, sem bloquear.
 5. Só `prettier` e `oxlint`.
 6. A guarda deixa passar a remoção recursiva da pasta temporária criada pelo `mktemp` no mesmo comando (RN-08a), e o roteiro "Verificar uma mudança" continua como está.
 7. Na revisão: a guarda também barra `git push --all` e `git push --mirror` a partir de branch protegida (RN-06a).
+8. No PR: `staging` entra na lista fixa de branches protegidas (mudança de escopo pedida e aprovada pelo usuário, T10).
