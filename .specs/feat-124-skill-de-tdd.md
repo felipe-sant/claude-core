@@ -1,6 +1,6 @@
 # Criar a skill de TDD com ciclo, adequação dos testes e prova de que o teste falha
 
-> Status: aprovada
+> Status: em-andamento
 > Tipo: funcionalidade
 > Tamanho: media
 > Branch: feat/124-skill-de-tdd
@@ -75,7 +75,7 @@ As tarefas T1 e T2 mexem em fontes do conteúdo sincronizado e não rodam ao mes
 - Pronto quando: a skill cobre ciclo, o que entra e o que não entra, tabela de adequação, prova com defeitos e caso do bug; não tem caminho nem comando de projeto; diz de forma explícita que nunca se altera, apaga ou pula teste para passar; o passo de desfazer o defeito é só descrito ("desfaça e confira que os testes voltam a passar"), sem comando de git; catálogo e os quatro perfis têm `tdd`; `.claude/` regenerado e commitado junto; gate passando.
 - Teste: integração. Falha primeiro: incluir `'tdd'` em `generalSkills` faz os testes "projeto <stack> recebe as skills gerais..." falharem antes da skill existir. Junto, um teste de conteúdo que lê a skill pelo catálogo e confere `applies` igual a `["all"]`, a presença de `tdd` nos quatro perfis, que o texto cita os pontos da issue (motivo certo, mínimo, tabela de adequação, defeito, bug) e que não contém orientação de pular teste.
 - Gate: `npm run lint`, `node --test tests/standards.test.js` (e o arquivo do teste de conteúdo, se for outro), `node bin/ai-sync.js --check`. Typecheck: o projeto não tem.
-- Status: pendente
+- Status: feita (commit b5be1f0; teste falhou com 7 falhas antes e passou depois; gate final: lint ok, 633 testes, --check ok, npm pack leva a skill)
 
 ### T2 Fazer os devs, o executor e o revisor citarem a skill
 
@@ -89,7 +89,7 @@ As tarefas T1 e T2 mexem em fontes do conteúdo sincronizado e não rodam ao mes
 - Pronto quando: os oito agentes citam `tdd`; a instrução ao executor em cada dev cita a skill; `.claude/` regenerado e commitado junto; gate passando.
 - Teste: unitário de conteúdo. Falha primeiro: um teste novo em `tests/agents.test.js` que confere que cada um dos oito agentes cita a skill `tdd` e que a linha de chamada do executor nos devs a cita.
 - Gate: `npm run lint`, `node --test tests/agents.test.js`, `node bin/ai-sync.js --check`. Typecheck: o projeto não tem.
-- Status: pendente
+- Status: feita (commit 65b1e49; teste falhou com 2 falhas antes e passou depois; gate final: lint ok, 633 testes, --check ok)
 
 ### T3 [P] Adicionar a nota de mudança minor
 
@@ -103,7 +103,7 @@ As tarefas T1 e T2 mexem em fontes do conteúdo sincronizado e não rodam ao mes
 - Pronto quando: a nota existe com tipo minor e o corpo diz que há uma skill nova de TDD usada pelos devs, executor e revisor; gate passando.
 - Teste: nenhum (o teste da checagem de changeset já cobre o formato).
 - Gate: `npm run lint`, `node --test tests/changeset-check-workflow.test.js`. Typecheck: o projeto não tem.
-- Status: pendente
+- Status: feita (commit 3e3cc83; nota de mudança minor; gate final: lint ok, 633 testes, --check ok)
 
 ## Dúvidas
 
