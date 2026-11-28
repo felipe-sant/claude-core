@@ -134,6 +134,18 @@ test('push sem destino é barrado em branch protegida e passa em branch de taref
   allowed(runGuard({ command: 'git push origin', cwd: makeRepo('feat/1-x') }))
 })
 
+for (const command of ['git push --all', 'git push --mirror', 'git push --all origin', 'git push origin --mirror']) {
+  test(`envio de todas as branches a partir de branch protegida é barrado: ${command}`, () => {
+    const result = runGuard({ command, cwd: makeRepo('develop') })
+    blocked(result)
+    assert.match(result.stderr, /todas as branches/)
+  })
+
+  test(`envio de todas as branches a partir de branch de tarefa passa: ${command}`, () => {
+    allowed(runGuard({ command, cwd: makeRepo('feat/1-x') }))
+  })
+}
+
 test('push de branch de tarefa passa, mesmo estando na main', () => {
   allowed(runGuard({ command: 'git push -u origin feat/1-x', cwd: makeRepo() }))
 })
