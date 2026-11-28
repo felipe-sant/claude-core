@@ -65,7 +65,7 @@ Por padrão o time roda com subagentes. O time de agentes é opcional e experime
 
 O `ai-sync` acrescenta ao `.claude/settings.json` do projeto dois ganchos, sem alterar os que o projeto já tem:
 
-- Antes de cada comando no terminal, barra commit e envio direto nas branches `main`, `master`, `develop` e `production`, envio forçado em qualquer branch e remoção recursiva de arquivos (`rm -r`), avisando o motivo em português. A remoção recursiva de uma pasta criada pelo `mktemp` no mesmo comando é permitida. Na dúvida, o comando passa.
+- Antes de cada comando no terminal, barra commit e envio direto nas branches `main`, `master`, `develop`, `production` e `staging` (inclusive o envio de todas as branches a partir delas), envio forçado em qualquer branch e remoção recursiva de arquivos (`rm -r`), avisando o motivo em português. A remoção recursiva de uma pasta criada pelo `mktemp` no mesmo comando é permitida. Na dúvida, o comando passa.
 - Depois de cada edição de arquivo, formata com o `prettier` (só se o projeto tem configuração dele) e confere com o `oxlint`, usando o que o projeto já tem instalado. Se a conferência achar problemas, o agente é avisado e a edição é mantida.
 
 Os ganchos não dependem de arquivos do projeto. Para desligá-los sem editar arquivo versionado, defina `CLAUDE_KIT_HOOKS_OFF=1` no terminal ou em `env` no `.claude/settings.local.json`.

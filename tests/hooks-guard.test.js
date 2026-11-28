@@ -55,7 +55,7 @@ before(() => {
   assert.ok(guardCommand, 'o modelo precisa ter o gancho de Bash')
 })
 
-for (const protectedBranch of ['main', 'master', 'develop', 'production']) {
+for (const protectedBranch of ['main', 'master', 'develop', 'production', 'staging']) {
   test(`commit na ${protectedBranch} é barrado com mensagem em português`, () => {
     const repo = makeRepo(protectedBranch)
     const result = runGuard({ command: 'git commit -m "x"', cwd: repo })
@@ -97,7 +97,9 @@ for (const command of [
   'git push origin --delete main',
   'git push origin refs/heads/master',
   'git push origin production',
-  'git push origin develop'
+  'git push origin develop',
+  'git push origin staging',
+  'git push origin HEAD:staging'
 ]) {
   test(`envio barrado: ${command}`, () => {
     blocked(runGuard({ command, cwd: makeRepo('feat/1-x') }))
@@ -124,6 +126,12 @@ test('redirecionamento em comando liberado continua passando', () => {
   allowed(runGuard({ command: 'git push origin 2>&1 | tail -5', cwd }))
   allowed(runGuard({ command: 'git push -u origin feat/1-x >/dev/null 2>&1', cwd: makeRepo() }))
   allowed(runGuard({ command: 'git status 2>&1', cwd }))
+})
+
+test('push sem destino na staging é barrado e passa em branch de tarefa', () => {
+  blocked(runGuard({ command: 'git push', cwd: makeRepo('staging') }))
+  blocked(runGuard({ command: 'git push --all', cwd: makeRepo('staging') }))
+  allowed(runGuard({ command: 'git push origin feat/x', cwd: makeRepo('feat/x') }))
 })
 
 test('push sem destino é barrado em branch protegida e passa em branch de tarefa', () => {
