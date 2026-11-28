@@ -1,6 +1,6 @@
 # Detectar stacks por tecnologia, não só por framework
 
-> Status: aprovada
+> Status: em-andamento
 > Tipo: funcionalidade
 > Tamanho: media
 > Branch: feat/130-detectar-stacks-por-tecnologia
@@ -67,7 +67,7 @@ Hoje a sincronização reconhece o projeto pelo framework (React, NestJS, Larave
 - Gate: `npm run lint`, `npm test` e `node bin/ai-sync.js --check`. Sem typecheck nem formatador no projeto.
 - Commit: `Feat :sparkles: [#130] Adiciona as stacks Vitest, Playwright e Redux Toolkit ao catálogo`, com os caminhos explícitos. O catálogo é fonte sincronizada: antes de commitar, rode `npm run sync` e inclua nos caminhos os arquivos de `.claude/` que mudarem (provavelmente nenhum, já que o perfil `tooling` não usa essas stacks). O hook recusa o commit por caminhos sem eles.
 - Modelo: economico.
-- Status: pendente.
+- Status: feita (commit dccccd6; gate ok: lint, 634 testes, --check).
 
 ### T2 [P] Testar a detecção das stacks novas com catálogo de teste
 - O quê: cobrir a detecção positiva, negativa, de várias stacks juntas e por dependências de desenvolvimento, usando um catálogo de teste em que as três stacks têm uma regra fictícia.
@@ -81,7 +81,7 @@ Hoje a sincronização reconhece o projeto pelo framework (React, NestJS, Larave
 - Gate: `npm run lint`, `npm test` e `node bin/ai-sync.js --check`. Sem typecheck nem formatador no projeto.
 - Commit: `Test :test_tube: [#130] Cobre a detecção das stacks Vitest, Playwright e Redux Toolkit`, só com `tests/ai-sync.test.js` nos caminhos.
 - Modelo: economico.
-- Status: pendente.
+- Status: feita (commit ca5b744; gate ok: lint, 640 testes, --check).
 
 ## Dúvidas
 
