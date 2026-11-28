@@ -1,6 +1,6 @@
 # Skill de testes de ponta a ponta com Playwright e verificação de acessibilidade
 
-> Status: em-revisao
+> Status: aprovada
 > Tipo: funcionalidade
 > Tamanho: media
 > Branch: feat/126-skill-playwright-acessibilidade
@@ -51,7 +51,7 @@ Teste de ponta a ponta mal escrito é lento e instável. A issue #126 pede uma s
 
 - Regra de padrão (arquivo em regras) para Playwright: a issue pede só a skill.
 - Incluir a skill em perfis manuais: as outras skills de stack também não estão neles (RN-11).
-- Citar a skill nas definições de agentes (por exemplo, `qa` ou devs): a issue não pede; ver Dúvidas.
+- Citar a skill nas definições de agentes (por exemplo, `qa` ou devs): fica para a issue #132, por decisão do usuário.
 - Mudar a detecção de stacks: já foi feita na issue #130.
 - Atualizar o README: ele não lista as skills de stack uma a uma.
 
@@ -65,7 +65,7 @@ Teste de ponta a ponta mal escrito é lento e instável. A issue #126 pede uma s
 
 ### T1 [P] Criar a skill e registrá-la no catálogo, com os testes
 - O quê: criar a skill de testes de ponta a ponta com Playwright, registrá-la no catálogo ligada à stack `playwright` e cobrir detecção, instalação e formato com testes.
-- Onde: nova pasta `stacks/playwright/skills/playwright-e2e/` com `SKILL.md` (nome sugerido pelo dev; o campo `name` do cabeçalho é igual ao nome da pasta); `catalog.json` (seção `skills`, entrada com `path`, `applies: ["playwright"]` e `description`); `tests/standards.test.js`.
+- Onde: nova pasta `stacks/playwright/skills/playwright-e2e/` com `SKILL.md` (nome aprovado pelo usuário; o campo `name` do cabeçalho é igual ao nome da pasta); `catalog.json` (seção `skills`, entrada com `path`, `applies: ["playwright"]` e `description`); `tests/standards.test.js`.
 - Dev: dev-frontend-2.
 - Depende de: nada.
 - Reaproveita: formato de `stacks/react/skills/accessibility-audit/SKILL.md` e `stacks/react/skills/exploratory-qa/SKILL.md` (cabeçalho, linha "Entrega:", seções curtas e fechamento com o que ficou de fora); a stack `playwright` já registrada no catálogo; os auxiliares `h.makeTarget`, `sync`, `skillsOf` e `rulesOf` de `tests/standards.test.js`.
@@ -97,9 +97,7 @@ Teste de ponta a ponta mal escrito é lento e instável. A issue #126 pede uma s
 
 ## Dúvidas
 
-Do product-owner:
-- Nenhuma.
+Nenhuma. Decisões do usuário registradas na aprovação:
 
-Só o usuário responde:
-- D-U-1: O nome da skill fica `playwright-e2e`, como sugerido pelo dev?
-- D-U-2: Alguma definição de agente (por exemplo, `qa` ou `dev-frontend`) deve passar a citar a skill nova, como o `qa` cita a de QA exploratório? Hoje está fora do escopo.
+- D-U-1: o nome `playwright-e2e` está aprovado.
+- D-U-2: nenhum agente cita a skill agora. Isso fica para a issue #132.
