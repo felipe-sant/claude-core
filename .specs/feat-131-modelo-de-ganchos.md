@@ -1,6 +1,6 @@
 # Modelo de ganchos com proteção de branch e formatação automática
 
-> Status: em-revisao
+> Status: aprovada
 > Tipo: funcionalidade
 > Tamanho: grande
 > Branch: feat/131-modelo-de-ganchos
@@ -21,12 +21,13 @@ Para isso, a sincronização passa a saber mesclar listas de ganchos: acrescenta
 - RN-02: Os ganchos funcionam sozinhos, escritos por inteiro na própria configuração, sem depender de scripts, arquivos ou comandos do projeto. Fonte: issue #131.
 - RN-03: Em caso de dúvida os ganchos deixam passar: comando que a guarda não reconhece, dados de entrada ilegíveis, pasta sem git, ferramenta ausente ou qualquer erro interno. Só é barrado o que está na lista da RN-05 a RN-08. Fonte: issue #131.
 - RN-04: Ao barrar, a guarda impede o comando e explica em português o que foi barrado e por quê, para o agente entender e mudar de rumo. Fonte: issue #131.
-- RN-05: Commit direto em branch protegida é barrado. As branches protegidas são `main`, `master`, `develop` e `production` (lista proposta, ver Dúvidas). Fonte: issue #131 e pedido da orchestrator.
+- RN-05: Commit direto em branch protegida é barrado. As branches protegidas são `main`, `master`, `develop` e `production` (lista fixa). Fonte: issue #131, pedido da orchestrator e decisão do usuário.
 - RN-06: Envio (push) para branch protegida é barrado, seja nomeando a branch de destino, seja enviando sem nomear o destino enquanto se está nela. Apagar uma branch protegida no servidor também é barrado. Fonte: issue #131.
 - RN-07: Envio forçado é barrado em qualquer branch, nas suas várias formas (forçado, forçado com proteção e o destino marcado com sinal de mais). Fonte: issue #131.
 - RN-08: Remoção recursiva de arquivos é barrada em qualquer pasta, nas suas várias formas de escrever a opção. Fonte: issue #131.
+- RN-08a: Exceção à RN-08: a remoção recursiva de uma pasta temporária criada pelo `mktemp` no mesmo comando é deixada passar, para que o roteiro "Verificar uma mudança" do repositório continue funcionando. Fonte: decisão do usuário.
 - RN-09: A branch conferida é a da pasta onde o comando vai rodar de fato: se o comando entra antes em outra pasta, vale a branch dessa pasta. Isso é o que permite aos agentes commitarem nas worktrees das tarefas enquanto a pasta principal está na `main`. Fonte: fluxo do time (CLAUDE.md, worktrees por tarefa).
-- RN-10: Depois de cada edição ou criação de arquivo pelo agente, o arquivo é formatado e conferido com as ferramentas do projeto que já estão instaladas nele. Se o projeto não tem nenhuma, nada acontece e nada falha. A etapa nunca desfaz nem impede a edição. Fonte: issue #131.
+- RN-10: Depois de cada edição ou criação de arquivo pelo agente, o arquivo é formatado e conferido com as ferramentas do projeto que já estão instaladas nele. Se o projeto não tem nenhuma, nada acontece e nada falha. Se o projeto não tem o arquivo de configuração do formatador, o arquivo não é formatado. Problemas encontrados pela conferência são avisados ao agente, sem bloquear. As ferramentas são só `prettier` e `oxlint`. A etapa nunca desfaz nem impede a edição. Fonte: issue #131 e decisão do usuário.
 - RN-11: A sincronização preserva os ganchos que o projeto já tem: os do kit são acrescentados ao lado, sem alterar, reordenar nem apagar os do dono. Fonte: issue #131 e garantia do kit de nunca sobrescrever o que é do usuário (CLAUDE.md).
 - RN-12: Rodar a sincronização de novo não duplica os ganchos do kit. Fonte: pedido da orchestrator.
 - RN-13: Gancho do kit que o dono apagou não volta nas próximas sincronizações, como já acontece com as demais configurações. Fonte: pedido da orchestrator e comportamento atual do kit.
@@ -47,6 +48,8 @@ Guarda de comandos (exemplos de comando entre crases são o texto que o agente p
 - CA-08: QUANDO o agente pede um envio com `--force`, `-f`, `--force-with-lease`, `--force-if-includes`, `-f` dentro de um grupo de opções curtas (como `-uf`) ou um destino começando com `+` (como `+feat/x`) ENTÃO o sistema DEVE barrar, em qualquer branch. Cobre RN-04, RN-07.
 - CA-09: QUANDO o agente pede `rm -r x`, `rm -rf x`, `rm -fr x`, `rm -Rf x`, `rm -r -f x`, `rm --recursive x` ou qualquer uma delas precedida de `sudo` ENTÃO o sistema DEVE barrar e explicar em português que remoção recursiva não é permitida. Cobre RN-04, RN-08.
 - CA-10: QUANDO o agente pede `rm arquivo.txt` ou `rm -f arquivo.txt` ENTÃO o sistema DEVE deixar passar. Cobre RN-03, RN-08.
+- CA-10a: QUANDO o agente pede um comando que cria a pasta temporária com `mktemp -d`, guarda o nome numa variável e depois a remove recursivamente pela mesma variável, como `T=$(mktemp -d) && node bin/ai-sync.js "$T" && ls -R "$T/.claude"; rm -rf "$T"` ENTÃO o sistema DEVE deixar passar. Cobre RN-08a.
+- CA-10b: QUANDO a remoção recursiva usa uma variável que não foi criada pelo `mktemp -d` no mesmo comando (por exemplo `rm -rf "$T"` sozinho, ou `T=build; rm -rf "$T"`), ou mistura a pasta temporária com outro alvo (`T=$(mktemp -d); rm -rf "$T" src`) ENTÃO o sistema DEVE barrar. Cobre RN-08, RN-08a.
 - CA-11: QUANDO o comando proibido aparece encadeado depois de outro (`npm test && git push --force`, `ls; rm -rf x`, `true || git commit -m x` na `main`) ENTÃO o sistema DEVE barrar. Cobre RN-05 a RN-08.
 - CA-12: QUANDO o texto proibido aparece só dentro de uma mensagem ou de um argumento entre aspas (por exemplo `git commit -m "explica o rm -rf"` numa branch de tarefa, ou `echo "git push --force"`) ENTÃO o sistema DEVE deixar passar. Cobre RN-03.
 - CA-13: QUANDO a entrada recebida pelo gancho não é legível, o comando está vazio, a pasta não tem git, o git não está instalado ou o Node não está instalado ENTÃO o sistema DEVE deixar passar, sem mensagem de erro. Cobre RN-02, RN-03.
@@ -55,8 +58,8 @@ Guarda de comandos (exemplos de comando entre crases são o texto que o agente p
 
 Formatação depois da edição:
 
-- CA-16: QUANDO o agente edita ou cria um arquivo num projeto que tem o formatador instalado ENTÃO o sistema DEVE formatar esse arquivo logo em seguida. Cobre RN-10.
-- CA-17: QUANDO o projeto também tem a ferramenta de conferência instalada ENTÃO o sistema DEVE conferir o arquivo editado, sem desfazer nem impedir a edição (o que acontece com os problemas encontrados depende da resposta em Dúvidas). Cobre RN-10.
+- CA-16: QUANDO o agente edita ou cria um arquivo num projeto que tem o formatador instalado e o arquivo de configuração dele ENTÃO o sistema DEVE formatar esse arquivo logo em seguida; e QUANDO o formatador está instalado mas o projeto não tem o arquivo de configuração dele ENTÃO DEVE deixar o arquivo como está. Cobre RN-10.
+- CA-17: QUANDO o projeto também tem a ferramenta de conferência instalada ENTÃO o sistema DEVE conferir o arquivo editado, sem desfazer nem impedir a edição; e QUANDO a conferência encontra problemas ENTÃO DEVE avisar o agente com o resultado, sem bloquear. Cobre RN-10.
 - CA-18: QUANDO o arquivo editado está numa worktree ENTÃO o sistema DEVE usar as ferramentas instaladas na pasta do próprio arquivo (subindo pelas pastas acima dele), e QUANDO não há nenhuma instalada ali ENTÃO DEVE não fazer nada. Cobre RN-09, RN-10.
 - CA-19: QUANDO o projeto não tem formatador nem ferramenta de conferência, o arquivo não existe mais ou a entrada é ilegível ENTÃO o sistema DEVE terminar sem fazer nada e sem erro. Cobre RN-03, RN-10.
 - CA-20: QUANDO o formatador demora demais ENTÃO o sistema DEVE desistir depois de um tempo curto (30 segundos) sem travar o agente. Cobre RN-03.
@@ -77,15 +80,16 @@ Sincronização:
 ## Critérios de sucesso
 
 - Um projeto que roda a sincronização passa a ter as duas guardas funcionando, sem perder nenhum gancho próprio, e a segunda rodada não muda nada.
-- Nos testes, todos os exemplos barrados de CA-01 a CA-11 saem barrados e todos os exemplos liberados de CA-02 a CA-14 saem liberados.
+- Nos testes, todos os exemplos barrados de CA-01 a CA-11 (incluindo CA-10b) saem barrados e todos os exemplos liberados de CA-02 a CA-14 (incluindo CA-10a) saem liberados.
 - `npm run lint` e `npm test` passam, e `node bin/ai-sync.js --check` não aponta erro.
 - O próprio claude-kit, que recebe o perfil `tooling`, passa a ter os ganchos e o fluxo do time segue funcionando nas worktrees.
 
 ## Fora do escopo
 
-- Lista de branches protegidas configurável por projeto: a lista é fixa nesta entrega (ver Dúvidas).
+- Lista de branches protegidas configurável por projeto: a lista é fixa nesta entrega, por decisão do usuário.
 - Proteção contra outros comandos perigosos (reescrever histórico na principal, `git reset --hard`, apagar com outras ferramentas). A issue pede só os três casos.
-- Ferramentas de formatação e conferência de outras linguagens (PHP, por exemplo) e outras além das listadas nas tarefas, salvo decisão em Dúvidas.
+- Ferramentas de formatação e conferência além de `prettier` e `oxlint` (como `eslint`, `biome` ou as de PHP), por decisão do usuário.
+- Exceção para remoção recursiva de outras pastas temporárias que não as criadas pelo `mktemp` no mesmo comando.
 - Mudar as permissões do Claude ou as listas de comandos permitidos das automações de issues.
 - Escrever os ganchos em arquivos separados do projeto: a issue pede que não dependam de arquivos do projeto.
 
@@ -99,7 +103,7 @@ Sincronização:
 
 **Contratos fixados por esta especificação (as tarefas paralelas partem deles)**
 
-- Arquivo do modelo: `templates/settings.hooks.json`, nome no catálogo `hooks`, `applies: ["all"]` (ver Dúvidas sobre ligar por padrão) e listado nos quatro perfis.
+- Arquivo do modelo: `templates/settings.hooks.json`, nome no catálogo `hooks`, `applies: ["all"]` (decisão do usuário) e listado nos quatro perfis.
 - Formato do modelo, igual ao esperado pelo Claude Code:
 
 ```json
@@ -114,8 +118,8 @@ Sincronização:
 - Variável de desligar: `CLAUDE_KIT_HOOKS_OFF=1`.
 - Saída da guarda: código 2 com a mensagem em português na saída de erro para barrar; código 0 em qualquer outro caso, inclusive erro interno.
 - Linguagem do comando: um prefixo de shell curto que sai com 0 quando a variável de desligar está ligada ou quando o Node não existe (`command -v node`), seguido de `node -e` com o programa inteiro dentro de um `try`, cujo `catch` sai com 0. Motivo: o Node já é exigido pelo kit, lê JSON sem `jq` (que não é garantido) e roda igual em Linux, macOS e no shell que o Claude Code usa no Windows. O programa não pode conter aspas simples, para caber no `node -e '...'`.
-- A guarda lê do stdin o JSON do gancho (`tool_input.command` e `cwd`), divide o comando em trechos por `&&`, `||`, `;`, `|` e quebra de linha, respeitando aspas, acompanha `cd <pasta>` e `git -C <pasta>` para saber a pasta de cada trecho e pergunta a branch com `git -C <pasta> symbolic-ref --short HEAD`. Pasta indefinida ou falha do git: o trecho passa.
-- A formatação lê `tool_input.file_path`, sobe a partir da pasta do arquivo procurando `node_modules/.bin`, roda o formatador (`prettier --write <arquivo>`) e a conferência (`oxlint <arquivo>`) quando existem ali. Ausência de ambos ou de arquivo: sai com 0.
+- A guarda lê do stdin o JSON do gancho (`tool_input.command` e `cwd`), divide o comando em trechos por `&&`, `||`, `;`, `|` e quebra de linha, respeitando aspas, acompanha `cd <pasta>` e `git -C <pasta>` para saber a pasta de cada trecho e pergunta a branch com `git -C <pasta> symbolic-ref --short HEAD`. Pasta indefinida ou falha do git: o trecho passa. A guarda também anota as variáveis atribuídas com `NOME=$(mktemp -d ...)` em trechos anteriores do mesmo comando; um `rm` recursivo cujos alvos são todos `$NOME` ou `"$NOME"` dessas variáveis passa, e qualquer outro alvo junto o faz ser barrado.
+- A formatação lê `tool_input.file_path`, sobe a partir da pasta do arquivo procurando `node_modules/.bin`, roda o formatador (`prettier --write <arquivo>`) só quando existe ali e há configuração do prettier no projeto (arquivo de configuração dele ou a chave `prettier` no `package.json`), e a conferência (`oxlint <arquivo>`) quando existe ali. Se a conferência aponta problemas, o gancho devolve o resultado ao agente como aviso que não bloqueia (a forma exata de devolver, pela saída do gancho que o Claude Code mostra ao agente, é escolhida e testada em T3). Ausência de ambos ou de arquivo: sai com 0.
 
 **Mesclagem dos ganchos na sincronização**
 
@@ -135,7 +139,7 @@ Sincronização:
 **Reflexos neste repositório**
 
 - O perfil `tooling` passa a receber os ganchos, então o `.claude/settings.json` gerado ganha as duas entradas.
-- O roteiro "Verificar uma mudança" do CLAUDE.md termina com uma remoção recursiva da pasta temporária, que passa a ser barrada (ver Dúvidas).
+- O roteiro "Verificar uma mudança" do CLAUDE.md termina com uma remoção recursiva da pasta criada pelo `mktemp` no mesmo comando, que a exceção RN-08a deixa passar; o roteiro não muda.
 - As automações de issues trabalham numa branch própria e só enviam essa branch, então não são barradas.
 
 **Testes**
@@ -177,9 +181,9 @@ T2, T3 e T4 mexem em fontes do conteúdo sincronizado (`templates/`, `catalog.js
 - Onde: `templates/settings.hooks.json` (novo), `tests/hooks-guard.test.js` (novo). Não registra no catálogo nem nos perfis (fica para T4).
 - Depende de: nada.
 - Reaproveita: `h.tempDir`, `h.cleanup` e `h.repoRoot` de `tests/helpers.js`.
-- Atende: RN-02 a RN-09, RN-15; CA-01 a CA-15 (a parte da configuração local de CA-15 é conferida em T4).
-- Pronto quando: cada exemplo barrado de CA-01, CA-03, CA-05, CA-06, CA-08, CA-09 e CA-11 sai com código 2 e mensagem em português na saída de erro; cada exemplo liberado de CA-02, CA-03, CA-04, CA-06, CA-07, CA-10, CA-12, CA-13 e CA-14 sai com código 0 e sem mensagem; com `CLAUDE_KIT_HOOKS_OFF=1` todos saem com 0; com o Node fora do caminho de busca o comando sai com 0; o lint de conteúdo aceita o modelo; o gate passa.
-- Teste: integração, extraindo o comando do modelo real e executando-o com `spawnSync('sh', ['-c', comando], ...)` num repositório git temporário. O primeiro a falhar: "commit na main é barrado com mensagem em português".
+- Atende: RN-02 a RN-09, RN-08a, RN-15; CA-01 a CA-15, incluindo CA-10a e CA-10b (a parte da configuração local de CA-15 é conferida em T4).
+- Pronto quando: cada exemplo barrado de CA-01, CA-03, CA-05, CA-06, CA-08, CA-09 e CA-11 sai com código 2 e mensagem em português na saída de erro; cada exemplo liberado de CA-02, CA-03, CA-04, CA-06, CA-07, CA-10, CA-12, CA-13 e CA-14 sai com código 0 e sem mensagem; o comando do roteiro "Verificar uma mudança" do CLAUDE.md (CA-10a) sai com 0 e cada exemplo de CA-10b sai com 2; com `CLAUDE_KIT_HOOKS_OFF=1` todos saem com 0; com o Node fora do caminho de busca o comando sai com 0; o lint de conteúdo aceita o modelo; o gate passa.
+- Teste: integração, extraindo o comando do modelo real e executando-o com `spawnSync('sh', ['-c', comando], ...)` num repositório git temporário. O primeiro a falhar: "commit na main é barrado com mensagem em português". Para a exceção, o primeiro a falhar: "remoção recursiva da pasta criada pelo mktemp no mesmo comando passa".
 - Gate: `node --test tests/hooks-guard.test.js` e `npm run lint`.
 - Modelo: padrao.
 - Status: pendente.
@@ -191,7 +195,7 @@ T2, T3 e T4 mexem em fontes do conteúdo sincronizado (`templates/`, `catalog.js
 - Depende de: T2 (mesmo arquivo de modelo, que é fonte sincronizada).
 - Reaproveita: `h.tempDir`, `h.cleanup`, `h.repoRoot` e o jeito de extrair e executar o comando criado em T2.
 - Atende: RN-02, RN-03, RN-10, RN-15; CA-15 a CA-20.
-- Pronto quando: com um `prettier` falso no `node_modules/.bin` da pasta do arquivo, ele é chamado com o arquivo editado; com um `oxlint` falso, ele também é chamado; num arquivo de worktree sem `node_modules` nada é chamado; sem ferramentas, sem arquivo, com entrada ilegível ou com `CLAUDE_KIT_HOOKS_OFF=1` o comando sai com 0 sem chamar nada; a entrada tem tempo limite de 30 segundos; o resultado da conferência segue a resposta da Dúvida 4; o gate passa.
+- Pronto quando: com um `prettier` falso no `node_modules/.bin` da pasta do arquivo e configuração do prettier no projeto, ele é chamado com o arquivo editado; sem a configuração, ele não é chamado; com um `oxlint` falso, ele também é chamado; num arquivo de worktree sem `node_modules` nada é chamado; sem ferramentas, sem arquivo, com entrada ilegível ou com `CLAUDE_KIT_HOOKS_OFF=1` o comando sai com 0 sem chamar nada; a entrada tem tempo limite de 30 segundos; quando o `oxlint` falso aponta problema, o gancho devolve o aviso ao agente sem bloquear a edição; o gate passa.
 - Teste: integração, com ferramentas falsas que gravam um arquivo de marca. O primeiro a falhar: "arquivo editado é formatado pelo prettier do projeto".
 - Gate: `node --test tests/hooks-format.test.js` e `npm run lint`.
 - Modelo: padrao.
@@ -212,12 +216,12 @@ T2, T3 e T4 mexem em fontes do conteúdo sincronizado (`templates/`, `catalog.js
 
 ### T5 [P] Documentação e nota de mudança
 
-- O quê: documenta o modelo de ganchos e como desligá-lo, ajusta o roteiro de verificação conforme a Dúvida 6 e cria a nota de mudança `minor`.
-- Onde: `README.md` (seção sobre o que o kit configura e como desligar os ganchos), `.claude/CLAUDE.md` do repositório (linha de `templates/` na tabela de estrutura e o roteiro "Verificar uma mudança"), `.changeset/<nome-unico>.md` com `"@felipe-sant/claude-kit": minor` e uma ou duas linhas em português simples.
+- O quê: documenta o modelo de ganchos, a exceção da pasta temporária e como desligá-lo, e cria a nota de mudança `minor`. O roteiro "Verificar uma mudança" não muda.
+- Onde: `README.md` (seção sobre o que o kit configura e como desligar os ganchos), `.claude/CLAUDE.md` do repositório (linha de `templates/` na tabela de estrutura), `.changeset/<nome-unico>.md` com `"@felipe-sant/claude-kit": minor` e uma ou duas linhas em português simples.
 - Depende de: nada (os nomes estão fixados no Desenho).
 - Reaproveita: o formato das notas existentes em `.changeset/`.
 - Atende: RN-01, RN-15.
-- Pronto quando: o README diz o que os ganchos fazem e como desligá-los com `CLAUDE_KIT_HOOKS_OFF=1`; o roteiro do CLAUDE.md não usa mais remoção recursiva (ou segue a decisão da Dúvida 6); a nota existe com tipo `minor`; o gate passa.
+- Pronto quando: o README diz o que os ganchos fazem e como desligá-los com `CLAUDE_KIT_HOOKS_OFF=1`; o README cita a exceção para a pasta criada pelo `mktemp` no mesmo comando; o roteiro do CLAUDE.md continua igual; a nota existe com tipo `minor`; o gate passa.
 - Teste: nenhum (só texto).
 - Gate: `npm run lint` e `node --test tests/changeset-check-workflow.test.js tests/content.test.js`.
 - Modelo: economico.
@@ -225,14 +229,11 @@ T2, T3 e T4 mexem em fontes do conteúdo sincronizado (`templates/`, `catalog.js
 
 ## Dúvidas
 
-Para o product-owner:
+Nenhuma. Decisões do usuário registradas na aprovação:
 
-1. Ligado por padrão para todos? Um item com `applies: ["all"]` é aplicado a todo projeto que roda a sincronização sem perfil, ou seja, todos os usuários atuais passam a ter as guardas na próxima atualização. Não existe hoje um jeito de entregar o modelo só para quem escolhe um perfil. A proposta é ligar para todos e nos quatro perfis.
-2. A lista de branches protegidas `main`, `master`, `develop` e `production` está certa? Deve incluir outras (como `staging` ou `release/*`) ou ser configurável por projeto (por exemplo, por variável de ambiente)?
-3. Quando o formatador existe mas o projeto não tem arquivo de configuração dele, o arquivo deve ser formatado com o padrão da ferramenta ou deixado como está?
-4. Quando a conferência encontra problemas no arquivo, o agente deve ser avisado (para corrigir em seguida, sem desfazer a edição) ou nada deve ser dito?
-5. Além de `prettier` e `oxlint`, devem entrar outras ferramentas (como `eslint` e `biome`, ou as de PHP para projetos Laravel)?
-
-Para o usuário:
-
-6. O roteiro "Verificar uma mudança" do CLAUDE.md termina apagando a pasta temporária com remoção recursiva, que a guarda vai barrar neste repositório. Prefere tirar a limpeza do roteiro (a pasta temporária fica para o sistema limpar), trocar por outra forma de apagar, ou abrir uma exceção na guarda para pastas temporárias?
+1. O modelo vale para todos os projetos (`applies: ["all"]`) e entra nos quatro perfis.
+2. Branches protegidas: `main`, `master`, `develop` e `production`, em lista fixa.
+3. Sem arquivo de configuração do formatador no projeto, o arquivo não é formatado.
+4. Problemas encontrados pela conferência são avisados ao agente, sem bloquear.
+5. Só `prettier` e `oxlint`.
+6. A guarda deixa passar a remoção recursiva da pasta temporária criada pelo `mktemp` no mesmo comando (RN-08a), e o roteiro "Verificar uma mudança" continua como está.
