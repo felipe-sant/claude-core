@@ -11,6 +11,18 @@
           }
         ]
       }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ \"$CLAUDE_KIT_HOOKS_OFF\" = 1 ] && exit 0; command -v node >/dev/null 2>&1 || exit 0; node -e 'try { const fs = require(\"fs\"); const path = require(\"path\"); const cp = require(\"child_process\"); const input = JSON.parse(fs.readFileSync(0, \"utf8\")); const file = input && input.tool_input && input.tool_input.file_path; if (typeof file !== \"string\" || file === \"\") process.exit(0); const absolute = path.resolve(input.cwd || process.cwd(), file); if (!fs.existsSync(absolute) || !fs.statSync(absolute).isFile()) process.exit(0); if (absolute.split(path.sep).includes(\"node_modules\")) process.exit(0); const LINTABLE = /\\.(js|jsx|mjs|cjs|ts|tsx|mts|cts|vue|svelte|astro)$/; const PRETTIER_CONFIGS = [\".prettierrc\", \".prettierrc.json\", \".prettierrc.yml\", \".prettierrc.yaml\", \".prettierrc.json5\", \".prettierrc.js\", \".prettierrc.cjs\", \".prettierrc.mjs\", \".prettierrc.toml\", \"prettier.config.js\", \"prettier.config.cjs\", \"prettier.config.mjs\", \"prettier.config.ts\"]; const ancestors = []; for (let current = path.dirname(absolute); ; current = path.dirname(current)) { ancestors.push(current); if (path.dirname(current) === current) break; } const findTool = (name) => { for (const current of ancestors) { const candidate = path.join(current, \"node_modules\", \".bin\", name); if (fs.existsSync(candidate)) return { tool: candidate, root: current }; } return null; }; const hasPrettierConfig = (from) => ancestors.slice(ancestors.indexOf(from)).some((current) => { if (PRETTIER_CONFIGS.some((name) => fs.existsSync(path.join(current, name)))) return true; try { return \"prettier\" in JSON.parse(fs.readFileSync(path.join(current, \"package.json\"), \"utf8\")); } catch (e) { return false; } }); const run = (tool, args, cwd) => cp.spawnSync(tool, args, { cwd, encoding: \"utf8\", timeout: 30000, stdio: [\"ignore\", \"pipe\", \"pipe\"] }); const prettier = findTool(\"prettier\"); if (prettier && hasPrettierConfig(prettier.root)) { try { run(prettier.tool, [\"--write\", \"--ignore-unknown\", absolute], prettier.root); } catch (e) { } } const oxlint = LINTABLE.test(absolute) ? findTool(\"oxlint\") : null; if (oxlint) { const result = run(oxlint.tool, [absolute], oxlint.root); const report = ((result.stdout || \"\") + (result.stderr || \"\")).trim(); if (result.status === 1 && report) { process.stderr.write(\"O oxlint encontrou problemas em \" + file + \" (a edição foi mantida, corrija em seguida):\\n\" + report + \"\\n\"); process.exit(2); } } } catch (e) { process.exit(0); }'",
+            "timeout": 30
+          }
+        ]
+      }
     ]
   }
 }
