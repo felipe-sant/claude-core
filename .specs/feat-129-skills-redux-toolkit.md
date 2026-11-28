@@ -1,6 +1,6 @@
 # Skills de estado no cliente: fatia de estado e endpoint de API (Redux Toolkit)
 
-> Status: em-revisao
+> Status: aprovada
 > Tipo: funcionalidade
 > Tamanho: media
 > Branch: feat/129-skills-redux-toolkit
@@ -16,6 +16,8 @@ Estado da aplicação e dados vindos do servidor são onde mais aparece código 
 - RN-02: As duas skills são entregues só aos projetos que usam Redux Toolkit, reconhecidos pelas dependências (o pacote `@reduxjs/toolkit`, em dependências normais ou de desenvolvimento). A stack já existe no catálogo, desde a issue #130. Fonte: issue #129 e issue #130.
 - RN-03: A skill de fatia de estado cobre: o registro da fatia no estado geral da aplicação, os hooks tipados para ler e alterar o estado, seletores estreitos (cada tela lê só o pedaço de que precisa) e o teste feito com o estado geral de verdade. Fonte: issue #129.
 - RN-04: A skill de endpoint de API cobre: os endpoints agrupados e injetados por assunto (domínio), as etiquetas de cache que dizem o que recarregar depois de uma alteração, o uso dos hooks gerados pela biblioteca e o teste com a requisição simulada. Fonte: issue #129.
+- RN-04a: Nas duas skills, os passos com hooks (hooks tipados e hooks gerados do RTK Query) dizem que valem só em projetos com React. As skills não trazem equivalentes sem hooks. Fonte: decisão do usuário.
+- RN-04b: Quando o projeto não tem ferramenta de simulação de requisição, a skill de endpoint lembra o roteiro de "Dependência nova" do padrão de segurança e sugere o MSW, sem instalar nada. Fonte: decisão do usuário.
 - RN-05: As duas skills dizem que, quando o projeto tem uma convenção própria, ela vence a da skill. Fonte: issue #129.
 - RN-06: As duas skills seguem o mesmo formato das skills de stack que já existem: dizem quando usar, o que entregam e os passos, com o teste escrito primeiro. Fonte: padrão das skills atuais do catálogo.
 - RN-07: Projetos que não usam Redux Toolkit continuam recebendo exatamente o mesmo conteúdo de antes. Fonte: issue #130 (projeto que não usa a tecnologia não recebe o conteúdo dela).
@@ -30,6 +32,8 @@ Estado da aplicação e dados vindos do servidor são onde mais aparece código 
 - CA-05: QUANDO alguém abre a skill de fatia de estado ENTÃO ela DEVE dizer quando usá-la, o que entrega e trazer passos que cubram registro no estado geral, hooks tipados, seletores estreitos e teste com o estado geral de verdade, com o teste escrito primeiro. (RN-03, RN-06)
 - CA-06: QUANDO alguém abre a skill de endpoint de API ENTÃO ela DEVE dizer quando usá-la, o que entrega e trazer passos que cubram endpoints injetados por assunto, etiquetas de cache, hooks gerados e teste com a requisição simulada, com o teste escrito primeiro. (RN-04, RN-06)
 - CA-07: QUANDO alguém abre qualquer uma das duas skills ENTÃO ela DEVE dizer, com a mesma frase nas duas, que a convenção própria do projeto vence a da skill. (RN-05)
+- CA-07a: QUANDO alguém abre qualquer uma das duas skills ENTÃO os passos com hooks DEVEM dizer que valem só com React, e a skill NÃO DEVE trazer equivalentes sem hooks. (RN-04a)
+- CA-07b: QUANDO alguém abre a skill de endpoint e o projeto não tem ferramenta de simulação de requisição ENTÃO a skill DEVE lembrar o roteiro de "Dependência nova" e sugerir o MSW, sem mandar instalar nada por conta própria. (RN-04b)
 - CA-08: QUANDO a checagem de formato do conteúdo e a checagem do catálogo rodam ENTÃO elas DEVEM passar sem erro com as duas skills novas registradas. (RN-06)
 - CA-09: QUANDO a pessoa edita no projeto uma das skills novas e sincroniza de novo ENTÃO a sincronização NÃO DEVE sobrescrever a edição, como já acontece com as outras skills. (RN-07)
 
@@ -60,14 +64,14 @@ Estado da aplicação e dados vindos do servidor são onde mais aparece código 
 ### T1 [P] Escrever a skill de fatia de estado
 - O quê: criar a skill `redux-slice`, que guia a criação de uma fatia de estado com Redux Toolkit.
 - Onde: `stacks/redux-toolkit/skills/redux-slice/SKILL.md` (pasta nova).
-- Dev: dev-frontend-1.
+- Dev: dev-frontend-3.
 - Depende de: nada.
 - Reaproveita: o formato de `stacks/react/skills/react-component/SKILL.md` (cabeçalho com `name` e `description`, título, linha `Entrega:`, seção `## Passos` numerada, último passo rodando lint, teste e checagem de tipos do projeto).
-- Atende: RN-01, RN-03, RN-05, RN-06, CA-05, CA-07.
+- Atende: RN-01, RN-03, RN-04a, RN-05, RN-06, CA-05, CA-07, CA-07a.
 - Pronto quando:
   - o cabeçalho tem `name: redux-slice` (igual ao nome da pasta) e uma `description` de até 1024 caracteres que contém "Use quando";
   - o texto tem a linha `Entrega:` (a fatia registrada no estado geral, os hooks e seletores e o teste);
-  - os passos cobrem, nesta ordem: olhar fatias parecidas e seguir a estrutura do projeto; definir o formato do estado e as ações; escrever primeiro o teste com o estado geral de verdade (montado como na aplicação, não com dublê) e vê-lo falhar; criar a fatia com `createSlice`; registrá-la no estado geral; usar os hooks tipados do projeto (ou criá-los, se não existirem) em vez dos hooks sem tipo; criar seletores estreitos, que devolvem só o pedaço usado pela tela; rodar lint, teste e checagem de tipos;
+  - os passos cobrem, nesta ordem: olhar fatias parecidas e seguir a estrutura do projeto; definir o formato do estado e as ações; escrever primeiro o teste com o estado geral de verdade (montado como na aplicação, não com dublê) e vê-lo falhar; criar a fatia com `createSlice`; registrá-la no estado geral; usar os hooks tipados do projeto (ou criá-los, se não existirem) em vez dos hooks sem tipo, dizendo que este passo vale só com React; criar seletores estreitos, que devolvem só o pedaço usado pela tela; rodar lint, teste e checagem de tipos;
   - o texto contém exatamente a frase `Se o projeto já tem uma convenção própria, ela vence esta skill.`;
   - nenhum código de exemplo tem comentário;
   - o gate passa.
@@ -80,14 +84,14 @@ Estado da aplicação e dados vindos do servidor são onde mais aparece código 
 ### T2 [P] Escrever a skill de endpoint de API com RTK Query
 - O quê: criar a skill `rtk-query-endpoint`, que guia a criação de endpoints de API com RTK Query.
 - Onde: `stacks/redux-toolkit/skills/rtk-query-endpoint/SKILL.md` (pasta nova).
-- Dev: dev-frontend-2.
+- Dev: dev-frontend-3.
 - Depende de: nada.
 - Reaproveita: o mesmo formato de `stacks/react/skills/react-component/SKILL.md` e de `stacks/nestjs/skills/nestjs-module/SKILL.md`.
-- Atende: RN-01, RN-04, RN-05, RN-06, CA-06, CA-07.
+- Atende: RN-01, RN-04, RN-04a, RN-04b, RN-05, RN-06, CA-06, CA-07, CA-07a, CA-07b.
 - Pronto quando:
   - o cabeçalho tem `name: rtk-query-endpoint` (igual ao nome da pasta) e uma `description` de até 1024 caracteres que contém "Use quando";
   - o texto tem a linha `Entrega:` (os endpoints injetados, as etiquetas de cache, o uso dos hooks gerados e o teste);
-  - os passos cobrem, nesta ordem: achar a API base do projeto e os arquivos de endpoints por assunto e seguir a estrutura deles; definir o contrato (rotas, entradas, saídas e erros); escrever primeiro o teste com a requisição simulada, usando a ferramenta de simulação que o projeto já tem, e vê-lo falhar; criar os endpoints em um arquivo do assunto com `injectEndpoints`, sem crescer a API base; declarar as etiquetas de cache (`providesTags` nas consultas e `invalidatesTags` nas alterações); usar nas telas os hooks gerados pela biblioteca, sem chamada manual de requisição; rodar lint, teste e checagem de tipos;
+  - os passos cobrem, nesta ordem: achar a API base do projeto e os arquivos de endpoints por assunto e seguir a estrutura deles; definir o contrato (rotas, entradas, saídas e erros); escrever primeiro o teste com a requisição simulada, usando a ferramenta de simulação que o projeto já tem (se não houver, lembrar o roteiro de "Dependência nova" e sugerir o MSW, sem instalar nada), e vê-lo falhar; criar os endpoints em um arquivo do assunto com `injectEndpoints`, sem crescer a API base; declarar as etiquetas de cache (`providesTags` nas consultas e `invalidatesTags` nas alterações); usar nas telas os hooks gerados pela biblioteca, sem chamada manual de requisição, dizendo que este passo vale só com React; rodar lint, teste e checagem de tipos;
   - o texto contém exatamente a frase `Se o projeto já tem uma convenção própria, ela vence esta skill.`;
   - nenhum código de exemplo tem comentário;
   - o gate passa.
@@ -100,10 +104,10 @@ Estado da aplicação e dados vindos do servidor são onde mais aparece código 
 ### T3 Registrar as duas skills no catálogo e cobrir com testes
 - O quê: registrar `redux-slice` e `rtk-query-endpoint` no catálogo com `applies` `["redux-toolkit"]`, testar detecção, instalação e formato, e criar a nota de mudança minor.
 - Onde: `catalog.json` (seção `skills`), `tests/standards.test.js`, nova nota em `.changeset/` (nome livre, por exemplo `feat-129-skills-redux-toolkit.md`).
-- Dev: dev-frontend-1.
+- Dev: dev-frontend-3.
 - Depende de: T1 e T2 (commitadas).
 - Reaproveita: as entradas de skill de stack do catálogo (`react-component`, `nestjs-module`); em `tests/standards.test.js`, os objetos `projects`, `stackRules` e `stackSkills`, os laços "recebe os padrões gerais e só os de" e "recebe as skills gerais e só as da própria stack", o teste "projeto com React e NestJS recebe as skills das duas stacks", o teste "cada skill do catálogo diz quando usar e o que entrega" e o teste "skill editada no projeto não é sobrescrita"; a nota `.changeset/feat-128-skill-qa-exploratorio.md` como modelo.
-- Atende: RN-01, RN-02, RN-05, RN-06, RN-07, RN-08, CA-01, CA-02, CA-03, CA-04, CA-07, CA-08, CA-09.
+- Atende: RN-01, RN-02, RN-04a, RN-04b, RN-05, RN-06, RN-07, RN-08, CA-01, CA-02, CA-03, CA-04, CA-07, CA-07a, CA-07b, CA-08, CA-09.
 - Pronto quando:
   - o catálogo tem as duas entradas, com `path` `stacks/redux-toolkit/skills/<nome>`, `applies` `["redux-toolkit"]` e `description` curta em português;
   - em `tests/standards.test.js`: `projects` ganha `redux-toolkit` com `@reduxjs/toolkit` nas dependências normais; `stackRules` ganha `redux-toolkit: []` (sem isso o laço de regras quebra com erro de tipo, e não pelo motivo certo); `stackSkills` ganha `redux-toolkit: ['redux-slice', 'rtk-query-endpoint']`. Com isso os laços existentes cobrem CA-01 (inclusive a linha "Stacks detectadas: redux-toolkit") e CA-04 para as outras stacks;
@@ -111,6 +115,7 @@ Estado da aplicação e dados vindos do servidor são onde mais aparece código 
   - há um teste para CA-03 com o catálogo real (React e Redux Toolkit no mesmo projeto recebem exatamente as skills gerais, as três de React e as duas novas);
   - há um teste para CA-04 com o pacote `redux` sem o Toolkit (não recebe as skills novas);
   - há um teste para CA-07: toda skill do catálogo com `applies` `redux-toolkit` contém a frase `Se o projeto já tem uma convenção própria, ela vence esta skill.`;
+  - há um teste de conteúdo para CA-07a e CA-07b: as duas skills dizem que os passos com hooks valem só com React, e a de endpoint cita o roteiro de "Dependência nova" e o MSW;
   - CA-08 fica coberto pelo teste existente "cada skill do catálogo diz quando usar e o que entrega", pelo teste de formato do repositório em `tests/content.test.js` e pelo `--check`; CA-09 fica coberto pelo teste existente de skill editada, que vale para qualquer skill;
   - o teste "projeto só com Vitest recebe só os padrões gerais" segue passando sem mudança;
   - a nota existe com o cabeçalho `"@felipe-sant/claude-kit": minor` e uma ou duas linhas em português simples;
@@ -124,10 +129,9 @@ Estado da aplicação e dados vindos do servidor são onde mais aparece código 
 
 ## Dúvidas
 
-Do product-owner:
+Nenhuma. Decisões do usuário registradas na aprovação:
 
-- D-PO-1: Redux Toolkit pode ser usado sem React, mas os hooks tipados e os hooks gerados do RTK Query são de React. Em um projeto com Redux Toolkit sem React, as skills devem (a) dizer para usar os equivalentes sem hooks (seletores e chamadas diretas ao estado geral), (b) dizer que esses passos valem só com React, ou (c) ser entregues só a projetos que usam React e Redux Toolkit juntos? Sugestão para não bloquear: (b), que não muda a detecção.
-
-Do usuário:
-
-- D-US-1: Quando o projeto não tem nenhuma ferramenta de simulação de requisição, a skill de endpoint deve recomendar uma (por exemplo, MSW, que exige dependência nova e passa pelo roteiro de dependência nova) ou só pedir para a pessoa escolher? Sugestão: recomendar MSW e lembrar o roteiro de dependência nova.
+- As skills se chamam `redux-slice` e `rtk-query-endpoint`.
+- D-PO-1: opção (b). Os passos com hooks valem só com React, e as skills não trazem equivalentes sem hooks (RN-04a).
+- D-US-1: sem ferramenta de simulação de requisição, a skill de endpoint lembra o roteiro de "Dependência nova" e sugere o MSW, sem instalar nada (RN-04b).
+- O dev-frontend-3 é o único dev da issue, então as tarefas ficam com ele.
