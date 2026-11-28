@@ -212,6 +212,7 @@ test('projeto só com Vitest recebe a stack e a skill de testes', () => {
   const output = sync(target)
 
   assert.match(output, /Stacks detectadas: vitest$/m)
+  assert.deepEqual(rulesOf(target), [...general].sort())
   assert.deepEqual(skillsOf(target), [...generalSkills, testingSkill].sort())
 })
 
@@ -234,6 +235,14 @@ for (const dependency of ['@testing-library/user-event', '@testing-library/jest-
     assert.deepEqual(skillsOf(target), [...generalSkills].sort())
   })
 }
+
+test('projeto só com user-event e jest-dom juntos não recebe a skill de testes', () => {
+  const target = h.makeTarget(packageJson({ '@testing-library/user-event': '14', '@testing-library/jest-dom': '6' }))
+  const output = sync(target)
+
+  assert.match(output, /Stacks detectadas: nenhuma$/m)
+  assert.deepEqual(skillsOf(target), [...generalSkills].sort())
+})
 
 test('projeto com Vitest e Testing Library recebe as duas stacks e a skill de testes uma única vez', () => {
   const target = h.makeTarget(packageJson({ vitest: '2', '@testing-library/react': '16' }))
