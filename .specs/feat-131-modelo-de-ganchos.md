@@ -23,9 +23,10 @@ Para isso, a sincronização passa a saber mesclar listas de ganchos: acrescenta
 - RN-04: Ao barrar, a guarda impede o comando e explica em português o que foi barrado e por quê, para o agente entender e mudar de rumo. Fonte: issue #131.
 - RN-05: Commit direto em branch protegida é barrado. As branches protegidas são `main`, `master`, `develop` e `production` (lista fixa). Fonte: issue #131, pedido da orchestrator e decisão do usuário.
 - RN-06: Envio (push) para branch protegida é barrado, seja nomeando a branch de destino, seja enviando sem nomear o destino enquanto se está nela. Apagar uma branch protegida no servidor também é barrado. Fonte: issue #131.
+- RN-06a: Enviar todas as branches de uma vez (opções `--all` e `--mirror`) é barrado quando a pasta está numa branch protegida, e deixado passar quando está numa branch de tarefa. Fonte: decisão do usuário na revisão.
 - RN-07: Envio forçado é barrado em qualquer branch, nas suas várias formas (forçado, forçado com proteção e o destino marcado com sinal de mais). Fonte: issue #131.
 - RN-08: Remoção recursiva de arquivos é barrada em qualquer pasta, nas suas várias formas de escrever a opção. Fonte: issue #131.
-- RN-08a: Exceção à RN-08: a remoção recursiva de uma pasta temporária criada pelo `mktemp` no mesmo comando é deixada passar, para que o roteiro "Verificar uma mudança" do repositório continue funcionando. Fonte: decisão do usuário.
+- RN-08a: Exceção à RN-08: a remoção recursiva de uma pasta temporária criada pelo `mktemp` no mesmo comando é deixada passar, para que o roteiro "Verificar uma mudança" do repositório continue funcionando. A exceção só vale quando a variável recebeu o resultado do `mktemp` antes da remoção e não foi usada de outro jeito no caminho até ela. Fonte: decisão do usuário e revisão.
 - RN-09: A branch conferida é a da pasta onde o comando vai rodar de fato: se o comando entra antes em outra pasta, vale a branch dessa pasta. Isso é o que permite aos agentes commitarem nas worktrees das tarefas enquanto a pasta principal está na `main`. Fonte: fluxo do time (CLAUDE.md, worktrees por tarefa).
 - RN-10: Depois de cada edição ou criação de arquivo pelo agente, o arquivo é formatado e conferido com as ferramentas do projeto que já estão instaladas nele. Se o projeto não tem nenhuma, nada acontece e nada falha. Se o projeto não tem o arquivo de configuração do formatador, o arquivo não é formatado. Problemas encontrados pela conferência são avisados ao agente, sem bloquear. As ferramentas são só `prettier` e `oxlint`. A etapa nunca desfaz nem impede a edição. Fonte: issue #131 e decisão do usuário.
 - RN-11: A sincronização preserva os ganchos que o projeto já tem: os do kit são acrescentados ao lado, sem alterar, reordenar nem apagar os do dono. Fonte: issue #131 e garantia do kit de nunca sobrescrever o que é do usuário (CLAUDE.md).
@@ -43,6 +44,7 @@ Guarda de comandos (exemplos de comando entre crases são o texto que o agente p
 - CA-03: QUANDO o agente, a partir de uma pasta na `main`, pede `cd <worktree> && git commit ...` ou `git -C <worktree> commit ...` e a worktree está numa branch de tarefa ENTÃO o sistema DEVE deixar passar; e QUANDO a pasta de destino está numa branch protegida ENTÃO DEVE barrar. Cobre RN-09.
 - CA-04: QUANDO a pasta de destino não pode ser descoberta com segurança (nome vindo de variável, subcomando ou pasta inexistente) ENTÃO o sistema DEVE deixar passar. Cobre RN-03, RN-09.
 - CA-05: QUANDO o agente pede `git push origin main`, `git push origin HEAD:main`, `git push origin feat/x:main`, `git push origin :main` ou `git push origin --delete main` ENTÃO o sistema DEVE barrar, valendo o mesmo para as outras branches protegidas. Cobre RN-04, RN-06.
+- CA-05a: QUANDO o agente pede `git push --all`, `git push --mirror`, `git push --all origin` ou `git push origin --mirror` numa pasta em branch protegida ENTÃO o sistema DEVE barrar; e QUANDO a pasta está numa branch de tarefa ENTÃO DEVE deixar passar. Cobre RN-04, RN-06a.
 - CA-06: QUANDO o agente pede `git push` ou `git push origin` sem nomear destino e a pasta está numa branch protegida ENTÃO o sistema DEVE barrar; e QUANDO está numa branch de tarefa ENTÃO DEVE deixar passar. Cobre RN-06.
 - CA-07: QUANDO o agente pede `git push -u origin feat/1-x` (inclusive estando na `main`) ENTÃO o sistema DEVE deixar passar. Cobre RN-03, RN-06.
 - CA-08: QUANDO o agente pede um envio com `--force`, `-f`, `--force-with-lease`, `--force-if-includes`, `-f` dentro de um grupo de opções curtas (como `-uf`) ou um destino começando com `+` (como `+feat/x`) ENTÃO o sistema DEVE barrar, em qualquer branch. Cobre RN-04, RN-07.
@@ -50,8 +52,10 @@ Guarda de comandos (exemplos de comando entre crases são o texto que o agente p
 - CA-10: QUANDO o agente pede `rm arquivo.txt` ou `rm -f arquivo.txt` ENTÃO o sistema DEVE deixar passar. Cobre RN-03, RN-08.
 - CA-10a: QUANDO o agente pede um comando que cria a pasta temporária com `mktemp -d`, guarda o nome numa variável e depois a remove recursivamente pela mesma variável, como `T=$(mktemp -d) && node bin/ai-sync.js "$T" && ls -R "$T/.claude"; rm -rf "$T"` ENTÃO o sistema DEVE deixar passar. Cobre RN-08a.
 - CA-10b: QUANDO a remoção recursiva usa uma variável que não foi criada pelo `mktemp -d` no mesmo comando (por exemplo `rm -rf "$T"` sozinho, ou `T=build; rm -rf "$T"`), ou mistura a pasta temporária com outro alvo (`T=$(mktemp -d); rm -rf "$T" src`) ENTÃO o sistema DEVE barrar. Cobre RN-08, RN-08a.
+- CA-10c: QUANDO a variável recebe um caminho que sai da pasta temporária (`T=$(mktemp -d)/../..`), a remoção vem antes da atribuição, ou a variável é redefinida por um laço (`for T in /`) ENTÃO o sistema DEVE barrar. Cobre RN-08, RN-08a.
 - CA-11: QUANDO o comando proibido aparece encadeado depois de outro (`npm test && git push --force`, `ls; rm -rf x`, `true || git commit -m x` na `main`) ENTÃO o sistema DEVE barrar. Cobre RN-05 a RN-08.
 - CA-12: QUANDO o texto proibido aparece só dentro de uma mensagem ou de um argumento entre aspas (por exemplo `git commit -m "explica o rm -rf"` numa branch de tarefa, ou `echo "git push --force"`) ENTÃO o sistema DEVE deixar passar. Cobre RN-03.
+- CA-12a: QUANDO o comando tem redirecionamento de saída ou de entrada (por exemplo `git push --all 2>&1`, `git status > saida.txt`) ENTÃO o sistema DEVE ignorar o redirecionamento ao decidir, sem tratá-lo como destino do envio nem como alvo, e um comando liberado continua liberado. Cobre RN-03, RN-06.
 - CA-13: QUANDO a entrada recebida pelo gancho não é legível, o comando está vazio, a pasta não tem git, o git não está instalado ou o Node não está instalado ENTÃO o sistema DEVE deixar passar, sem mensagem de erro. Cobre RN-02, RN-03.
 - CA-14: QUANDO o agente pede qualquer comando que não esteja na lista acima (por exemplo `npm test`, `git status`, `git worktree remove ../x`) ENTÃO o sistema DEVE deixar passar. Cobre RN-03.
 - CA-15: QUANDO a variável `CLAUDE_KIT_HOOKS_OFF` vale `1` ENTÃO o sistema DEVE deixar passar todos os comandos e não formatar nem conferir arquivos; isso vale com a variável no terminal e com a variável na configuração local do Claude (esta forma é conferida na prática na tarefa de registro). Cobre RN-15.
@@ -76,6 +80,7 @@ Sincronização:
 - CA-28: QUANDO os ganchos do projeto estão num formato que a sincronização não entende (por exemplo, não são uma lista) ENTÃO ela NÃO DEVE mexer neles e DEVE listar os do kit como sugeridos. Cobre RN-11.
 - CA-29: QUANDO dois modelos do kit trazem ganchos para o mesmo momento ENTÃO a sincronização DEVE juntar as listas, sem que um modelo apague os ganchos do outro. Cobre RN-11.
 - CA-30: QUANDO as demais configurações (as que não são ganchos) são sincronizadas ENTÃO DEVEM se comportar exatamente como antes. Cobre RN-11.
+- CA-31: QUANDO o dono deixou uma lista de ganchos vazia num momento, ou o grupo de ganchos vazio ENTÃO a sincronização NÃO DEVE apagá-los ao gravar a configuração; só apaga a chave vazia que ela mesma criou. Cobre RN-11.
 
 ## Critérios de sucesso
 
@@ -92,6 +97,14 @@ Sincronização:
 - Exceção para remoção recursiva de outras pastas temporárias que não as criadas pelo `mktemp` no mesmo comando.
 - Mudar as permissões do Claude ou as listas de comandos permitidos das automações de issues.
 - Escrever os ganchos em arquivos separados do projeto: a issue pede que não dependam de arquivos do projeto.
+
+**Limites conhecidos** (aceitos nesta entrega, registrados na revisão):
+
+- A guarda pode ser contornada por quem escreve o comando de outro jeito: `/bin/rm` ou outro caminho completo, `bash -c "..."`, `sh -c`, `eval`, apelidos (aliases) do git e texto vindo de heredoc não são analisados.
+- `pushd` não é acompanhado como troca de pasta, só `cd` e `git -C`.
+- A conferência usa o `oxlint` instalado no `node_modules` do projeto; se ele estiver só instalado globalmente, não roda.
+- Quando o kit traz um gancho novo para uma ferramenta que já tinha um gancho antigo do kit alterado ou apagado pelo dono, o novo vai para "sugerido" e não é aplicado (RN-14).
+- A lista de branches protegidas é fixa.
 
 ## Desenho
 
@@ -157,6 +170,10 @@ O projeto não tem typecheck nem formatador; os gates usam o lint e os testes.
   - Gate de fase: `npm run lint`, `npm test` e `node bin/ai-sync.js --check`.
 - Fase 3 (sequencial): T4, que só começa depois dos commits de T1 e T3.
   - Gate de fase: `npm run lint`, `npm test`, `node bin/ai-sync.js --check`, `npm pack --dry-run` (o modelo novo entra no pacote) e o `ai-sync` numa pasta temporária, conferindo o `.claude/settings.json` gerado. Depois, o reviewer.
+- Fase 4 (correções da revisão, sequencial): T6 → T7 → T9 mexem no modelo de ganchos (fonte sincronizada) e foram commitadas em ordem; T8 mexe só na sincronização.
+  - Gate de fase: `npm run lint`, `npm test` (726/726 no último commit), `node bin/ai-sync.js --check`. Depois, nova revisão.
+
+**Não conferido numa sessão real do Claude** (pendente): a desativação pela configuração local (parte de CA-15, pedida em T4) e o aviso do `oxlint` chegando ao agente (CA-17, testado só com ferramenta falsa em T3).
 
 T2, T3 e T4 mexem em fontes do conteúdo sincronizado (`templates/`, `catalog.json`, `profiles/`) e por isso não rodam em paralelo entre si: a próxima só começa depois do commit da anterior. T1 (sincronização) e T5 (documentação e nota de mudança) não mexem nessas fontes.
 
@@ -227,6 +244,50 @@ T2, T3 e T4 mexem em fontes do conteúdo sincronizado (`templates/`, `catalog.js
 - Modelo: economico.
 - Status: feita (commit 8adab3a; README, linha de templates no CLAUDE.md e nota de mudança minor; gate ok: lint e testes de changeset e conteúdo).
 
+### T6 Guarda ignora redirecionamentos (correção da revisão)
+
+- O quê: a guarda deixa de tratar redirecionamentos como destino do envio ou alvo da remoção.
+- Onde: `templates/settings.hooks.json`, `tests/hooks-guard.test.js`, `.claude/` regenerado.
+- Depende de: T4.
+- Atende: RN-03, RN-06; CA-12a.
+- Teste: integração; 6 testes falharam antes.
+- Gate: `node --test tests/hooks-guard.test.js`, `npm test` e `npm run lint`.
+- Modelo: padrao.
+- Status: feita (commit 6d9d127; vermelho em 6 testes; gate ok: 716/716 testes).
+
+### T7 Exceção do mktemp mais estrita (correção da revisão)
+
+- O quê: a exceção só vale para a variável que recebeu `$(mktemp ...)` antes da remoção, sem outro uso no caminho.
+- Onde: `templates/settings.hooks.json`, `tests/hooks-guard.test.js`, `.claude/` regenerado.
+- Depende de: T6.
+- Atende: RN-08, RN-08a; CA-10a, CA-10b, CA-10c.
+- Teste: integração; falharam antes os casos `T=$(mktemp -d)/../..`, remoção antes da atribuição e `for T in /`.
+- Gate: `node --test tests/hooks-guard.test.js`, `npm test` e `npm run lint`.
+- Modelo: padrao.
+- Status: feita (commit 9c2cf61; vermelho nos três casos citados; gate ok: 716/716 testes).
+
+### T8 Sincronização só apaga a chave vazia que ela criou (correção da revisão)
+
+- O quê: ao gravar a configuração, a sincronização não apaga lista ou grupo de ganchos vazio deixado pelo dono.
+- Onde: `bin/ai-sync.js`, `tests/settings.test.js`.
+- Depende de: T1.
+- Atende: RN-11; CA-31.
+- Teste: integração; 2 testes falharam antes.
+- Gate: `node --test tests/settings.test.js`, `npm test` e `npm run lint`.
+- Modelo: padrao.
+- Status: feita (commit 39e8d9c; vermelho em 2 testes; gate ok: 718/718 testes).
+
+### T9 Barrar envio de todas as branches a partir de branch protegida (decisão do usuário na revisão)
+
+- O quê: a guarda passa a barrar `git push --all` e `git push --mirror` quando a pasta está numa branch protegida.
+- Onde: `templates/settings.hooks.json`, `tests/hooks-guard.test.js`, `.claude/` regenerado.
+- Depende de: T7.
+- Atende: RN-04, RN-06a; CA-05a.
+- Teste: integração; 4 testes falharam antes.
+- Gate: `node --test tests/hooks-guard.test.js`, `npm test` e `npm run lint`.
+- Modelo: padrao.
+- Status: feita (commit fc0a8ca; vermelho em 4 testes; gate ok: 726/726 testes).
+
 ## Dúvidas
 
 Nenhuma. Decisões do usuário registradas na aprovação:
@@ -237,3 +298,4 @@ Nenhuma. Decisões do usuário registradas na aprovação:
 4. Problemas encontrados pela conferência são avisados ao agente, sem bloquear.
 5. Só `prettier` e `oxlint`.
 6. A guarda deixa passar a remoção recursiva da pasta temporária criada pelo `mktemp` no mesmo comando (RN-08a), e o roteiro "Verificar uma mudança" continua como está.
+7. Na revisão: a guarda também barra `git push --all` e `git push --mirror` a partir de branch protegida (RN-06a).
