@@ -1,6 +1,6 @@
 # Detectar stacks por tecnologia, não só por framework
 
-> Status: em-andamento
+> Status: implementada (código aprovado pelo reviewer, sem achado bloqueante)
 > Tipo: funcionalidade
 > Tamanho: media
 > Branch: feat/130-detectar-stacks-por-tecnologia
@@ -13,13 +13,13 @@ Hoje a sincronização reconhece o projeto pelo framework (React, NestJS, Larave
 ## Regras
 
 - RN-01: O catálogo passa a ter três stacks novas: `vitest`, `playwright` e `redux-toolkit`, cada uma com a sua regra de detecção pelos pacotes do projeto. Fonte: issue #130.
-- RN-02: Pacotes que identificam cada stack: Vitest pelo pacote `vitest`; Playwright pelo pacote `@playwright/test` ou pelo pacote `playwright`; Redux Toolkit pelo pacote `@reduxjs/toolkit`. Fonte: issue #130 (pacotes sugeridos).
+- RN-02: Pacotes que identificam cada stack: Vitest pelo pacote `vitest`; Playwright pelo pacote `@playwright/test` ou pelo pacote `playwright`; Redux Toolkit pelo pacote `@reduxjs/toolkit`. Fonte: issue #130 (pacotes sugeridos) e decisão do usuário.
 - RN-03: A detecção vale tanto para dependências normais quanto para dependências de desenvolvimento. Fonte: issue #130.
 - RN-04: Um projeto pode ser reconhecido por várias stacks ao mesmo tempo e recebe o conteúdo de todas elas. Fonte: issue #130.
 - RN-05: Projeto que não usa a tecnologia não recebe o conteúdo dela. Fonte: issue #130.
 - RN-06: A checagem do catálogo continua reprovando qualquer item que cite uma stack que não está registrada. Fonte: issue #130.
 - RN-07: Esta tarefa não cria regras nem skills para as três stacks, e não mexe em TypeScript nem em tradução. Fonte: issue #130.
-- RN-08: Comportamento atual, mantido: uma stack sem nenhum conteúdo no catálogo não aparece como detectada. Fonte: código atual e teste existente "stack sem conteúdo no catálogo não é detectada". Ver a dúvida D-PO-1.
+- RN-08: Comportamento atual, mantido: uma stack sem nenhum conteúdo no catálogo não aparece como detectada. Fonte: código atual, teste existente "stack sem conteúdo no catálogo não é detectada" e decisão do usuário (opção a de D-PO-1).
 
 ## Critérios de aceite
 
@@ -32,7 +32,7 @@ Hoje a sincronização reconhece o projeto pelo framework (React, NestJS, Larave
 - CA-07: QUANDO um projeto usa só uma das três tecnologias ENTÃO ele NÃO DEVE receber o conteúdo das outras duas. (RN-05)
 - CA-08: QUANDO o catálogo real passa pela checagem ENTÃO ela DEVE terminar sem erro. (RN-01, RN-06)
 - CA-09: QUANDO um item do catálogo cita uma stack que não está registrada ENTÃO a checagem DEVE reprovar e dizer qual stack falta. (RN-06)
-- CA-10: QUANDO um projeto real usa só o Vitest, enquanto as três stacks ainda não têm conteúdo ENTÃO a sincronização DEVE entregar só o conteúdo geral, como hoje. (RN-07, RN-08; muda se a resposta de D-PO-1 for a opção b)
+- CA-10: QUANDO um projeto real usa só o Vitest, enquanto as três stacks ainda não têm conteúdo ENTÃO a sincronização DEVE entregar só o conteúdo geral, como hoje. (RN-07, RN-08)
 - CA-11: QUANDO um projeto que já era reconhecido (React, NestJS, Laravel, AdonisJS, TypeScript, tradução) é sincronizado ENTÃO ele DEVE receber exatamente o mesmo conteúdo de antes. (RN-07)
 
 ## Critérios de sucesso
@@ -45,7 +45,7 @@ Hoje a sincronização reconhece o projeto pelo framework (React, NestJS, Larave
 
 - Regras e skills de Vitest, Playwright e Redux Toolkit: virão em outras issues (RN-07).
 - Mudanças nas stacks de TypeScript e de tradução (RN-07).
-- Mudar a regra de que stack sem conteúdo não aparece como detectada, salvo se o product-owner escolher a opção b de D-PO-1.
+- Mudar a regra de que stack sem conteúdo não aparece como detectada: o usuário escolheu manter (opção a de D-PO-1).
 - Atualizar o README: ele não lista as stacks uma a uma.
 
 ## Plano de execução
@@ -85,11 +85,8 @@ Hoje a sincronização reconhece o projeto pelo framework (React, NestJS, Larave
 
 ## Dúvidas
 
-Do product-owner:
-- D-PO-1 (bloqueia o que dá para aceitar): hoje uma stack sem nenhum conteúdo no catálogo não aparece como detectada, e há um teste que garante isso. Como esta tarefa registra as três stacks sem conteúdo, um projeto real com Vitest continuará vendo "Stacks detectadas: nenhuma" até a issue do conteúdo. Opções:
-  - a) Manter como está (base desta especificação). A detecção das stacks novas só fica visível no projeto real quando o conteúdo chegar; nesta tarefa ela é provada com catálogo de teste.
-  - b) Mostrar como detectada também a stack sem conteúdo. Muda o comportamento atual, exige uma tarefa de código no `ai-sync` e a troca do teste existente, e faz o aviso "Nenhuma stack reconhecida" sumir em projetos que só têm essas tecnologias, mesmo sem receber nada a mais.
-- D-PO-2: os pacotes sugeridos na issue bastam? Por exemplo, o Redux Toolkit é reconhecido só por `@reduxjs/toolkit`; projetos com o pacote `redux` puro ficam de fora.
+Nenhuma. Decisões do usuário registradas na aprovação:
 
-Do usuário:
-- D-US-1: é aceitável registrar no catálogo stacks que ainda não têm conteúdo? A checagem do catálogo aceita isso hoje, mas o registro fica sem efeito visível até as próximas issues.
+- D-PO-1: opção a. A sincronização não muda, e um projeto real continua vendo "nenhuma stack" até as skills e regras dessas stacks existirem.
+- D-PO-2: os pacotes são `vitest`, `@playwright/test`, `playwright` e `@reduxjs/toolkit`, e o pacote `redux` puro fica de fora.
+- D-US-1: registrar no catálogo stacks ainda sem conteúdo é aceito.
