@@ -1,6 +1,6 @@
 # Skills de estado no cliente: fatia de estado e endpoint de API (Redux Toolkit)
 
-> Status: em-andamento
+> Status: implementada (código aprovado pelo reviewer, sem achado bloqueante; T4, pedida pelo reviewer, em andamento)
 > Tipo: funcionalidade
 > Tamanho: media
 > Branch: feat/129-skills-redux-toolkit
@@ -57,6 +57,8 @@ Estado da aplicação e dados vindos do servidor são onde mais aparece código 
 - Gate de fase 1: `npm run lint`, `npm test` e `node bin/ai-sync.js --check`, uma vez ao fim da fase.
 - Fase 2 (sequencial): T3, depois do commit de T1 e de T2 (o registro no catálogo exige que as pastas das skills existam).
 - Gate de fase 2: `npm run lint`, `npm test`, `node bin/ai-sync.js --check` e `npm pack --dry-run` (confirma que as duas skills vão no pacote), uma vez ao fim da fase e antes do reviewer.
+- Fase 3 (pedido do reviewer na revisão, sequencial): T4.
+- Gate de fase 3: `npm run lint`, `npm test` e `node bin/ai-sync.js --check`.
 - O projeto não tem typecheck, build nem formatador: é JavaScript puro, sem TypeScript, e o lint é o oxlint mais a checagem de formato do conteúdo. Por isso os gates não têm typecheck nem checagem de formatação.
 
 ## Tarefas
@@ -126,6 +128,20 @@ Estado da aplicação e dados vindos do servidor são onde mais aparece código 
 - Commit: `Feat :sparkles: [#129] Registra as skills de Redux Toolkit no catálogo`, com os caminhos explícitos (catálogo, teste e nota). O catálogo é fonte sincronizada: antes de commitar, rode `npm run sync` e inclua nos caminhos os arquivos de `.claude/` que mudarem (provavelmente nenhum, já que o perfil `tooling` não usa essa stack). O hook recusa o commit por caminhos sem eles.
 - Modelo: padrao.
 - Status: feita (commit a7b97e3; catálogo, testes com 5 falhas antes e nota de mudança minor; gate ok: lint, 746 testes, --check, npm pack lista as duas skills).
+
+### T4 Testes de conteúdo de CA-07a e CA-07b e conferência das stacks detectadas (pedido do reviewer)
+- O quê: acrescentar os testes de conteúdo que provam CA-07a e CA-07b e conferir a linha "Stacks detectadas" nos testes de entrega das skills.
+- Onde: `tests/standards.test.js`.
+- Dev: dev-frontend-3.
+- Depende de: T3.
+- Reaproveita: os testes de conteúdo e de entrega criados em T3.
+- Atende: RN-04a, RN-04b, RN-08; CA-01, CA-07a, CA-07b.
+- Pronto quando: há teste que confere nas duas skills que os passos com hooks valem só com React; há teste que confere na skill de endpoint o roteiro de "Dependência nova" e o MSW; os testes de entrega conferem "Stacks detectadas: redux-toolkit"; o gate passa.
+- Teste: unitário de conteúdo e integração. Como as skills já existem, os testes podem passar de primeira: para provar que não passam por acaso, retire de propósito o trecho conferido da skill, confira que falha e desfaça.
+- Gate: `npm run lint`, `npm test` e `node bin/ai-sync.js --check`. Sem typecheck nem formatador no projeto.
+- Commit: um commit de teste, `Test :test_tube: [#129] ...`, só com `tests/standards.test.js` nos caminhos.
+- Modelo: economico.
+- Status: em-andamento.
 
 ## Dúvidas
 
